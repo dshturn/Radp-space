@@ -36,21 +36,21 @@
     .upload-btn { background: #0284c7; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
     .add-btn { background: #059669; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; margin-bottom: 16px; }
     .empty { color: #475569; text-align: center; padding: 32px; }
-    .sn-row { display: flex; gap: 8px; margin-top: 10px; }
-    .sn-row input { flex: 1; padding: 8px 12px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0; font-size: 13px; }
+    .sn-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .sn-row input { flex: 1; min-width: 120px; padding: 8px 12px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0; font-size: 13px; }
     .sn-row button { background: #0284c7; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; }
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 100; justify-content: center; align-items: center; }
     .modal.open { display: flex; }
     .modal-box { background: #1e293b; padding: 24px; border-radius: 12px; width: 90%; max-width: 400px; }
     .modal-box h3 { color: #38bdf8; margin-bottom: 16px; }
     .modal-box input { width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #e2e8f0; font-size: 14px; margin-bottom: 12px; }
-    .modal-box select { width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #e2e8f0; font-size: 14px; margin-bottom: 12px; }
     .modal-btns { display: flex; gap: 8px; }
     .modal-btns button { flex: 1; padding: 10px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; }
     .btn-save { background: #0284c7; color: white; }
     .btn-cancel { background: #334155; color: #e2e8f0; }
     input[type="file"] { display: none; }
     .section-label { font-size: 12px; color: #64748b; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
+    .sn-info { font-size: 13px; color: #94a3b8; margin-bottom: 10px; }
   </style>
 </head>
 <body>
@@ -86,7 +86,6 @@
   </div>
 </div>
 
-<!-- Modal: Add Equipment -->
 <div class="modal" id="equipModal">
   <div class="modal-box">
     <h3>Add Equipment</h3>
@@ -100,7 +99,6 @@
   </div>
 </div>
 
-<!-- Modal: Add Personnel -->
 <div class="modal" id="personnelModal">
   <div class="modal-box">
     <h3>Add Personnel</h3>
@@ -130,6 +128,10 @@
 
   const headers = { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 
+  let currentUploadItemId = null;
+  let currentUploadDocTypeId = null;
+  let currentUploadType = null;
+
   function showTab(tab, el) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -148,39 +150,75 @@
   function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
   async function loadEquipment() {
-    // Загружаем templates для service line подрядчика
     const tmplRes = await fetch(`${SUPABASE_URL}/rest/v1/equipment_templates?service_line=eq.${encodeURIComponent(user.service_line)}&order=name`, { headers });
     const templates = await tmplRes.json();
 
-    // Загружаем уже добавленные items подрядчика
     const itemsRes = await fetch(`${SUPABASE_URL}/rest/v1/equipment_items?contractor_id=eq.${user.id}&select=*`, { headers });
     const items = await itemsRes.json();
 
     const itemsByTemplate = {};
     items.forEach(i => { itemsByTemplate[i.equipment_template_id] = i; });
 
-    // Mandatory
+    const tmplIds = templates.map(t => t.id).join(',');
+    let allDocTypes = [];
+    if (tmplIds) {
+      const dtRes = await fetch(`${SUPABASE_URL}/rest/v1/document_types?equipment_template_id=in.(${tmplIds})&select=*`, { headers });
+      allDocTypes = await dtRes.json();
+    }
+
+    const itemIds = items.map(i => i.id).join(',');
+    let uploadedDocs = [];
+    if (itemIds) {
+      const docsRes = await fetch(`${SUPABASE_URL}/rest/v1/documents?equipment_item_id=in.(${itemIds})&select=*`, { headers });
+      uploadedDocs = await docsRes.json();
+    }
+
+    const docsByItem = {};
+    uploadedDocs.forEach(d => {
+      if (!docsByItem[d.equipment_item_id]) docsByItem[d.equipment_item_id] = [];
+      docsByItem[d.equipment_item_id].push(d);
+    });
+
     const mandatory = templates.filter(t => t.is_mandatory);
     document.getElementById('mandatoryList').innerHTML = mandatory.length ? mandatory.map(t => {
       const item = itemsByTemplate[t.id];
-      return equipCard(t, item, true);
+      const docTypes = allDocTypes.filter(dt => dt.equipment_template_id === t.id);
+      const docs = item ? (docsByItem[item.id] || []) : [];
+      return equipCard(t, item, true, docTypes, docs);
     }).join('') : '<div class="empty">No mandatory equipment defined</div>';
 
-    // Additional (non-mandatory templates + custom)
     const additional = items.filter(i => !i.equipment_template_id);
     document.getElementById('additionalList').innerHTML = additional.length ? additional.map(i => customEquipCard(i)).join('') : '';
   }
 
-  function equipCard(template, item, mandatory) {
+  function equipCard(template, item, mandatory, docTypes, docs) {
     const badge = mandatory ? '<span class="badge mandatory">Required</span>' : '<span class="badge optional">Optional</span>';
     if (item) {
+      const docsHtml = docTypes.map(dt => {
+        const uploaded = docs.find(d => d.document_type_id === dt.id);
+        const status = uploaded ? (uploaded.ai_status || 'pending') : 'missing';
+        const statusColors = { valid: '#6ee7b7', expired: '#fda4af', missing: '#94a3b8', pending: '#fbbf24' };
+        const color = statusColors[status] || '#fbbf24';
+        const dateInfo = uploaded ? `Issue: ${uploaded.issue_date || '—'} · Expiry: ${uploaded.expiry_date || '—'}` : 'Not uploaded';
+        return `<div class="doc-row">
+          <div style="flex:1">
+            <div class="doc-name">${dt.document_name}</div>
+            <div class="doc-date">${dateInfo}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="color:${color};font-size:11px;font-weight:bold">${status.toUpperCase()}</span>
+            <button class="upload-btn" onclick="uploadEquipDoc('${item.id}', '${dt.id}')">↑ Upload</button>
+          </div>
+        </div>`;
+      }).join('');
+
       return `<div class="card">
         <div class="card-header">
           <div class="card-title">${template.name}</div>
           ${badge}
         </div>
-        <div class="doc-name">S/N: ${item.serial_number || '—'} · Model: ${item.model || '—'}</div>
-        <button class="upload-btn" style="margin-top:10px" onclick="uploadEquipDoc('${item.id}')">+ Upload Document</button>
+        <div class="sn-info">S/N: ${item.serial_number || '—'} · Model: ${item.model || '—'}</div>
+        ${docsHtml || '<div class="doc-name">No document types defined</div>'}
       </div>`;
     } else {
       return `<div class="card">
@@ -189,9 +227,9 @@
           ${badge}
         </div>
         <div class="sn-row">
-          <input type="text" placeholder="Enter serial number" id="sn_${template.id}">
+          <input type="text" placeholder="Serial number" id="sn_${template.id}">
           <input type="text" placeholder="Model" id="model_${template.id}">
-          <button onclick="saveSerialNumber('${template.id}', '${template.name}')">Save</button>
+          <button onclick="saveSerialNumber('${template.id}')">Save</button>
         </div>
       </div>`;
     }
@@ -203,19 +241,19 @@
         <div class="card-title">${item.model || 'Custom Equipment'}</div>
         <span class="badge optional">Additional</span>
       </div>
-      <div class="doc-name">S/N: ${item.serial_number || '—'}</div>
-      <button class="upload-btn" style="margin-top:10px" onclick="uploadEquipDoc('${item.id}')">+ Upload Document</button>
+      <div class="sn-info">S/N: ${item.serial_number || '—'}</div>
+      <button class="upload-btn" style="margin-top:10px" onclick="uploadEquipDoc('${item.id}', null)">↑ Upload Document</button>
     </div>`;
   }
 
-  async function saveSerialNumber(templateId, templateName) {
+  async function saveSerialNumber(templateId) {
     const sn = document.getElementById(`sn_${templateId}`).value;
     const model = document.getElementById(`model_${templateId}`).value;
     if (!sn) { alert('Please enter serial number'); return; }
     await fetch(`${SUPABASE_URL}/rest/v1/equipment_items`, {
       method: 'POST',
       headers: { ...headers, Prefer: 'return=minimal' },
-      body: JSON.stringify({ contractor_id: user.id, equipment_template_id: templateId, serial_number: sn, model })
+      body: JSON.stringify({ contractor_id: user.id, equipment_template_id: parseInt(templateId), serial_number: sn, model })
     });
     loadEquipment();
   }
@@ -260,22 +298,21 @@
           <span class="badge ${p.ai_status || 'pending'}">${p.ai_status || 'pending'}</span>
         </div>
         <div class="doc-name">${p.position || ''} · Cert: ${p.certificate_number || '—'}</div>
-        <div class="doc-date" style="margin-top:6px">Expiry: ${p.expiry_date || 'Not set'}</div>
-        <button class="upload-btn" style="margin-top:10px" onclick="uploadPersonnelDoc('${p.id}')">+ Upload Certificate</button>
+        <div class="doc-date" style="margin-top:6px">Issue: ${p.issue_date || '—'} · Expiry: ${p.expiry_date || 'Not set'}</div>
+        <button class="upload-btn" style="margin-top:10px" onclick="uploadPersonnelDoc('${p.id}')">↑ Upload Certificate</button>
       </div>`).join('');
   }
 
-  let currentUploadItemId = null;
-  let currentUploadType = null;
-
-  function uploadEquipDoc(itemId) {
+  function uploadEquipDoc(itemId, docTypeId) {
     currentUploadItemId = itemId;
+    currentUploadDocTypeId = docTypeId;
     currentUploadType = 'equipment';
     document.getElementById('fileInput').click();
   }
 
   function uploadPersonnelDoc(personId) {
     currentUploadItemId = personId;
+    currentUploadDocTypeId = null;
     currentUploadType = 'personnel';
     document.getElementById('fileInput').click();
   }
@@ -296,7 +333,12 @@
         await fetch(`${SUPABASE_URL}/rest/v1/documents`, {
           method: 'POST',
           headers: { ...headers, Prefer: 'return=minimal' },
-          body: JSON.stringify({ equipment_item_id: currentUploadItemId, file_url: fileUrl, ai_status: 'pending' })
+          body: JSON.stringify({
+            equipment_item_id: parseInt(currentUploadItemId),
+            document_type_id: currentUploadDocTypeId ? parseInt(currentUploadDocTypeId) : null,
+            file_url: fileUrl,
+            ai_status: 'pending'
+          })
         });
       } else {
         await fetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${currentUploadItemId}`, {
