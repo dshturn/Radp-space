@@ -7,6 +7,9 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: Arial, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+    nav { background: #0f172a; border-bottom: 1px solid #334155; padding: 10px 24px; display: flex; gap: 16px; flex-wrap: wrap; }
+    nav a { color: #94a3b8; font-size: 13px; text-decoration: none; }
+    nav a:hover { color: #38bdf8; }
     .header { background: #1e293b; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
     .header h1 { color: #38bdf8; font-size: 18px; }
     .header .info { font-size: 13px; color: #94a3b8; }
@@ -54,6 +57,14 @@
   </style>
 </head>
 <body>
+
+<nav>
+  <a href="/index.html">🏠 Home</a>
+  <a href="/contractor.html">📋 My Equipment</a>
+  <a href="/login.html">🔐 Login</a>
+  <a href="/register.html">📝 Register</a>
+  <a href="/admin.html">⚙️ Admin</a>
+</nav>
 
 <div class="header">
   <h1>RADP Contractor Portal</h1>
@@ -152,33 +163,27 @@
   async function loadEquipment() {
     const tmplRes = await fetch(`${SUPABASE_URL}/rest/v1/equipment_templates?service_line=eq.${encodeURIComponent(user.service_line)}&order=name`, { headers });
     const templates = await tmplRes.json();
-
     const itemsRes = await fetch(`${SUPABASE_URL}/rest/v1/equipment_items?contractor_id=eq.${user.id}&select=*`, { headers });
     const items = await itemsRes.json();
-
     const itemsByTemplate = {};
     items.forEach(i => { itemsByTemplate[i.equipment_template_id] = i; });
-
     const tmplIds = templates.map(t => t.id).join(',');
     let allDocTypes = [];
     if (tmplIds) {
       const dtRes = await fetch(`${SUPABASE_URL}/rest/v1/document_types?equipment_template_id=in.(${tmplIds})&select=*`, { headers });
       allDocTypes = await dtRes.json();
     }
-
     const itemIds = items.map(i => i.id).join(',');
     let uploadedDocs = [];
     if (itemIds) {
       const docsRes = await fetch(`${SUPABASE_URL}/rest/v1/documents?equipment_item_id=in.(${itemIds})&select=*`, { headers });
       uploadedDocs = await docsRes.json();
     }
-
     const docsByItem = {};
     uploadedDocs.forEach(d => {
       if (!docsByItem[d.equipment_item_id]) docsByItem[d.equipment_item_id] = [];
       docsByItem[d.equipment_item_id].push(d);
     });
-
     const mandatory = templates.filter(t => t.is_mandatory);
     document.getElementById('mandatoryList').innerHTML = mandatory.length ? mandatory.map(t => {
       const item = itemsByTemplate[t.id];
@@ -186,7 +191,6 @@
       const docs = item ? (docsByItem[item.id] || []) : [];
       return equipCard(t, item, true, docTypes, docs);
     }).join('') : '<div class="empty">No mandatory equipment defined</div>';
-
     const additional = items.filter(i => !i.equipment_template_id);
     document.getElementById('additionalList').innerHTML = additional.length ? additional.map(i => customEquipCard(i)).join('') : '';
   }
@@ -211,7 +215,6 @@
           </div>
         </div>`;
       }).join('');
-
       return `<div class="card">
         <div class="card-header">
           <div class="card-title">${template.name}</div>
