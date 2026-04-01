@@ -102,10 +102,12 @@
     })
   });
   msg.className = 'msg success';
-  msg.textContent = 'Account created! Waiting for admin approval.';
-}
+      msg.textContent = 'Account created! Waiting for admin approval.';
+    } else {
+      msg.className = 'msg error';
+      msg.textContent = 'Registration failed. Try again.';
+    }
+  }
 
   loadOptions();
 </script>
-</body>
-</html>
