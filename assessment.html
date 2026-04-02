@@ -498,22 +498,25 @@
   </tr>
 </table>
 
-<h2>Manpower</h2>
 <table>
   <colgroup>
     <col style="width:3%">
     <col style="width:13%">
-    <col style="width:6%">
+    <col style="width:9%">
     <col style="width:9%">
     <col style="width:10%">
     <col style="width:8%">
     <col style="width:10%">
     <col style="width:8%">
     <col style="width:8%">
-    <col style="width:12%">
-    <col style="width:13%">
+    <col style="width:11%">
+    <col style="width:11%">
   </colgroup>
   <thead>
+    <tr>
+      <th class="sp" colspan="6" style="text-align:left;">Manpower</th>
+      <th class="as divider" colspan="5" style="text-align:left;">Assessor Section</th>
+    </tr>
     <tr>
       <th class="sp">#</th>
       <th class="sp">Name</th>
@@ -528,25 +531,12 @@
       <th class="as">Comment</th>
     </tr>
   </thead>
-  <tbody>${persRows || '<tr><td colspan="11" style="text-align:center;color:#999;">No personnel selected</td></tr>'}</tbody>
-</table>
-
-<h2>Equipment</h2>
-<table>
-  <colgroup>
-    <col style="width:3%">
-    <col style="width:13%">
-    <col style="width:10%">
-    <col style="width:9%">
-    <col style="width:8%">
-    <col style="width:8%">
-    <col style="width:10%">
-    <col style="width:8%">
-    <col style="width:8%">
-    <col style="width:12%">
-    <col style="width:11%">
-  </colgroup>
-  <thead>
+  <tbody>
+    ${persRows || '<tr><td colspan="11" style="text-align:center;color:#999;">No personnel selected</td></tr>'}
+    <tr>
+      <th class="sp" colspan="6" style="text-align:left;">Equipment</th>
+      <th class="as divider" colspan="5" style="text-align:left;">Assessor Section</th>
+    </tr>
     <tr>
       <th class="sp">#</th>
       <th class="sp">Equipment S/N</th>
@@ -560,8 +550,8 @@
       <th class="as">Readiness for Operations</th>
       <th class="as">Comment</th>
     </tr>
-  </thead>
-  <tbody>${equipRows || '<tr><td colspan="11" style="text-align:center;color:#999;">No equipment selected</td></tr>'}</tbody>
+    ${equipRows || '<tr><td colspan="11" style="text-align:center;color:#999;">No equipment selected</td></tr>'}
+  </tbody>
 </table>
 
 <div class="no-print" style="margin-top:12px;">
