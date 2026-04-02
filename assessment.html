@@ -286,9 +286,7 @@
   }
 
   async function removeEquipment(id) {
-    await fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment?id=eq.${id}`, {
-      method: 'DELETE', headers
-    });
+    await fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment?id=eq.${id}`, { method: 'DELETE', headers });
     loadSelectedEquipment(currentAssessmentId);
   }
 
@@ -323,9 +321,7 @@
   }
 
   async function removePersonnel(id) {
-    await fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?id=eq.${id}`, {
-      method: 'DELETE', headers
-    });
+    await fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?id=eq.${id}`, { method: 'DELETE', headers });
     loadSelectedPersonnel(currentAssessmentId);
   }
 
@@ -333,7 +329,7 @@
     const aRes = await fetch(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${currentAssessmentId}`, { headers });
     const assessment = (await aRes.json())[0];
 
-    const eRes = await fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment?assessment_id=eq.${currentAssessmentId}&select=*,equipment_items(serial_number,model,equipment_templates(name),documents(*))`, { headers });
+    const eRes = await fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment?assessment_id=eq.${currentAssessmentId}&select=*,equipment_items(serial_number,model,equipment_templates(name),documents(*,document_types(document_name)))`, { headers });
     const equipment = await eRes.json();
 
     const pRes = await fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?assessment_id=eq.${currentAssessmentId}&select=*,personnel(*)`, { headers });
@@ -341,25 +337,59 @@
 
     const today = new Date().toLocaleDateString('en-GB');
 
+    let persRows = '';
+    let pNum = 1;
+    personnel.forEach(p => {
+      const per = p.personnel;
+      persRows += `<tr>
+        <td>${pNum++}</td>
+        <td>${per?.full_name || '—'}</td>
+        <td>${per?.position || '—'}</td>
+        <td>${per?.years_experience || '—'}</td>
+        <td>${per?.certificate_number || '—'}</td>
+        <td>${per?.expiry_date || '—'}</td>
+        <td style="background:#fffde7;"></td>
+        <td style="background:#fffde7;"></td>
+        <td style="background:#fffde7;"></td>
+        <td style="background:#fffde7;">${p.readiness || ''}</td>
+        <td style="background:#fffde7;">${p.comment || ''}</td>
+      </tr>`;
+    });
+
     let equipRows = '';
     let eNum = 1;
     equipment.forEach(e => {
       const item = e.equipment_items;
       const docs = item?.documents || [];
       if (docs.length === 0) {
-        equipRows += `<tr><td>${eNum++}</td><td>${item?.serial_number || '—'}</td><td>${item?.equipment_templates?.name || item?.model || '—'}</td><td>—</td><td>—</td><td>—</td><td>${e.readiness || 'Pending'}</td><td>${e.comment || ''}</td></tr>`;
+        equipRows += `<tr>
+          <td>${eNum++}</td>
+          <td>${item?.serial_number || '—'}</td>
+          <td>${item?.equipment_templates?.name || item?.model || '—'}</td>
+          <td>—</td><td>—</td><td>—</td>
+          <td style="background:#fffde7;"></td>
+          <td style="background:#fffde7;"></td>
+          <td style="background:#fffde7;"></td>
+          <td style="background:#fffde7;">${e.readiness || ''}</td>
+          <td style="background:#fffde7;">${e.comment || ''}</td>
+        </tr>`;
       } else {
         docs.forEach(d => {
-          equipRows += `<tr><td>${eNum++}</td><td>${item?.serial_number || '—'}</td><td>${item?.equipment_templates?.name || item?.model || '—'}</td><td>${d.document_type_id || '—'}</td><td>${d.issue_date || '—'}</td><td>${d.expiry_date || '—'}</td><td>${e.readiness || 'Pending'}</td><td>${e.comment || ''}</td></tr>`;
+          equipRows += `<tr>
+            <td>${eNum++}</td>
+            <td>${item?.serial_number || '—'}</td>
+            <td>${item?.equipment_templates?.name || item?.model || '—'}</td>
+            <td>${d.document_types?.document_name || '—'}</td>
+            <td>${d.issue_date || '—'}</td>
+            <td>${d.expiry_date || '—'}</td>
+            <td style="background:#fffde7;"></td>
+            <td style="background:#fffde7;"></td>
+            <td style="background:#fffde7;"></td>
+            <td style="background:#fffde7;">${e.readiness || ''}</td>
+            <td style="background:#fffde7;">${e.comment || ''}</td>
+          </tr>`;
         });
       }
-    });
-
-    let persRows = '';
-    let pNum = 1;
-    personnel.forEach(p => {
-      const per = p.personnel;
-      persRows += `<tr><td>${pNum++}</td><td>${per?.full_name || '—'}</td><td>${per?.position || '—'}</td><td>${per?.certificate_number || '—'}</td><td>${per?.expiry_date || '—'}</td><td>${p.readiness || 'Pending'}</td><td>${p.comment || ''}</td></tr>`;
     });
 
     const lorHtml = `<!DOCTYPE html>
@@ -368,41 +398,71 @@
 <meta charset="UTF-8">
 <title>LoR - ${assessment.field_well}</title>
 <style>
-  body { font-family: Arial, sans-serif; font-size: 12px; margin: 20px; color: #000; }
-  h1 { font-size: 16px; text-align: center; margin-bottom: 4px; }
-  h2 { font-size: 13px; margin: 16px 0 8px; background: #1e3a5f; color: white; padding: 6px 10px; }
+  body { font-family: Arial, sans-serif; font-size: 11px; margin: 20px; color: #000; }
+  h1 { font-size: 15px; text-align: center; margin-bottom: 4px; }
+  h2 { font-size: 12px; margin: 16px 0 6px; background: #1e3a5f; color: white; padding: 5px 10px; }
   .info-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
   .info-table td { padding: 4px 8px; border: 1px solid #ccc; }
-  .info-table td:first-child { font-weight: bold; width: 150px; background: #f5f5f5; }
+  .info-table td:first-child { font-weight: bold; width: 130px; background: #f5f5f5; }
   table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
-  th { background: #1e3a5f; color: white; padding: 6px 8px; text-align: left; font-size: 11px; }
-  td { padding: 5px 8px; border: 1px solid #ddd; font-size: 11px; }
+  th { background: #1e3a5f; color: white; padding: 5px 6px; text-align: left; font-size: 10px; }
+  th.assessor { background: #2d4a1e; }
+  td { padding: 4px 6px; border: 1px solid #ddd; font-size: 10px; }
   tr:nth-child(even) { background: #f9f9f9; }
-  .footer { margin-top: 24px; font-size: 11px; color: #666; text-align: center; }
-  @media print { body { margin: 10px; } }
+  .footer { margin-top: 24px; font-size: 10px; color: #666; text-align: center; }
+  .col-divider { border-left: 2px solid #1e3a5f !important; }
+  @media print { body { margin: 8px; } }
 </style>
 </head>
 <body>
 <h1>List of Readiness (LoR)</h1>
-<p style="text-align:center;font-size:11px;color:#666;">Attachment to SMS Process 07.01 "Service Provider Readiness Assessment Process"</p>
+<p style="text-align:center;font-size:10px;color:#666;margin-bottom:12px;">Attachment to SMS Process 07.01 "Service Provider Readiness Assessment Process"</p>
 
-<table class="info-table" style="margin-top:12px;">
-  <tr><td>Service Provider</td><td>${user.company || '—'} (${user.service_line || '—'})</td><td>Date of Issue</td><td>${today}</td></tr>
-  <tr><td>Field / Well</td><td>${assessment.field_well || '—'}</td><td>Status</td><td>${assessment.status}</td></tr>
+<table class="info-table">
+  <tr><td>Service Provider</td><td>${user.company || '—'} · ${user.service_line || '—'}</td><td style="font-weight:bold;width:130px;background:#f5f5f5;">Date of Issue</td><td>${today}</td></tr>
+  <tr><td>Field / Well</td><td>${assessment.field_well || '—'}</td><td style="font-weight:bold;background:#f5f5f5;">Status</td><td>${assessment.status}</td></tr>
   <tr><td>Type of Job</td><td colspan="3">${assessment.type_of_job || '—'}</td></tr>
   <tr><td>Objective</td><td colspan="3">${assessment.objective || '—'}</td></tr>
 </table>
 
 <h2>Manpower</h2>
 <table>
-  <thead><tr><th>#</th><th>Name</th><th>Position</th><th>Certificate No.</th><th>Expiry Date</th><th>Readiness</th><th>Comment</th></tr></thead>
-  <tbody>${persRows || '<tr><td colspan="7" style="text-align:center">No personnel selected</td></tr>'}</tbody>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Name</th>
+      <th>Job Role</th>
+      <th>Yrs Exp</th>
+      <th>Document</th>
+      <th>Expiry Date</th>
+      <th class="assessor col-divider">NAWCOD Unit</th>
+      <th class="assessor">Auditor</th>
+      <th class="assessor">Inspection Date</th>
+      <th class="assessor">Readiness</th>
+      <th class="assessor">Comment</th>
+    </tr>
+  </thead>
+  <tbody>${persRows || '<tr><td colspan="11" style="text-align:center">No personnel selected</td></tr>'}</tbody>
 </table>
 
 <h2>Equipment</h2>
 <table>
-  <thead><tr><th>#</th><th>Serial / Tag No.</th><th>Equipment Type</th><th>Document</th><th>Issue Date</th><th>Expiry Date</th><th>Readiness</th><th>Comment</th></tr></thead>
-  <tbody>${equipRows || '<tr><td colspan="8" style="text-align:center">No equipment selected</td></tr>'}</tbody>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Serial / Tag No.</th>
+      <th>Equipment Type</th>
+      <th>Document</th>
+      <th>Issue Date</th>
+      <th>Expiry Date</th>
+      <th class="assessor col-divider">NAWCOD Unit</th>
+      <th class="assessor">Auditor</th>
+      <th class="assessor">Inspection Date</th>
+      <th class="assessor">Readiness</th>
+      <th class="assessor">Comment</th>
+    </tr>
+  </thead>
+  <tbody>${equipRows || '<tr><td colspan="11" style="text-align:center">No equipment selected</td></tr>'}</tbody>
 </table>
 
 <div class="footer">Generated by RADP · ${today}</div>
