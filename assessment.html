@@ -471,34 +471,7 @@
 <h1>List of Readiness (LoR)</h1>
 <div class="subtitle">Attachment to SMS Process 07.01 "Service Provider Readiness Assessment Process"</div>
 
-<table class="info-table">
-  <tr>
-    <td class="lbl">Service Provider (SP)</td>
-    <td><strong>${user.company || '—'}</strong> · ${user.service_line || '—'}</td>
-    <td class="lbl">Date of Issue</td>
-    <td>${todayStr}</td>
-    <td class="lbl">Valid Till</td>
-    <td style="background:${validTillBg};color:${validTillColor};font-weight:bold;padding:3px 6px;">${validTillStr}</td>
-  </tr>
-  <tr>
-    <td class="lbl">Field / Well</td>
-    <td colspan="5">${assessment.field_well || '—'}</td>
-  </tr>
-  <tr>
-    <td class="lbl">Type of Job</td>
-    <td colspan="5">${assessment.type_of_job || '—'}</td>
-  </tr>
-  <tr>
-    <td class="lbl">Objective (Short Summary)</td>
-    <td colspan="5">${assessment.objective || '—'}</td>
-  </tr>
-  <tr>
-    <td class="lbl">Peer Review Team</td>
-    <td colspan="5" style="color:#999;font-style:italic;">To be filled by assessor</td>
-  </tr>
-</table>
-
-<table>
+<table style="width:100%;border-collapse:collapse;table-layout:fixed;margin-bottom:12px;">
   <colgroup>
     <col style="width:3%">
     <col style="width:13%">
@@ -512,10 +485,34 @@
     <col style="width:11%">
     <col style="width:11%">
   </colgroup>
-  <thead>
+  <tbody>
     <tr>
-      <th class="sp" colspan="6" style="text-align:left;">Manpower</th>
-      <th class="as divider" colspan="5" style="text-align:left;">Assessor Section</th>
+      <td class="lbl" colspan="2" style="border:1px solid #bbb;">Service Provider (SP)</td>
+      <td colspan="3" style="border:1px solid #bbb;"><strong>${user.company || '—'}</strong> · ${user.service_line || '—'}</td>
+      <td class="lbl" style="border:1px solid #bbb;">Date of Issue</td>
+      <td colspan="2" style="border:1px solid #bbb;">${todayStr}</td>
+      <td class="lbl" style="border:1px solid #bbb;">Valid Till</td>
+      <td colspan="2" style="border:1px solid #bbb;background:${validTillBg};color:${validTillColor};font-weight:bold;">${validTillStr}</td>
+    </tr>
+    <tr>
+      <td class="lbl" colspan="2" style="border:1px solid #bbb;">Field / Well</td>
+      <td colspan="9" style="border:1px solid #bbb;">${assessment.field_well || '—'}</td>
+    </tr>
+    <tr>
+      <td class="lbl" colspan="2" style="border:1px solid #bbb;">Type of Job</td>
+      <td colspan="9" style="border:1px solid #bbb;">${assessment.type_of_job || '—'}</td>
+    </tr>
+    <tr>
+      <td class="lbl" colspan="2" style="border:1px solid #bbb;">Objective (Short Summary)</td>
+      <td colspan="9" style="border:1px solid #bbb;">${assessment.objective || '—'}</td>
+    </tr>
+    <tr>
+      <td class="lbl" colspan="2" style="border:1px solid #bbb;">Peer Review Team</td>
+      <td colspan="9" style="border:1px solid #bbb;color:#999;font-style:italic;">To be filled by assessor</td>
+    </tr>
+    <tr>
+      <th class="sp" colspan="6" style="text-align:left;border:1px solid #bbb;">Manpower</th>
+      <th class="as divider" colspan="5" style="text-align:left;border:1px solid #bbb;">Assessor Section</th>
     </tr>
     <tr>
       <th class="sp">#</th>
@@ -530,12 +527,13 @@
       <th class="as">Readiness for Operations</th>
       <th class="as">Comment</th>
     </tr>
-  </thead>
-  <tbody>
-    ${persRows || '<tr><td colspan="11" style="text-align:center;color:#999;">No personnel selected</td></tr>'}
+    ${persRows || '<tr><td colspan="11" style="text-align:center;color:#999;border:1px solid #ddd;">No personnel selected</td></tr>'}
+    <tr style="height:8px;">
+      <td colspan="11" style="border:none;background:#fff;padding:0;"></td>
+    </tr>
     <tr>
-      <th class="sp" colspan="6" style="text-align:left;">Equipment</th>
-      <th class="as divider" colspan="5" style="text-align:left;">Assessor Section</th>
+      <th class="sp" colspan="6" style="text-align:left;border:1px solid #bbb;">Equipment</th>
+      <th class="as divider" colspan="5" style="text-align:left;border:1px solid #bbb;">Assessor Section</th>
     </tr>
     <tr>
       <th class="sp">#</th>
@@ -550,7 +548,7 @@
       <th class="as">Readiness for Operations</th>
       <th class="as">Comment</th>
     </tr>
-    ${equipRows || '<tr><td colspan="11" style="text-align:center;color:#999;">No equipment selected</td></tr>'}
+    ${equipRows || '<tr><td colspan="11" style="text-align:center;color:#999;border:1px solid #ddd;">No equipment selected</td></tr>'}
   </tbody>
 </table>
 
