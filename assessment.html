@@ -95,24 +95,24 @@
     <div class="card" id="assessmentInfo"></div>
 
     <div class="tabs">
-      <button class="tab active" onclick="showDetailTab('equipment', this)">Equipment</button>
-      <button class="tab" onclick="showDetailTab('personnel', this)">Personnel</button>
+      <button class="tab active" onclick="showDetailTab('personnel', this)">Personnel</button>
+      <button class="tab" onclick="showDetailTab('equipment', this)">Equipment</button>
     </div>
 
-    <div id="equipmentTab">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <div class="section-label">Selected Equipment</div>
-        <button class="btn-primary" onclick="openEquipmentSelector()">+ Add Equipment</button>
-      </div>
-      <div id="selectedEquipment"></div>
-    </div>
-
-    <div id="personnelTab" style="display:none;">
+    <div id="personnelTab">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
         <div class="section-label">Selected Personnel</div>
         <button class="btn-primary" onclick="openPersonnelSelector()">+ Add Personnel</button>
       </div>
       <div id="selectedPersonnel"></div>
+    </div>
+
+    <div id="equipmentTab" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div class="section-label">Selected Equipment</div>
+        <button class="btn-primary" onclick="openEquipmentSelector()">+ Add Equipment</button>
+      </div>
+      <div id="selectedEquipment"></div>
     </div>
 
     <div style="margin-top:24px;">
@@ -273,16 +273,24 @@
   }
 
   async function openEquipmentSelector() {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/equipment_items?contractor_id=eq.${user.id}&select=*,equipment_templates(name)`, { headers });
-    const items = await res.json();
-    document.getElementById('equipSelectorList').innerHTML = items.map(i => `
-      <div class="checkbox-item">
-        <input type="checkbox" id="eq_${i.id}" value="${i.id}">
+    const [itemsRes, addedRes] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/equipment_items?contractor_id=eq.${user.id}&select=*,equipment_templates(name)`, { headers }),
+      fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment?assessment_id=eq.${currentAssessmentId}&select=equipment_item_id`, { headers })
+    ]);
+    const items = await itemsRes.json();
+    const added = await addedRes.json();
+    const addedIds = new Set(added.map(a => String(a.equipment_item_id)));
+    document.getElementById('equipSelectorList').innerHTML = items.map(i => {
+      const isAdded = addedIds.has(String(i.id));
+      return `<div class="checkbox-item" style="${isAdded ? 'opacity:0.4;pointer-events:none;' : ''}">
+        <input type="checkbox" id="eq_${i.id}" value="${i.id}" ${isAdded ? 'disabled' : ''}>
         <label for="eq_${i.id}">
           <strong>${i.equipment_templates?.name || i.model || '—'}</strong>
           <span style="color:#64748b;font-size:12px;"> · S/N: ${i.serial_number || '—'}</span>
+          ${isAdded ? '<span style="color:#64748b;font-size:11px;"> · Already added</span>' : ''}
         </label>
-      </div>`).join('') || '<div class="empty">No equipment in your database</div>';
+      </div>`;
+    }).join('') || '<div class="empty">No equipment in your database</div>';
     document.getElementById('equipModal').style.display = 'flex';
   }
 
@@ -308,14 +316,21 @@
   }
 
   async function openPersonnelSelector() {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/personnel?contractor_id=eq.${user.id}&select=*`, { headers });
-    const people = await res.json();
-    document.getElementById('persSelectorList').innerHTML = people.map(p => `
-      <div class="checkbox-item">
-        <input type="checkbox" id="per_${p.id}" value="${p.id}">
+    const [peopleRes, addedRes] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/personnel?contractor_id=eq.${user.id}&select=*`, { headers }),
+      fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?assessment_id=eq.${currentAssessmentId}&select=personnel_id`, { headers })
+    ]);
+    const people = await peopleRes.json();
+    const added = await addedRes.json();
+    const addedIds = new Set(added.map(a => String(a.personnel_id)));
+    document.getElementById('persSelectorList').innerHTML = people.map(p => {
+      const isAdded = addedIds.has(String(p.id));
+      return `<div class="checkbox-item" style="${isAdded ? 'opacity:0.4;pointer-events:none;' : ''}">
+        <input type="checkbox" id="per_${p.id}" value="${p.id}" ${isAdded ? 'disabled' : ''}>
         <label for="per_${p.id}">
           <strong>${p.full_name}</strong>
           <span style="color:#64748b;font-size:12px;"> · ${p.position || ''}</span>
+          ${isAdded ? '<span style="color:#64748b;font-size:11px;"> · Already added</span>' : ''}
         </label>
       </div>`).join('') || '<div class="empty">No personnel in your database</div>';
     document.getElementById('persModal').style.display = 'flex';
