@@ -39,7 +39,7 @@
     <label>Email</label>
     <input type="email" id="email" placeholder="you@company.com">
     <label>Password</label>
-    <input type="password" id="password" placeholder="Password">
+    <input type="password" id="password" placeholder="Password" onkeydown="if(event.key==='Enter') login()">
     <button onclick="login()">Login</button>
     <div id="msg" class="msg"></div>
     <a href="/register.html">New contractor? Register here</a>
