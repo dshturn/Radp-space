@@ -1,4 +1,8 @@
 {
+  "rewrites": [
+    { "source": "/contractor", "destination": "/shell.html" },
+    { "source": "/assessment", "destination": "/shell.html" }
+  ],
   "headers": [
     {
       "source": "/(.*)",

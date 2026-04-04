@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RADP</title>
+  <style>
+    /* ── Reset ── */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+
+    /* ── Nav ── */
+    nav { background: #1e293b; border-bottom: 1px solid #334155; padding: 10px 24px; min-height: 44px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .nav-links { display: flex; gap: 16px; flex-wrap: wrap; }
+    nav a { color: #94a3b8; font-size: 13px; text-decoration: none; cursor: pointer; }
+    nav a:hover, nav a.active { color: #38bdf8; }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .nav-user { font-size: 13px; color: #64748b; }
+    .nav-logout { background: #334155; color: #e2e8f0; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+    .nav-logout:hover { background: #475569; }
+
+    /* ── Top-level page routing ── */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── Shared components ── */
+    .container { padding: 24px; max-width: 900px; margin: 0 auto; }
+    .card { background: #1e293b; border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+    .card h2 { color: #38bdf8; font-size: 16px; margin-bottom: 16px; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+    .card-title { font-size: 15px; font-weight: bold; }
+    .section-label { font-size: 12px; color: #64748b; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
+    .empty { color: #475569; text-align: center; padding: 32px; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+    .tab { padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; border: none; background: #1e293b; color: #94a3b8; }
+    .tab.active { background: #0284c7; color: white; }
+    .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; }
+    .badge.valid     { background: #064e3b; color: #6ee7b7; }
+    .badge.expired   { background: #4c0519; color: #fda4af; }
+    .badge.pending   { background: #422006; color: #fbbf24; }
+    .badge.missing   { background: #334155; color: #94a3b8; }
+    .badge.mandatory { background: #1e3a5f; color: #93c5fd; }
+    .badge.optional  { background: #2d1b69; color: #c4b5fd; }
+    .badge.draft     { background: #334155; color: #94a3b8; }
+    .badge.submitted { background: #1e3a5f; color: #93c5fd; }
+    .badge.approved  { background: #064e3b; color: #6ee7b7; }
+
+    /* ── Contractor page ── */
+    .welcome { background: #1e293b; border-radius: 10px; padding: 20px; margin-bottom: 24px; }
+    .welcome h2 { font-size: 16px; margin-bottom: 6px; }
+    .welcome p { font-size: 13px; color: #94a3b8; }
+    .section { display: none; }
+    .section.active { display: block; }
+    .doc-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #334155; flex-wrap: wrap; gap: 8px; }
+    .doc-row:last-child { border-bottom: none; }
+    .doc-name { font-size: 13px; color: #94a3b8; }
+    .doc-date { font-size: 12px; color: #64748b; }
+    .upload-btn { background: #0284c7; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+    .add-btn { background: #059669; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; margin-bottom: 16px; }
+    .sn-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .sn-row input { flex: 1; min-width: 120px; padding: 8px 12px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0; font-size: 13px; margin-bottom: 0; }
+    .sn-row button { background: #0284c7; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+    .sn-info { font-size: 13px; color: #94a3b8; margin-bottom: 10px; }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 100; justify-content: center; align-items: center; }
+    .modal.open { display: flex; }
+    .modal-box { background: #1e293b; padding: 24px; border-radius: 12px; width: 90%; max-width: 400px; }
+    .modal-box h3 { color: #38bdf8; margin-bottom: 16px; }
+    .modal-box input { width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #e2e8f0; font-size: 14px; margin-bottom: 12px; }
+    .modal-btns { display: flex; gap: 8px; }
+    .modal-btns button { flex: 1; padding: 10px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; }
+    .btn-save { background: #0284c7; color: white; }
+    .btn-cancel { background: #334155; color: #e2e8f0; }
+
+    /* ── Assessment page ── */
+    .view { display: none; }
+    .view.active { display: block; }
+    label { display: block; font-size: 13px; color: #94a3b8; margin-bottom: 6px; }
+    input[type="text"], input[type="email"], input[type="password"], textarea, select { width: 100%; padding: 10px 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #e2e8f0; font-size: 14px; margin-bottom: 14px; }
+    textarea { height: 80px; resize: vertical; }
+    select { appearance: none; }
+    .btn-primary { background: #0284c7; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+    .btn-success { background: #059669; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+    .btn-danger  { background: #dc2626; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+    .item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #0f172a; border-radius: 8px; margin-bottom: 8px; flex-wrap: wrap; gap: 8px; }
+    .item-info { flex: 1; }
+    .item-name { font-size: 14px; font-weight: bold; }
+    .item-detail { font-size: 12px; color: #64748b; margin-top: 2px; }
+    .checkbox-item { display: flex; align-items: center; gap: 10px; padding: 10px; background: #0f172a; border-radius: 8px; margin-bottom: 8px; cursor: pointer; }
+    .checkbox-item input[type="checkbox"] { width: 16px; height: 16px; margin-bottom: 0; cursor: pointer; flex-shrink: 0; }
+    .checkbox-item label { cursor: pointer; font-size: 13px; flex: 1; margin-bottom: 0; }
+    .assessment-card { background: #1e293b; border-radius: 10px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; cursor: pointer; }
+    .assessment-card:hover { background: #253347; }
+    .lor-btn { background: #7c3aed; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+    input[type="file"] { display: none; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-links">
+    <a onclick="showPage('contractor')" id="navContractor">📋 Contractor</a>
+    <a onclick="showPage('assessment')" id="navAssessment">📄 Assessments</a>
+  </div>
+  <div class="nav-right">
+    <span class="nav-user" id="navUser"></span>
+    <button class="nav-logout" onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<!-- ══════════════════ CONTRACTOR PAGE ══════════════════ -->
+<div id="contractor-page" class="page">
+  <div class="container">
+    <div class="welcome">
+      <h2 id="welcomeMsg">Welcome</h2>
+      <p id="companyInfo"></p>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="showContractorTab('equipment', this)">Equipment</button>
+      <button class="tab" onclick="showContractorTab('personnel', this)">Personnel</button>
+    </div>
+    <div id="ct-equipment" class="section active">
+      <div class="section-label">Mandatory Equipment</div>
+      <div id="mandatoryList"><div class="empty">Loading...</div></div>
+      <div class="section-label" style="margin-top:20px">Additional Equipment</div>
+      <button class="add-btn" onclick="openAddEquipment()">+ Add Equipment</button>
+      <div id="additionalList"></div>
+    </div>
+    <div id="ct-personnel" class="section">
+      <button class="add-btn" onclick="openAddPersonnel()">+ Add Personnel</button>
+      <div id="personnelList"><div class="empty">Loading...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ ASSESSMENT PAGE ══════════════════ -->
+<div id="assessment-page" class="page">
+  <div class="container">
+    <div id="listView" class="view active">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div class="section-label">My Assessments</div>
+        <button class="btn-success" onclick="showCreate()">+ New Assessment</button>
+      </div>
+      <div id="assessmentList"><div class="empty">Loading...</div></div>
+    </div>
+
+    <div id="createView" class="view">
+      <div class="card">
+        <h2>New Assessment</h2>
+        <label>SharePoint Request ID</label>
+        <input type="text" id="requestId" placeholder="e.g. 176">
+        <label>Field / Well</label>
+        <input type="text" id="fieldWell" placeholder="e.g. MANIFA/MNIF-123">
+        <label>Type of Job</label>
+        <select id="typeOfJob"><option value="">Select type of job...</option></select>
+        <label>Objective</label>
+        <textarea id="objective" placeholder="Short summary of the job objective"></textarea>
+        <button class="btn-primary" onclick="createAssessment()">Create Assessment</button>
+        <button style="margin-left:8px;background:#334155;color:#e2e8f0;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;" onclick="showList()">Cancel</button>
+      </div>
+    </div>
+
+    <div id="detailView" class="view">
+      <div style="margin-bottom:16px;">
+        <button style="background:#334155;color:#e2e8f0;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px;" onclick="showList()">← Back</button>
+      </div>
+      <div class="card" id="assessmentInfo"></div>
+      <div class="tabs" id="detailTabs">
+        <button class="tab active" onclick="showDetailTab('personnel', this)">Personnel</button>
+        <button class="tab" onclick="showDetailTab('equipment', this)">Equipment</button>
+      </div>
+      <div id="personnelTab">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div class="section-label">Selected Personnel</div>
+          <button class="btn-primary" onclick="openPersonnelSelector()">+ Add Personnel</button>
+        </div>
+        <div id="selectedPersonnel"></div>
+      </div>
+      <div id="equipmentTab" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div class="section-label">Selected Equipment</div>
+          <button class="btn-primary" onclick="openEquipmentSelector()">+ Add Equipment</button>
+        </div>
+        <div id="selectedEquipment"></div>
+      </div>
+      <div style="margin-top:24px;">
+        <button class="lor-btn" onclick="generateLoR()">📄 Generate LoR</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ Contractor: Add Equipment Modal ══════ -->
+<div class="modal" id="ctEquipModal">
+  <div class="modal-box">
+    <h3>Add Equipment</h3>
+    <input type="text" id="equipName" placeholder="Equipment name">
+    <input type="text" id="equipSerial" placeholder="Serial number">
+    <input type="text" id="equipModel" placeholder="Model (optional)">
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('ctEquipModal')">Cancel</button>
+      <button class="btn-save" onclick="addEquipment()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ Contractor: Add Personnel Modal ══════ -->
+<div class="modal" id="ctPersModal">
+  <div class="modal-box">
+    <h3>Add Personnel</h3>
+    <input type="text" id="persName" placeholder="Full name">
+    <input type="text" id="persPosition" placeholder="Position / Role">
+    <input type="text" id="persCert" placeholder="Certificate number">
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('ctPersModal')">Cancel</button>
+      <button class="btn-save" onclick="addPersonnel()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ Assessment: Equipment Selector Modal ══════ -->
+<div id="asEquipModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:100;justify-content:center;align-items:center;">
+  <div style="background:#1e293b;padding:24px;border-radius:12px;width:90%;max-width:500px;max-height:80vh;overflow-y:auto;">
+    <h3 style="color:#38bdf8;margin-bottom:16px;">Select Equipment</h3>
+    <div id="equipSelectorList"></div>
+    <div style="display:flex;gap:8px;margin-top:16px;">
+      <button class="btn-primary" onclick="addSelectedEquipment()">Add Selected</button>
+      <button style="background:#334155;color:#e2e8f0;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;" onclick="document.getElementById('asEquipModal').style.display='none'">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ Assessment: Personnel Selector Modal ══════ -->
+<div id="asPersModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:100;justify-content:center;align-items:center;">
+  <div style="background:#1e293b;padding:24px;border-radius:12px;width:90%;max-width:500px;max-height:80vh;overflow-y:auto;">
+    <h3 style="color:#38bdf8;margin-bottom:16px;">Select Personnel</h3>
+    <div id="persSelectorList"></div>
+    <div style="display:flex;gap:8px;margin-top:16px;">
+      <button class="btn-primary" onclick="addSelectedPersonnel()">Add Selected</button>
+      <button style="background:#334155;color:#e2e8f0;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;" onclick="document.getElementById('asPersModal').style.display='none'">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png">
+
+<script>
+  // ═══════════════════ SHARED ═══════════════════
+  const SUPABASE_URL = 'https://fslleuedqlxpjnerruzt.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzbGxldWVkcWx4cGpuZXJydXp0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDk5MzExOSwiZXhwIjoyMDkwNTY5MTE5fQ.oY_dihwgMimesUsvHSuKNoJEXTb3c7vuqWKzeH2pwg4';
+
+  const token = localStorage.getItem('radp_token');
+  const user  = JSON.parse(localStorage.getItem('radp_user') || '{}');
+  if (!token) { window.location.replace('/login.html'); }
+
+  const headers = { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+
+  async function apiFetch(url, options = {}) {
+    const res = await fetch(url, options);
+    if (res.status === 401) {
+      localStorage.removeItem('radp_token');
+      localStorage.removeItem('radp_user');
+      window.location.replace('/login.html');
+      return null;
+    }
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  }
+
+  function logout() {
+    localStorage.removeItem('radp_token');
+    localStorage.removeItem('radp_user');
+    window.location.replace('/login.html');
+  }
+
+  // Init nav & welcome
+  document.getElementById('navUser').textContent      = user.email || '';
+  document.getElementById('welcomeMsg').textContent   = `Welcome, ${user.full_name || 'Contractor'}`;
+  document.getElementById('companyInfo').textContent  = `${user.company || ''} · ${user.service_line || ''}`;
+
+  // ═══════════════════ ROUTING ═══════════════════
+  function showPage(name, replace = false) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(name + '-page').classList.add('active');
+
+    document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+    document.getElementById(name === 'contractor' ? 'navContractor' : 'navAssessment').classList.add('active');
+
+    replace
+      ? history.replaceState({page: name}, '', '/' + name)
+      : history.pushState({page: name}, '', '/' + name);
+
+    if (name === 'contractor') { loadEquipment(); loadPersonnel(); }
+    else if (name === 'assessment') { loadAssessments(); }
+  }
+
+  window.addEventListener('popstate', e => { if (e.state?.page) showPage(e.state.page, true); });
+
+  // ═══════════════════ CONTRACTOR: TABS ═══════════════════
+  function showContractorTab(tab, el) {
+    document.querySelectorAll('#contractor-page .tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('#contractor-page .section').forEach(s => s.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('ct-' + tab).classList.add('active');
+  }
+
+  function openAddEquipment() { document.getElementById('ctEquipModal').classList.add('open'); }
+  function openAddPersonnel() { document.getElementById('ctPersModal').classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+  // ═══════════════════ CONTRACTOR: EQUIPMENT ═══════════════════
+  async function loadEquipment() {
+    const templates = await apiFetch(`${SUPABASE_URL}/rest/v1/equipment_templates?service_line=eq.${encodeURIComponent(user.service_line)}&order=name`, { headers });
+    if (!templates) return;
+    const items = await apiFetch(`${SUPABASE_URL}/rest/v1/equipment_items?contractor_id=eq.${user.id}&select=*`, { headers });
+    if (!items) return;
+
+    const itemsByTmpl = {};
+    items.forEach(i => { itemsByTmpl[i.equipment_template_id] = i; });
+
+    const tmplIds = templates.map(t => t.id).join(',');
+    let allDocTypes = [];
+    if (tmplIds) {
+      allDocTypes = await apiFetch(`${SUPABASE_URL}/rest/v1/document_types?equipment_template_id=in.(${tmplIds})&select=*`, { headers }) || [];
+    }
+    const itemIds = items.map(i => i.id).join(',');
+    let uploadedDocs = [];
+    if (itemIds) {
+      uploadedDocs = await apiFetch(`${SUPABASE_URL}/rest/v1/documents?equipment_item_id=in.(${itemIds})&select=*`, { headers }) || [];
+    }
+    const docsByItem = {};
+    uploadedDocs.forEach(d => {
+      if (!docsByItem[d.equipment_item_id]) docsByItem[d.equipment_item_id] = [];
+      docsByItem[d.equipment_item_id].push(d);
+    });
+
+    const mandatory = templates.filter(t => t.is_mandatory);
+    document.getElementById('mandatoryList').innerHTML = mandatory.length
+      ? mandatory.map(t => equipCard(t, itemsByTmpl[t.id], true, allDocTypes.filter(dt => dt.equipment_template_id === t.id), itemsByTmpl[t.id] ? (docsByItem[itemsByTmpl[t.id].id] || []) : [])).join('')
+      : '<div class="empty">No mandatory equipment defined</div>';
+
+    const additional = items.filter(i => !i.equipment_template_id);
+    document.getElementById('additionalList').innerHTML = additional.map(i => customEquipCard(i)).join('');
+  }
+
+  function equipCard(template, item, mandatory, docTypes, docs) {
+    const badge = mandatory ? '<span class="badge mandatory">Required</span>' : '<span class="badge optional">Optional</span>';
+    if (item) {
+      const docsHtml = docTypes.map(dt => {
+        const uploaded = docs.find(d => d.document_type_id === dt.id);
+        const status = uploaded ? (uploaded.ai_status || 'pending') : 'missing';
+        const colors = { valid: '#6ee7b7', expired: '#fda4af', missing: '#94a3b8', pending: '#fbbf24' };
+        const dateInfo = uploaded ? `Issue: ${uploaded.issue_date || '—'} · Expiry: ${uploaded.expiry_date || '—'}` : 'Not uploaded';
+        return `<div class="doc-row">
+          <div style="flex:1"><div class="doc-name">${dt.document_name}</div><div class="doc-date">${dateInfo}</div></div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="color:${colors[status]||'#fbbf24'};font-size:11px;font-weight:bold">${status.toUpperCase()}</span>
+            <button class="upload-btn" onclick="uploadEquipDoc('${item.id}','${dt.id}')">↑ Upload</button>
+          </div>
+        </div>`;
+      }).join('');
+      return `<div class="card"><div class="card-header"><div class="card-title">${template.name}</div>${badge}</div>
+        <div class="sn-info">S/N: ${item.serial_number || '—'} · Model: ${item.model || '—'}</div>
+        ${docsHtml || '<div class="doc-name">No document types defined</div>'}</div>`;
+    }
+    return `<div class="card"><div class="card-header"><div class="card-title">${template.name}</div>${badge}</div>
+      <div class="sn-row">
+        <input type="text" placeholder="Serial number" id="sn_${template.id}">
+        <input type="text" placeholder="Model" id="model_${template.id}">
+        <button onclick="saveSerialNumber('${template.id}')">Save</button>
+      </div></div>`;
+  }
+
+  function customEquipCard(item) {
+    return `<div class="card"><div class="card-header"><div class="card-title">${item.model || 'Custom Equipment'}</div>
+      <span class="badge optional">Additional</span></div>
+      <div class="sn-info">S/N: ${item.serial_number || '—'}</div>
+      <button class="upload-btn" style="margin-top:10px" onclick="uploadEquipDoc('${item.id}',null)">↑ Upload Document</button></div>`;
+  }
+
+  async function saveSerialNumber(templateId) {
+    const sn = document.getElementById(`sn_${templateId}`).value;
+    const model = document.getElementById(`model_${templateId}`).value;
+    if (!sn) { alert('Please enter serial number'); return; }
+    await fetch(`${SUPABASE_URL}/rest/v1/equipment_items`, {
+      method: 'POST', headers: { ...headers, Prefer: 'return=minimal' },
+      body: JSON.stringify({ contractor_id: user.id, equipment_template_id: parseInt(templateId), serial_number: sn, model })
+    });
+    loadEquipment();
+  }
+
+  async function addEquipment() {
+    const name = document.getElementById('equipName').value;
+    const serial = document.getElementById('equipSerial').value;
+    const model = document.getElementById('equipModel').value;
+    if (!name || !serial) { alert('Please fill name and serial number'); return; }
+    await fetch(`${SUPABASE_URL}/rest/v1/equipment_items`, {
+      method: 'POST', headers: { ...headers, Prefer: 'return=minimal' },
+      body: JSON.stringify({ contractor_id: user.id, serial_number: serial, model: name })
+    });
+    closeModal('ctEquipModal');
+    loadEquipment();
+  }
+
+  // ═══════════════════ CONTRACTOR: PERSONNEL ═══════════════════
+  async function addPersonnel() {
+    const name = document.getElementById('persName').value;
+    const position = document.getElementById('persPosition').value;
+    const cert = document.getElementById('persCert').value;
+    if (!name) { alert('Please enter full name'); return; }
+    await fetch(`${SUPABASE_URL}/rest/v1/personnel`, {
+      method: 'POST', headers: { ...headers, Prefer: 'return=minimal' },
+      body: JSON.stringify({ contractor_id: user.id, full_name: name, position, certificate_number: cert })
+    });
+    closeModal('ctPersModal');
+    loadPersonnel();
+  }
+
+  async function loadPersonnel() {
+    const people = await apiFetch(`${SUPABASE_URL}/rest/v1/personnel?contractor_id=eq.${user.id}&select=*`, { headers });
+    if (!people) return;
+    const list = document.getElementById('personnelList');
+    if (!people.length) { list.innerHTML = '<div class="empty">No personnel added yet</div>'; return; }
+    list.innerHTML = people.map(p => `
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">${p.full_name}</div>
+          <span class="badge ${p.ai_status || 'pending'}">${p.ai_status || 'pending'}</span>
+        </div>
+        <div class="doc-name">${p.position || ''} · Cert: ${p.certificate_number || '—'}</div>
+        <div class="doc-date" style="margin-top:6px">Issue: ${p.issue_date || '—'} · Expiry: ${p.expiry_date || 'Not set'}</div>
+        <button class="upload-btn" style="margin-top:10px" onclick="uploadPersonnelDoc('${p.id}')">↑ Upload Certificate</button>
+      </div>`).join('');
+  }
+
+  // ═══════════════════ CONTRACTOR: FILE UPLOAD ═══════════════════
+  let currentUploadItemId = null, currentUploadDocTypeId = null, currentUploadType = null;
+
+  function uploadEquipDoc(itemId, docTypeId) {
+    currentUploadItemId = itemId; currentUploadDocTypeId = docTypeId; currentUploadType = 'equipment';
+    document.getElementById('fileInput').click();
+  }
+  function uploadPersonnelDoc(personId) {
+    currentUploadItemId = personId; currentUploadDocTypeId = null; currentUploadType = 'personnel';
+    document.getElementById('fileInput').click();
+  }
+
+  document.getElementById('fileInput').onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const bucket = currentUploadType === 'equipment' ? 'equipment-docs' : 'personnel-docs';
+    const path = `${currentUploadType}/${user.id}/${currentUploadItemId}/${Date.now()}_${file.name}`;
+    const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/${bucket}/${path}`, {
+      method: 'POST',
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}`, 'Content-Type': file.type },
+      body: file
+    });
+    if (uploadRes.ok) {
+      const fileUrl = `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${path}`;
+      if (currentUploadType === 'equipment') {
+        await fetch(`${SUPABASE_URL}/rest/v1/documents`, {
+          method: 'POST', headers: { ...headers, Prefer: 'return=minimal' },
+          body: JSON.stringify({ equipment_item_id: parseInt(currentUploadItemId), document_type_id: currentUploadDocTypeId ? parseInt(currentUploadDocTypeId) : null, file_url: fileUrl, ai_status: 'pending' })
+        });
+      } else {
+        await fetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${currentUploadItemId}`, {
+          method: 'PATCH', headers: { ...headers, Prefer: 'return=minimal' },
+          body: JSON.stringify({ file_url: fileUrl, ai_status: 'pending' })
+        });
+      }
+      alert('File uploaded successfully!');
+      currentUploadType === 'equipment' ? loadEquipment() : loadPersonnel();
+    } else {
+      alert('Upload failed. Please try again.');
+    }
+    e.target.value = '';
+  };
+
+  // ═══════════════════ ASSESSMENT ═══════════════════
+  let currentAssessmentId = null;
+
+  function showList() {
+    document.querySelectorAll('#assessment-page .view').forEach(v => v.classList.remove('active'));
+    document.getElementById('listView').classList.add('active');
+    loadAssessments();
+  }
+
+  function showCreate() {
+    document.querySelectorAll('#assessment-page .view').forEach(v => v.classList.remove('active'));
+    document.getElementById('createView').classList.add('active');
+    loadServiceLines();
+  }
+
+  async function loadServiceLines() {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/service_lines?select=name&order=name`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    const lines = await res.json();
+    const sel = document.getElementById('typeOfJob');
+    sel.innerHTML = '<option value="">Select type of job...</option>';
+    lines.forEach(l => sel.innerHTML += `<option value="${l.name}">${l.name}</option>`);
+  }
+
+  function showDetail(id) {
+    currentAssessmentId = id;
+    document.querySelectorAll('#assessment-page .view').forEach(v => v.classList.remove('active'));
+    document.getElementById('detailView').classList.add('active');
+    // reset detail tabs to Personnel
+    document.querySelectorAll('#detailTabs .tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('#detailTabs .tab')[0].classList.add('active');
+    document.getElementById('personnelTab').style.display = 'block';
+    document.getElementById('equipmentTab').style.display = 'none';
+    loadAssessmentDetail(id);
+  }
+
+  function showDetailTab(tab, el) {
+    document.querySelectorAll('#detailTabs .tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('equipmentTab').style.display = tab === 'equipment' ? 'block' : 'none';
+    document.getElementById('personnelTab').style.display  = tab === 'personnel'  ? 'block' : 'none';
+  }
+
+  async function loadAssessments() {
+    const assessments = await apiFetch(`${SUPABASE_URL}/rest/v1/assessments?contractor_id=eq.${user.id}&order=created_at.desc`, { headers });
+    if (!assessments) return;
+    const list = document.getElementById('assessmentList');
+    if (!assessments.length) { list.innerHTML = '<div class="empty">No assessments yet. Create your first one.</div>'; return; }
+    list.innerHTML = assessments.map(a => `
+      <div class="assessment-card" onclick="showDetail(${a.id})">
+        <div>
+          <div style="font-size:15px;font-weight:bold;">${a.field_well || 'Untitled'}</div>
+          <div style="font-size:12px;color:#64748b;margin-top:4px;">${a.type_of_job || ''} · ${a.date_of_issue || ''}</div>
+        </div>
+        <span class="badge ${a.status}">${a.status}</span>
+      </div>`).join('');
+  }
+
+  async function createAssessment() {
+    const requestId = document.getElementById('requestId').value;
+    const fieldWell  = document.getElementById('fieldWell').value;
+    const typeOfJob  = document.getElementById('typeOfJob').value;
+    const objective  = document.getElementById('objective').value;
+    if (!fieldWell || !typeOfJob) { alert('Please fill Field/Well and Type of Job'); return; }
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/assessments`, {
+      method: 'POST', headers: { ...headers, Prefer: 'return=representation' },
+      body: JSON.stringify({ contractor_id: user.id, field_well: fieldWell, type_of_job: typeOfJob, objective, sharepoint_request_id: requestId || null })
+    });
+    const data = await res.json();
+    showDetail(data[0].id);
+  }
+
+  async function loadAssessmentDetail(id) {
+    const data = await apiFetch(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${id}`, { headers });
+    if (!data) return;
+    const a = data[0];
+    document.getElementById('assessmentInfo').innerHTML = `
+      <h2 style="margin-bottom:12px;">${a.field_well}</h2>
+      <div style="font-size:13px;color:#94a3b8;margin-bottom:6px;">Type: ${a.type_of_job}</div>
+      <div style="font-size:13px;color:#94a3b8;margin-bottom:6px;">Objective: ${a.objective || '—'}</div>
+      <div style="font-size:13px;color:#94a3b8;">Date: ${a.date_of_issue} · Status: <span class="badge ${a.status}">${a.status}</span></div>`;
+    loadSelectedEquipment(id);
+    loadSelectedPersonnel(id);
+  }
+
+  async function loadSelectedEquipment(id) {
+    const items = await apiFetch(`${SUPABASE_URL}/rest/v1/assessment_equipment?assessment_id=eq.${id}&select=*,equipment_items(serial_number,model,equipment_template_id,equipment_templates(name))`, { headers });
+    if (!items) return;
+    const el = document.getElementById('selectedEquipment');
+    if (!items.length) { el.innerHTML = '<div class="empty">No equipment selected</div>'; return; }
+    el.innerHTML = items.map(i => `
+      <div class="item-row">
+        <div class="item-info">
+          <div class="item-name">${i.equipment_items?.equipment_templates?.name || i.equipment_items?.model || '—'}</div>
+          <div class="item-detail">S/N: ${i.equipment_items?.serial_number || '—'}</div>
+        </div>
+        <button class="btn-danger" onclick="removeEquipment(${i.id})">Remove</button>
+      </div>`).join('');
+  }
+
+  async function loadSelectedPersonnel(id) {
+    const items = await apiFetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?assessment_id=eq.${id}&select=*,personnel(full_name,position,certificate_number)`, { headers });
+    if (!items) return;
+    const el = document.getElementById('selectedPersonnel');
+    if (!items.length) { el.innerHTML = '<div class="empty">No personnel selected</div>'; return; }
+    el.innerHTML = items.map(i => `
+      <div class="item-row">
+        <div class="item-info">
+          <div class="item-name">${i.personnel?.full_name || '—'}</div>
+          <div class="item-detail">${i.personnel?.position || ''} · Cert: ${i.personnel?.certificate_number || '—'}</div>
+        </div>
+        <button class="btn-danger" onclick="removePersonnel(${i.id})">Remove</button>
+      </div>`).join('');
+  }
+
+  async function openEquipmentSelector() {
+    const [itemsRes, addedRes] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/equipment_items?contractor_id=eq.${user.id}&select=*,equipment_templates(name)`, { headers }),
+      fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment?assessment_id=eq.${currentAssessmentId}&select=equipment_item_id`, { headers })
+    ]);
+    const items = await itemsRes.json();
+    const added = await addedRes.json();
+    const addedIds = new Set(added.map(a => String(a.equipment_item_id)));
+    document.getElementById('equipSelectorList').innerHTML = items.map(i => {
+      const isAdded = addedIds.has(String(i.id));
+      return `<div class="checkbox-item" style="${isAdded ? 'opacity:0.4;pointer-events:none;' : ''}">
+        <input type="checkbox" id="eq_${i.id}" value="${i.id}" ${isAdded ? 'disabled' : ''}>
+        <label for="eq_${i.id}"><strong>${i.equipment_templates?.name || i.model || '—'}</strong>
+          <span style="color:#64748b;font-size:12px;"> · S/N: ${i.serial_number || '—'}</span>
+          ${isAdded ? '<span style="color:#64748b;font-size:11px;"> · Already added</span>' : ''}
+        </label></div>`;
+    }).join('') || '<div class="empty">No equipment in your database</div>';
+    document.getElementById('asEquipModal').style.display = 'flex';
+  }
+
+  async function addSelectedEquipment() {
+    const checked = [...document.querySelectorAll('#equipSelectorList input:checked')].map(c => c.value);
+    if (!checked.length) { alert('Select at least one item'); return; }
+    for (const itemId of checked) {
+      await fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment`, {
+        method: 'POST', headers: { ...headers, Prefer: 'return=minimal' },
+        body: JSON.stringify({ assessment_id: currentAssessmentId, equipment_item_id: parseInt(itemId) })
+      });
+    }
+    document.getElementById('asEquipModal').style.display = 'none';
+    loadSelectedEquipment(currentAssessmentId);
+  }
+
+  async function removeEquipment(id) {
+    await fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment?id=eq.${id}`, { method: 'DELETE', headers });
+    loadSelectedEquipment(currentAssessmentId);
+  }
+
+  async function openPersonnelSelector() {
+    const [peopleRes, addedRes] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/personnel?contractor_id=eq.${user.id}&select=*`, { headers }),
+      fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?assessment_id=eq.${currentAssessmentId}&select=personnel_id`, { headers })
+    ]);
+    const people = await peopleRes.json();
+    const added  = await addedRes.json();
+    const addedIds = new Set(added.map(a => String(a.personnel_id)));
+    document.getElementById('persSelectorList').innerHTML = people.map(p => {
+      const isAdded = addedIds.has(String(p.id));
+      return `<div class="checkbox-item" style="${isAdded ? 'opacity:0.4;pointer-events:none;' : ''}">
+        <input type="checkbox" id="per_${p.id}" value="${p.id}" ${isAdded ? 'disabled' : ''}>
+        <label for="per_${p.id}"><strong>${p.full_name}</strong>
+          <span style="color:#64748b;font-size:12px;"> · ${p.position || ''}</span>
+          ${isAdded ? '<span style="color:#64748b;font-size:11px;"> · Already added</span>' : ''}
+        </label></div>`;
+    }).join('') || '<div class="empty">No personnel in your database</div>';
+    document.getElementById('asPersModal').style.display = 'flex';
+  }
+
+  async function addSelectedPersonnel() {
+    const checked = [...document.querySelectorAll('#persSelectorList input:checked')].map(c => c.value);
+    if (!checked.length) { alert('Select at least one person'); return; }
+    for (const persId of checked) {
+      await fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel`, {
+        method: 'POST', headers: { ...headers, Prefer: 'return=minimal' },
+        body: JSON.stringify({ assessment_id: currentAssessmentId, personnel_id: parseInt(persId) })
+      });
+    }
+    document.getElementById('asPersModal').style.display = 'none';
+    loadSelectedPersonnel(currentAssessmentId);
+  }
+
+  async function removePersonnel(id) {
+    await fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?id=eq.${id}`, { method: 'DELETE', headers });
+    loadSelectedPersonnel(currentAssessmentId);
+  }
+
+  // ═══════════════════ LoR GENERATION ═══════════════════
+  function getExpiryStyle(dateStr) {
+    if (!dateStr || dateStr === '—' || dateStr === '-') return '';
+    const expiry = new Date(dateStr);
+    const today  = new Date(); today.setHours(0,0,0,0);
+    const in14   = new Date(today); in14.setDate(in14.getDate() + 14);
+    if (expiry < today)  return 'background:#ffcccc;font-weight:bold;';
+    if (expiry <= in14)  return 'background:#fff3cc;font-weight:bold;';
+    return '';
+  }
+
+  async function generateLoR() {
+    const aRes      = await fetch(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${currentAssessmentId}`, { headers });
+    const assessment = (await aRes.json())[0];
+    const eRes      = await fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment?assessment_id=eq.${currentAssessmentId}&select=*,equipment_items(serial_number,model,equipment_templates(name),documents(*,document_types(document_name)))`, { headers });
+    const equipment  = await eRes.json();
+    const pRes      = await fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?assessment_id=eq.${currentAssessmentId}&select=*,personnel(*)`, { headers });
+    const personnel  = await pRes.json();
+
+    const today = new Date(); today.setHours(0,0,0,0);
+    const todayStr = today.toLocaleDateString('en-GB');
+    const allExpiries = [];
+
+    let persRows = '', pNum = 1;
+    personnel.forEach(p => {
+      const per = p.personnel;
+      const expiry = per?.expiry_date || '';
+      if (expiry && expiry !== '—' && expiry !== '-') allExpiries.push(new Date(expiry));
+      persRows += `<tr><td>${pNum++}</td><td>${per?.full_name||'—'}</td><td>${per?.years_experience||'—'}</td><td>${per?.position||'—'}</td><td>${per?.certificate_number||'—'}</td><td style="${getExpiryStyle(expiry)}">${expiry||'—'}</td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td></tr>`;
+    });
+
+    let equipRows = '', eNum = 1;
+    equipment.forEach(e => {
+      const item = e.equipment_items;
+      const docs = item?.documents || [];
+      if (!docs.length) {
+        equipRows += `<tr><td>${eNum++}</td><td>${item?.serial_number||'—'}</td><td>${item?.equipment_templates?.name||item?.model||'—'}</td><td>—</td><td>—</td><td>—</td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td></tr>`;
+      } else {
+        docs.forEach(d => {
+          const expiry = d.expiry_date || '';
+          if (expiry && expiry !== '—' && expiry !== '-') allExpiries.push(new Date(expiry));
+          equipRows += `<tr><td>${eNum++}</td><td>${item?.serial_number||'—'}</td><td>${item?.equipment_templates?.name||item?.model||'—'}</td><td>${d.document_types?.document_name||'—'}</td><td>${d.issue_date||'—'}</td><td style="${getExpiryStyle(expiry)}">${expiry||'—'}</td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td></tr>`;
+        });
+      }
+    });
+
+    let validTillStr = '—', validTillBg = '#cccccc', validTillColor = '#333';
+    if (allExpiries.length) {
+      const validTill = new Date(Math.min(...allExpiries.map(d => d.getTime())));
+      validTillStr = validTill.toLocaleDateString('en-GB');
+      const in14 = new Date(today); in14.setDate(in14.getDate() + 14);
+      if (validTill < today)  { validTillBg = '#cc0000'; validTillColor = 'white'; }
+      else if (validTill <= in14) { validTillBg = '#ffaa00'; validTillColor = '#000'; }
+      else { validTillBg = '#00aa44'; validTillColor = 'white'; }
+    }
+
+    const lorHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>LoR - ${assessment.field_well}</title>
+<style>body{font-family:Arial,sans-serif;font-size:11px;margin:16px;color:#000}h1{font-size:15px;text-align:center;margin-bottom:2px;font-weight:bold}.subtitle{text-align:center;font-size:10px;color:#444;margin-bottom:10px}h2{font-size:11px;margin:12px 0 5px;background:#1e3a5f;color:white;padding:5px 10px}.info-table{width:100%;border-collapse:collapse;margin-bottom:10px}.info-table td{padding:4px 8px;border:1px solid #bbb;font-size:11px}.info-table .lbl{font-weight:bold;background:#e8edf2;width:130px}table{width:100%;border-collapse:collapse;margin-bottom:12px;table-layout:fixed}th{padding:5px 4px;text-align:left;font-size:10px;border:1px solid #bbb;word-wrap:break-word;word-break:break-word;white-space:normal;line-height:1.3}th.sp{background:#1e3a5f;color:white}th.as{background:#2d4a1e;color:white}td{padding:4px 4px;border:1px solid #ddd;font-size:10px;vertical-align:middle;word-wrap:break-word}tr:nth-child(even) td{background:#f7f9f7}tr:nth-child(even) td.ac{background:#eaf4e8}.ac{background:#f0f7ee}.divider{border-left:2px solid #2d4a1e!important}.footer{margin-top:16px;font-size:10px;color:#888;text-align:center;border-top:1px solid #ddd;padding-top:8px}@media print{body{margin:0;font-size:9px}.no-print{display:none}@page{size:A4 landscape;margin:8mm}th,td,.info-table td{font-size:8px;padding:3px 3px}h2{font-size:9px}}</style>
+</head><body>
+<h1>List of Readiness (LoR)</h1>
+<div class="subtitle">Attachment to SMS Process 07.01 "Service Provider Readiness Assessment Process"</div>
+<table class="info-table">
+  <tr><td class="lbl">Service Provider (SP)</td><td><strong>${user.company||'—'}</strong> · ${user.service_line||'—'}</td><td class="lbl">Date of Issue</td><td>${todayStr}</td><td class="lbl">Valid Till</td><td style="background:${validTillBg};color:${validTillColor};font-weight:bold;padding:3px 6px;">${validTillStr}</td></tr>
+  <tr><td class="lbl">Request ID</td><td><strong>${assessment.sharepoint_request_id||'—'}</strong></td><td class="lbl">Field / Well</td><td colspan="3">${assessment.field_well||'—'}</td></tr>
+  <tr><td class="lbl">Type of Job</td><td colspan="5">${assessment.type_of_job||'—'}</td></tr>
+  <tr><td class="lbl">Objective (Short Summary)</td><td colspan="5">${assessment.objective||'—'}</td></tr>
+  <tr><td class="lbl">Peer Review Team</td><td colspan="5" style="color:#999;font-style:italic;">To be filled by assessor</td></tr>
+</table>
+<table>
+  <colgroup><col style="width:3%"><col style="width:13%"><col style="width:9%"><col style="width:9%"><col style="width:10%"><col style="width:8%"><col style="width:10%"><col style="width:8%"><col style="width:8%"><col style="width:11%"><col style="width:11%"></colgroup>
+  <thead>
+    <tr><th class="sp" colspan="6">Manpower</th><th class="as divider" colspan="5">Assessor Section</th></tr>
+    <tr><th class="sp">#</th><th class="sp">Name</th><th class="sp">Yrs Exp O&G</th><th class="sp">Job Role</th><th class="sp">Document Name</th><th class="sp">Date of Expiry</th><th class="as divider">NAWCOD Unit</th><th class="as">Auditor</th><th class="as">Date of Audit</th><th class="as">Readiness for Operations</th><th class="as">Comment</th></tr>
+  </thead>
+  <tbody>
+    ${persRows||'<tr><td colspan="11" style="text-align:center;color:#999;">No personnel selected</td></tr>'}
+    <tr><th class="sp" colspan="6">Equipment</th><th class="as divider" colspan="5">Assessor Section</th></tr>
+    <tr><th class="sp">#</th><th class="sp">Equipment S/N</th><th class="sp">Equipment Description</th><th class="sp">Type of Integrity Check</th><th class="sp">Date of Certification</th><th class="sp">Date of Expiry</th><th class="as divider">NAWCOD Unit</th><th class="as">Auditor</th><th class="as">Date of Audit</th><th class="as">Readiness for Operations</th><th class="as">Comment</th></tr>
+    ${equipRows||'<tr><td colspan="11" style="text-align:center;color:#999;">No equipment selected</td></tr>'}
+  </tbody>
+</table>
+<div class="no-print" style="margin-top:12px;"><button onclick="window.print()" style="background:#1e3a5f;color:white;border:none;padding:7px 18px;border-radius:6px;cursor:pointer;font-size:11px;">🖨️ Print / Save as PDF</button></div>
+<div class="footer">Generated by RADP · ${todayStr}</div>
+</body></html>`;
+
+    const win = window.open('', '_blank');
+    win.document.write(lorHtml);
+    win.document.close();
+  }
+
+  // ═══════════════════ INIT ═══════════════════
+  const initialPage = window.location.pathname.includes('assessment') ? 'assessment' : 'contractor';
+  showPage(initialPage, true);
+</script>
+</body>
+</html>
