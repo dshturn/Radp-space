@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RADP</title>
   <style>
+    @view-transition { navigation: auto; }
+    ::view-transition-group(main-card) { animation-timing-function: cubic-bezier(0.22,1,0.36,1); animation-duration: 0.5s; }
+    ::view-transition-old(main-card) { animation: 0.2s ease both vt-fade-out; }
+    ::view-transition-new(main-card) { animation: 0.35s 0.1s cubic-bezier(0.22,1,0.36,1) both vt-fade-in; }
+    @keyframes vt-fade-out { to { opacity: 0; } }
+    @keyframes vt-fade-in  { from { opacity: 0; } }
+
     /* ── Reset ── */
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: Arial, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
@@ -63,7 +70,7 @@
     .badge.approved  { background: #064e3b; color: #6ee7b7; }
 
     /* ── Contractor page ── */
-    .welcome { background: #1e293b; border-radius: 10px; padding: 20px; margin-bottom: 24px; }
+    .welcome { background: #1e293b; border-radius: 10px; padding: 20px; margin-bottom: 24px; view-transition-name: main-card; position: relative; }
     .welcome h2 { font-size: 16px; margin-bottom: 6px; }
     .welcome p { font-size: 13px; color: #94a3b8; }
     .section { display: none; }
