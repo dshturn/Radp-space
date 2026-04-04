@@ -29,14 +29,11 @@
     (function() {
       const token = localStorage.getItem('radp_token');
       const user = JSON.parse(localStorage.getItem('radp_user') || '{}');
-      const linksEl = document.getElementById('navLinks');
-      const userEl = document.getElementById('navUser');
       if (token) {
-        linksEl.innerHTML = `<a href="/contractor.html">📋 Contractor</a><a href="/assessment.html">📄 Assessments</a>`;
-        userEl.textContent = user.email || '';
-      } else {
-        linksEl.innerHTML = `<a href="/index.html">🏠 Home</a>`;
+        window.location.replace('/contractor.html');
+        return;
       }
+      document.getElementById('navLinks').innerHTML = `<a href="/index.html">🏠 Home</a>`;
     })();
   </script>
   <div class="main">
