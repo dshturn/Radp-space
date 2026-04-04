@@ -23,28 +23,11 @@
     .msg { margin-top: 16px; padding: 12px; border-radius: 8px; font-size: 13px; display: none; }
     .msg.error { background: #4c0519; color: #fda4af; display: block; }
     .msg.warning { background: #422006; color: #fbbf24; display: block; }
-    a { color: #38bdf8; font-size: 13px; display: block; text-align: center; margin-top: 16px; }
+    a { color: #38bdf8; font-size: 13px; display: block; text-align: center; margin-top: 16px; text-decoration: none; transition: color 0.2s ease; }
+    a:hover { color: #7dd3fc; }
   </style>
 </head>
 <body>
-<nav>
-  <div class="nav-links" id="navLinks"></div>
-  <div class="nav-user" id="navUser"></div>
-</nav>
-<script>
-  (function() {
-    const token = localStorage.getItem('radp_token');
-    const user = JSON.parse(localStorage.getItem('radp_user') || '{}');
-    const linksEl = document.getElementById('navLinks');
-    const userEl = document.getElementById('navUser');
-    if (token) {
-      linksEl.innerHTML = `<a href="/contractor.html">📋 Contractor</a><a href="/assessment.html">📄 Assessments</a>`;
-      userEl.textContent = user.email || '';
-    } else {
-      linksEl.innerHTML = `<a href="/index.html">🏠 Home</a>`;
-    }
-  })();
-</script>
 <div class="main">
   <div class="card">
     <h1>RADP Login</h1>
@@ -56,6 +39,7 @@
     <button onclick="login()">Login</button>
     <div id="msg" class="msg"></div>
     <a href="/register.html">New contractor? Register here</a>
+    <a href="/index.html" style="color:#475569;margin-top:8px;">← Back to Home</a>
   </div>
 </div>
 

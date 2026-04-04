@@ -7,11 +7,6 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: Arial, sans-serif; background: #0f172a; color: #e2e8f0; display: flex; flex-direction: column; min-height: 100vh; }
-    nav { background: #1e293b; border-bottom: 1px solid #334155; padding: 10px 24px; min-height: 44px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
-    .nav-links { display: flex; gap: 16px; flex-wrap: wrap; }
-    nav a { color: #94a3b8; font-size: 13px; text-decoration: none; }
-    nav a:hover { color: #38bdf8; }
-    .nav-user { font-size: 13px; color: #64748b; }
     .main { flex: 1; display: flex; justify-content: center; align-items: center; padding: 24px; }
     .card { background: #1e293b; padding: 40px; border-radius: 12px; text-align: center; max-width: 400px; width: 100%; }
     h1 { color: #38bdf8; font-size: 24px; margin-bottom: 8px; }
@@ -21,20 +16,8 @@
   </style>
 </head>
 <body>
-  <nav>
-    <div class="nav-links" id="navLinks"></div>
-    <div class="nav-user" id="navUser"></div>
-  </nav>
   <script>
-    (function() {
-      const token = localStorage.getItem('radp_token');
-      const user = JSON.parse(localStorage.getItem('radp_user') || '{}');
-      if (token) {
-        window.location.replace('/contractor');
-        return;
-      }
-      document.getElementById('navLinks').innerHTML = `<a href="/index.html">🏠 Home</a>`;
-    })();
+    if (localStorage.getItem('radp_token')) window.location.replace('/contractor');
   </script>
   <div class="main">
     <div class="card">

@@ -23,10 +23,14 @@
 
     /* ── Keyframes ── */
     @keyframes fadeSlideUp  { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideInRight { from { opacity: 0; transform: translateX(36px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes slideInLeft  { from { opacity: 0; transform: translateX(-36px); } to { opacity: 1; transform: translateX(0); } }
     @keyframes modalIn      { from { opacity: 0; transform: scale(0.94) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
     @keyframes shimmer      { 0% { background-position: -500px 0; } 100% { background-position: 500px 0; } }
     @keyframes pulseBadge   { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
     @keyframes fadeIn       { from { opacity: 0; } to { opacity: 1; } }
+    .slide-in-right { animation: slideInRight 0.28s cubic-bezier(0.22,1,0.36,1) both; }
+    .slide-in-left  { animation: slideInLeft  0.28s cubic-bezier(0.22,1,0.36,1) both; }
 
     /* ── Top-level page routing ── */
     .page { display: none; }
@@ -309,11 +313,20 @@
   document.getElementById('companyInfo').textContent  = `${user.company || ''} · ${user.service_line || ''}`;
 
   // ═══════════════════ ROUTING ═══════════════════
+  const PAGE_ORDER = { contractor: 0, assessment: 1 };
+  let currentPage = null;
+
   function showPage(name, replace = false) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active', 'entering'));
+    const isInitial = currentPage === null;
+    const goingRight = !isInitial && PAGE_ORDER[name] > PAGE_ORDER[currentPage];
+    const animClass = isInitial ? 'entering' : (goingRight ? 'slide-in-right' : 'slide-in-left');
+    currentPage = name;
+
+    document.querySelectorAll('.page').forEach(p =>
+      p.classList.remove('active', 'entering', 'slide-in-right', 'slide-in-left'));
     const page = document.getElementById(name + '-page');
-    page.classList.add('active', 'entering');
-    page.addEventListener('animationend', () => page.classList.remove('entering'), { once: true });
+    page.classList.add('active', animClass);
+    page.addEventListener('animationend', () => page.classList.remove(animClass), { once: true });
 
     document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
     document.getElementById(name === 'contractor' ? 'navContractor' : 'navAssessment').classList.add('active');
@@ -329,11 +342,20 @@
   window.addEventListener('popstate', e => { if (e.state?.page) showPage(e.state.page, true); });
 
   // ═══════════════════ CONTRACTOR: TABS ═══════════════════
+  const CT_ORDER = { equipment: 0, personnel: 1 };
+
   function showContractorTab(tab, el) {
+    const current = document.querySelector('#contractor-page .section.active')?.id?.replace('ct-', '') || 'equipment';
+    const goingRight = CT_ORDER[tab] > CT_ORDER[current];
+    const animClass = goingRight ? 'slide-in-right' : 'slide-in-left';
+
     document.querySelectorAll('#contractor-page .tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('#contractor-page .section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('#contractor-page .section').forEach(s =>
+      s.classList.remove('active', 'slide-in-right', 'slide-in-left'));
     el.classList.add('active');
-    document.getElementById('ct-' + tab).classList.add('active');
+    const section = document.getElementById('ct-' + tab);
+    section.classList.add('active', animClass);
+    section.addEventListener('animationend', () => section.classList.remove(animClass), { once: true });
   }
 
   function openAddEquipment() { document.getElementById('ctEquipModal').classList.add('open'); }
@@ -545,11 +567,24 @@
     loadAssessmentDetail(id);
   }
 
+  const DT_ORDER = { personnel: 0, equipment: 1 };
+
   function showDetailTab(tab, el) {
+    const perVisible = document.getElementById('personnelTab').style.display !== 'none';
+    const current = perVisible ? 'personnel' : 'equipment';
+    const goingRight = DT_ORDER[tab] > DT_ORDER[current];
+    const animClass = goingRight ? 'slide-in-right' : 'slide-in-left';
+
     document.querySelectorAll('#detailTabs .tab').forEach(t => t.classList.remove('active'));
     el.classList.add('active');
-    document.getElementById('equipmentTab').style.display = tab === 'equipment' ? 'block' : 'none';
-    document.getElementById('personnelTab').style.display  = tab === 'personnel'  ? 'block' : 'none';
+
+    const target = tab === 'equipment' ? document.getElementById('equipmentTab') : document.getElementById('personnelTab');
+    const other  = tab === 'equipment' ? document.getElementById('personnelTab')  : document.getElementById('equipmentTab');
+    other.style.display = 'none';
+    target.style.display = 'block';
+    target.classList.remove('slide-in-right', 'slide-in-left');
+    target.classList.add(animClass);
+    target.addEventListener('animationend', () => target.classList.remove(animClass), { once: true });
   }
 
   async function loadAssessments() {
