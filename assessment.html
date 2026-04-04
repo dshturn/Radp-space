@@ -11,10 +11,10 @@
     .nav-links { display: flex; gap: 16px; flex-wrap: wrap; }
     nav a { color: #94a3b8; font-size: 13px; text-decoration: none; }
     nav a:hover { color: #38bdf8; }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
     .nav-user { font-size: 13px; color: #64748b; }
-    .header { background: #1e293b; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
-    .header h1 { color: #38bdf8; font-size: 18px; }
-    .header button { background: #334155; color: #e2e8f0; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
+    .nav-logout { background: #334155; color: #e2e8f0; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+    .nav-logout:hover { background: #475569; }
     .container { padding: 24px; max-width: 900px; margin: 0 auto; }
     .card { background: #1e293b; border-radius: 10px; padding: 20px; margin-bottom: 16px; }
     .card h2 { color: #38bdf8; font-size: 16px; margin-bottom: 16px; }
@@ -51,27 +51,18 @@
 
 <nav>
   <div class="nav-links" id="navLinks"></div>
-  <div class="nav-user" id="navUser"></div>
+  <div class="nav-right">
+    <span class="nav-user" id="navUser"></span>
+    <button class="nav-logout" onclick="logout()">Logout</button>
+  </div>
 </nav>
 <script>
   (function() {
-    const token = localStorage.getItem('radp_token');
     const user = JSON.parse(localStorage.getItem('radp_user') || '{}');
-    const linksEl = document.getElementById('navLinks');
-    const userEl = document.getElementById('navUser');
-    if (token) {
-      linksEl.innerHTML = `<a href="/index.html">🏠 Home</a><a href="/contractor.html">📋 Contractor</a><a href="/assessment.html">📄 Assessments</a><a href="/admin.html">⚙️ Admin</a>`;
-      userEl.textContent = user.email || '';
-    } else {
-      linksEl.innerHTML = `<a href="/index.html">🏠 Home</a>`;
-    }
+    document.getElementById('navLinks').innerHTML = `<a href="/contractor.html">📋 Contractor</a><a href="/assessment.html">📄 Assessments</a>`;
+    document.getElementById('navUser').textContent = user.email || '';
   })();
 </script>
-
-<div class="header">
-  <h1>Assessments</h1>
-  <button onclick="logout()">Logout</button>
-</div>
 
 <div class="container">
   <div id="listView" class="view active">
