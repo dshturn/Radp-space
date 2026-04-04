@@ -13,7 +13,8 @@
     @keyframes vt-fade-in  { from { opacity: 0; } }
 
     /* ── Reset ── */
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+    input, textarea, select { user-select: text; -webkit-user-select: text; }
     body { font-family: Arial, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; overflow-x: hidden; }
 
     /* ── Nav ── */
