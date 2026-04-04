@@ -7,9 +7,11 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: Arial, sans-serif; background: #0f172a; color: #e2e8f0; display: flex; flex-direction: column; min-height: 100vh; }
-    nav { background: #1e293b; border-bottom: 1px solid #334155; padding: 10px 24px; display: flex; gap: 16px; flex-wrap: wrap; }
+    nav { background: #1e293b; border-bottom: 1px solid #334155; padding: 10px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .nav-links { display: flex; gap: 16px; flex-wrap: wrap; }
     nav a { color: #94a3b8; font-size: 13px; text-decoration: none; }
     nav a:hover { color: #38bdf8; }
+    .nav-user { font-size: 13px; color: #64748b; }
     .main { flex: 1; display: flex; justify-content: center; align-items: center; padding: 24px; }
     .card { background: #1e293b; padding: 40px; border-radius: 12px; text-align: center; max-width: 400px; width: 100%; }
     h1 { color: #38bdf8; font-size: 24px; margin-bottom: 8px; }
@@ -20,13 +22,23 @@
 </head>
 <body>
   <nav>
-    <a href="/index.html">🏠 Home</a>
-    <a href="/login.html">🔐 Login</a>
-    <a href="/register.html">📝 Register</a>
-    <a href="/contractor.html">📋 Contractor</a>
-    <a href="/assessment.html">📄 Assessments</a>
-    <a href="/admin.html">⚙️ Admin</a>
+    <div class="nav-links" id="navLinks"></div>
+    <div class="nav-user" id="navUser"></div>
   </nav>
+  <script>
+    (function() {
+      const token = localStorage.getItem('radp_token');
+      const user = JSON.parse(localStorage.getItem('radp_user') || '{}');
+      const linksEl = document.getElementById('navLinks');
+      const userEl = document.getElementById('navUser');
+      if (token) {
+        linksEl.innerHTML = `<a href="/index.html">🏠 Home</a><a href="/contractor.html">📋 Contractor</a><a href="/assessment.html">📄 Assessments</a><a href="/admin.html">⚙️ Admin</a>`;
+        userEl.textContent = user.email || '';
+      } else {
+        linksEl.innerHTML = `<a href="/index.html">🏠 Home</a>`;
+      }
+    })();
+  </script>
   <div class="main">
     <div class="card">
       <h1>RADP</h1>
