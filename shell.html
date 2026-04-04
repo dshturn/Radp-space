@@ -19,7 +19,7 @@
     /* ── Nav ── */
     nav { background: #1e293b; border-bottom: 1px solid #334155; padding: 10px 24px; min-height: 44px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
     .nav-links { display: flex; gap: 16px; flex-wrap: wrap; }
-    nav a { color: #94a3b8; font-size: 13px; text-decoration: none; cursor: pointer; transition: color 0.2s ease; position: relative; }
+    nav a { color: #94a3b8; font-size: 13px; text-decoration: none; cursor: pointer; transition: color 0.2s ease; position: relative; user-select: none; -webkit-user-select: none; }
     nav a::after { content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 2px; background: #38bdf8; border-radius: 2px; transition: width 0.22s ease; }
     nav a:hover::after, nav a.active::after { width: 100%; }
     nav a:hover, nav a.active { color: #38bdf8; }
@@ -140,8 +140,8 @@
 
 <nav>
   <div class="nav-links">
-    <a onclick="showPage('contractor')" id="navContractor">📋 Contractor</a>
-    <a onclick="showPage('assessment')" id="navAssessment">📄 Assessments</a>
+    <a href="/contractor" onclick="showPage('contractor');return false;" id="navContractor">📋 Contractor</a>
+    <a href="/assessment" onclick="showPage('assessment');return false;" id="navAssessment">📄 Assessments</a>
   </div>
   <div class="nav-right">
     <span class="nav-user" id="navUser"></span>
