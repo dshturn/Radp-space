@@ -335,7 +335,7 @@
           <span style="color:#64748b;font-size:12px;"> · ${p.position || ''}</span>
           ${isAdded ? '<span style="color:#64748b;font-size:11px;"> · Already added</span>' : ''}
         </label>
-      </div>`).join('') || '<div class="empty">No personnel in your database</div>';
+      </div>`}).join('') || '<div class="empty">No personnel in your database</div>';
     document.getElementById('persModal').style.display = 'flex';
   }
 
