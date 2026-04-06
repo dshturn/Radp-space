@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RADP - Readiness Assessment Digital Platform</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#1e293b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="RADP">
+  <link rel="apple-touch-icon" href="/icon.svg">
   <style>
     @view-transition { navigation: auto; }
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
@@ -14,6 +19,8 @@
     p { color: #94a3b8; margin-bottom: 24px; }
     .btn { display: block; background: #0284c7; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; margin: 8px 0; transition: background 0.2s ease, transform 0.15s ease; }
     .btn:hover { background: #0369a1; transform: translateY(-1px); }
+    .btn-install { display: none; background: transparent; color: #38bdf8; padding: 12px 24px; border-radius: 8px; text-decoration: none; margin: 16px 0 0; border: 1px solid #334155; font-size: 14px; cursor: pointer; width: 100%; transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease; }
+    .btn-install:hover { background: rgba(56,189,248,0.08); border-color: #38bdf8; transform: translateY(-1px); }
     ::view-transition-group(main-card) { animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); animation-duration: 0.5s; }
     ::view-transition-old(main-card) { animation: 0.25s ease both fade-out; }
     ::view-transition-new(main-card) { animation: 0.35s 0.1s cubic-bezier(0.22,1,0.36,1) both fade-in; }
@@ -31,7 +38,28 @@
       <p>Readiness Assessment Digital Platform</p>
       <a href="/login.html" class="btn">Contractor Portal</a>
       <a href="/admin.html" class="btn">Admin Dashboard</a>
+      <button class="btn-install" id="installBtn" onclick="installApp()">⬇ Install as App</button>
     </div>
   </div>
+  <script>
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('installBtn').style.display = 'block';
+    });
+    window.addEventListener('appinstalled', () => {
+      document.getElementById('installBtn').style.display = 'none';
+    });
+    function installApp() {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(() => {
+        deferredPrompt = null;
+        document.getElementById('installBtn').style.display = 'none';
+      });
+    }
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+  </script>
 </body>
 </html>

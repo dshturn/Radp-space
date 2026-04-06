@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RADP</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#1e293b">
+  <link rel="apple-touch-icon" href="/icon.svg">
   <style>
     @view-transition { navigation: auto; }
     ::view-transition-group(main-card) { animation-timing-function: cubic-bezier(0.22,1,0.36,1); animation-duration: 0.5s; }
@@ -832,6 +835,8 @@
     win.document.write(lorHtml);
     win.document.close();
   }
+
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
 
   // ═══════════════════ INIT ═══════════════════
   const initialPage = window.location.pathname.includes('assessment') ? 'assessment' : 'contractor';

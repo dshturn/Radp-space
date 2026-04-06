@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RADP - Login</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#1e293b">
+  <link rel="apple-touch-icon" href="/icon.svg">
   <style>
     @view-transition { navigation: auto; }
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
@@ -46,6 +49,7 @@
 </div>
 
 <script>
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
   const SUPABASE_URL = 'https://fslleuedqlxpjnerruzt.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzbGxldWVkcWx4cGpuZXJydXp0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDk5MzExOSwiZXhwIjoyMDkwNTY5MTE5fQ.oY_dihwgMimesUsvHSuKNoJEXTb3c7vuqWKzeH2pwg4';
 
