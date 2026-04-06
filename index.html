@@ -60,6 +60,17 @@
       });
     }
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+
+    // Request fullscreen on first interaction (fallback for browsers needing a gesture)
+    const isStandalone = window.matchMedia('(display-mode: fullscreen)').matches
+                      || window.matchMedia('(display-mode: standalone)').matches
+                      || window.navigator.standalone;
+    if (isStandalone && document.documentElement.requestFullscreen) {
+      document.addEventListener('click', function enterFS() {
+        document.documentElement.requestFullscreen().catch(() => {});
+        document.removeEventListener('click', enterFS);
+      }, { once: true });
+    }
   </script>
 </body>
 </html>
