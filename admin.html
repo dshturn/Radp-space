@@ -5,29 +5,56 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RADP - Admin</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Arial, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+    @view-transition { navigation: auto; }
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+    input { user-select: text; -webkit-user-select: text; }
+    body { font-family: Arial, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; overflow-x: hidden; }
+
+    /* --- keyframes --- */
+    @keyframes fadeSlideUp  { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+    @keyframes fadeScaleIn  { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+    @keyframes fadeScaleOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.96); } }
+    @keyframes slideInRight { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: none; } }
+    @keyframes vt-fade-out  { to { opacity: 0; } }
+    @keyframes vt-fade-in   { from { opacity: 0; } }
+
+    /* --- view-transition morph (index → admin) --- */
+    .login-box { view-transition-name: main-card; position: relative; }
+    ::view-transition-group(main-card) { animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); animation-duration: 0.5s; }
+    ::view-transition-old(main-card)   { animation: 0.25s ease both vt-fade-out; }
+    ::view-transition-new(main-card)   { animation: 0.35s 0.1s cubic-bezier(0.22,1,0.36,1) both vt-fade-in; }
+
+    /* --- animated view switching --- */
+    .anim-fade-in  { animation: fadeScaleIn  0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
+    .anim-fade-out { animation: fadeScaleOut 0.22s ease both; }
+    .anim-slide-in { animation: slideInRight 0.4s  cubic-bezier(0.22, 1, 0.36, 1) both; }
+
     .header { background: #1e293b; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
     .header h1 { color: #38bdf8; font-size: 18px; }
-    .header button { background: #334155; color: #e2e8f0; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
+    .header button { background: #334155; color: #e2e8f0; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: background 0.2s; }
+    .header button:hover { background: #475569; }
     .container { padding: 24px; max-width: 900px; margin: 0 auto; }
     .section-title { font-size: 16px; color: #94a3b8; margin-bottom: 16px; margin-top: 24px; }
-    .card { background: #1e293b; border-radius: 10px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .card { background: #1e293b; border-radius: 10px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; animation: fadeSlideUp 0.35s cubic-bezier(0.22,1,0.36,1) both; }
     .info { flex: 1; }
     .info .name { font-size: 15px; font-weight: bold; }
     .info .detail { font-size: 12px; color: #94a3b8; margin-top: 4px; }
     .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; }
-    .badge.pending { background: #422006; color: #fbbf24; }
+    .badge.pending  { background: #422006; color: #fbbf24; }
     .badge.approved { background: #064e3b; color: #6ee7b7; }
     .badge.rejected { background: #4c0519; color: #fda4af; }
     .actions { display: flex; gap: 8px; align-items: center; }
-    .btn-approve { background: #059669; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; }
-    .btn-reject { background: #dc2626; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; }
-    .btn-delete { background: #7f1d1d; color: #fca5a5; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+    .btn-approve { background: #059669; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: background 0.2s, transform 0.15s; }
+    .btn-approve:hover { background: #047857; transform: translateY(-1px); }
+    .btn-reject  { background: #dc2626; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: background 0.2s, transform 0.15s; }
+    .btn-reject:hover  { background: #b91c1c; transform: translateY(-1px); }
+    .btn-delete  { background: #7f1d1d; color: #fca5a5; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: background 0.2s, transform 0.15s; }
+    .btn-delete:hover  { background: #991b1b; transform: translateY(-1px); }
     .login-box { background: #1e293b; padding: 32px; border-radius: 12px; max-width: 360px; margin: 80px auto; }
     .login-box h2 { color: #38bdf8; margin-bottom: 20px; }
     input { width: 100%; padding: 10px 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #e2e8f0; font-size: 14px; margin-bottom: 12px; }
-    .btn-login { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; }
+    .btn-login { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; transition: background 0.2s, transform 0.15s; }
+    .btn-login:hover { background: #0369a1; transform: translateY(-1px); }
     .empty { color: #475569; text-align: center; padding: 32px; }
   </style>
 </head>
@@ -72,9 +99,17 @@
     const data = await res.json();
     if (data.access_token) {
       adminToken = data.access_token;
-      document.getElementById('loginView').style.display = 'none';
-      document.getElementById('adminView').style.display = 'block';
-      loadUsers();
+      const loginView = document.getElementById('loginView');
+      const adminView = document.getElementById('adminView');
+      loginView.classList.add('anim-fade-out');
+      loginView.addEventListener('animationend', () => {
+        loginView.style.display = 'none';
+        loginView.classList.remove('anim-fade-out');
+        adminView.style.display = 'block';
+        adminView.classList.add('anim-slide-in');
+        adminView.addEventListener('animationend', () => adminView.classList.remove('anim-slide-in'), { once: true });
+        loadUsers();
+      }, { once: true });
     } else {
       document.getElementById('loginMsg').textContent = 'Invalid credentials';
     }
@@ -89,6 +124,7 @@
     const approved = users.filter(u => u.status === 'approved');
     document.getElementById('pendingList').innerHTML = pending.length ? pending.map(userCard).join('') : '<div class="empty">No pending users</div>';
     document.getElementById('approvedList').innerHTML = approved.length ? approved.map(userCard).join('') : '<div class="empty">No approved users</div>';
+    document.querySelectorAll('.card').forEach((el, i) => { el.style.animationDelay = `${i * 50}ms`; });
   }
 
   function userCard(u) {
@@ -130,8 +166,16 @@
 
   function logout() {
     adminToken = '';
-    document.getElementById('loginView').style.display = 'block';
-    document.getElementById('adminView').style.display = 'none';
+    const adminView = document.getElementById('adminView');
+    const loginView = document.getElementById('loginView');
+    adminView.classList.add('anim-fade-out');
+    adminView.addEventListener('animationend', () => {
+      adminView.style.display = 'none';
+      adminView.classList.remove('anim-fade-out');
+      loginView.style.display = 'block';
+      loginView.classList.add('anim-fade-in');
+      loginView.addEventListener('animationend', () => loginView.classList.remove('anim-fade-in'), { once: true });
+    }, { once: true });
   }
 </script>
 </body>
