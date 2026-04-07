@@ -883,7 +883,10 @@
 
     return `<div class="app-card">
       <div class="card-header">
-        <div class="card-title">${name}</div>
+        <div>
+          <div class="card-title">${name}</div>
+          <div class="doc-name" style="margin-top:4px;">S/N: ${item.serial_number || '—'}</div>
+        </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           ${alertBadge}
           <button class="btn-toggle" onclick="toggleCard(this)" title="Expand">▾</button>
@@ -891,7 +894,6 @@
         </div>
       </div>
       <div class="card-body">
-        <div class="sn-info" style="padding-top:8px;">S/N: ${item.serial_number || '—'}</div>
         ${docsHtml}
         <button class="upload-btn" style="margin-top:10px;" onclick="openAddDoc(${item.id})">+ Add Document</button>
       </div>
