@@ -835,11 +835,13 @@
       ? `<span class="badge" style="background:#1e3a5f;color:#93c5fd;">Recommended</span>`
       : '';
 
+    const _today = new Date(); _today.setHours(0,0,0,0);
+    const _in30  = new Date(_today); _in30.setDate(_in30.getDate() + 30);
+
     const docsHtml = docs.length ? docs.map(d => {
       const typeName = d.doc_type_name || '—';
       const expiry   = d.expiry_date;
-      const today    = new Date(); today.setHours(0,0,0,0);
-      const in30     = new Date(today); in30.setDate(in30.getDate() + 30);
+      const today = _today, in30 = _in30;
       let statusColor = '#6ee7b7', statusText = 'VALID';
       if (expiry) {
         const exp = new Date(expiry);
