@@ -344,11 +344,14 @@
         </div>
         <label>Type of Job</label>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-          <span id="typeOfJobDisplay" style="font-size:14px;color:#e2e8f0;flex:1;"></span>
-          <button type="button" onclick="toggleTypeOfJobEdit()" style="background:#334155;color:#e2e8f0;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:13px;white-space:nowrap;">Change</button>
+          <span id="typeOfJobDisplay" style="width:100%;padding:10px 12px;background:#0f172a;border:1px solid #334155;border-radius:8px;color:#e2e8f0;font-size:14px;flex:1;"></span>
+          <button type="button" onclick="toggleTypeOfJobEdit()" style="background:#334155;color:#e2e8f0;border:none;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:13px;white-space:nowrap;">Change</button>
         </div>
-        <select id="typeOfJob" style="display:none;margin-bottom:14px;"><option value="">Select type of job...</option></select>
-        <label for="objective">Objective</label>
+        <select id="typeOfJob" style="display:none;margin-bottom:14px;" onchange="onTypeOfJobChange(this)"><option value="">Select type of job...</option></select>
+        <div id="typeOfJobCustomWrap" style="display:none;">
+          <input type="text" id="typeOfJobCustom" placeholder="Enter custom type of job" autocomplete="off">
+        </div>
+        <label for="objective">Objective (optional)</label>
         <textarea id="objective" placeholder="Short summary of the job objective"></textarea>
         <button class="btn-primary" onclick="createAssessment()">Create Assessment</button>
         <button style="margin-left:8px;background:#334155;color:#e2e8f0;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;" onclick="showList()">Cancel</button>
@@ -1317,9 +1320,11 @@
     const lines = await res.json();
     const sel   = document.getElementById('typeOfJob');
     sel.innerHTML = '<option value="">Select type of job...</option>'
-      + lines.map(l => `<option value="${l.name}"${l.name === u.service_line ? ' selected' : ''}>${l.name}</option>`).join('');
+      + lines.map(l => `<option value="${l.name}"${l.name === u.service_line ? ' selected' : ''}>${l.name}</option>`).join('')
+      + '<option value="__custom__">+ Add custom type of job...</option>';
     document.getElementById('typeOfJobDisplay').textContent = u.service_line || '—';
     document.getElementById('typeOfJob').style.display = 'none';
+    document.getElementById('typeOfJobCustomWrap').style.display = 'none';
 
     const fwRes  = await apiFetch(`${SUPABASE_URL}/rest/v1/assessments?select=field_well&contractor_id=eq.${u.id}&field_well=not.is.null&order=field_well`, { headers: getHeaders() });
     const unique = [...new Set((fwRes || []).map(r => r.field_well).filter(Boolean))];
@@ -1336,10 +1341,19 @@
     if (sel.value === '__new__') document.getElementById('fieldWellNew').focus();
   }
 
+  function onTypeOfJobChange(sel) {
+    const isCustom = sel.value === '__custom__';
+    document.getElementById('typeOfJobCustomWrap').style.display = isCustom ? 'block' : 'none';
+    if (isCustom) document.getElementById('typeOfJobCustom').focus();
+  }
+
   function toggleTypeOfJobEdit() {
     const sel = document.getElementById('typeOfJob');
     const visible = sel.style.display !== 'none';
     sel.style.display = visible ? 'none' : 'block';
+    if (visible) {
+      document.getElementById('typeOfJobCustomWrap').style.display = 'none';
+    }
   }
   function showDetail(id) {
     currentAssessmentId = id;
@@ -1389,9 +1403,14 @@
       ? document.getElementById('fieldWellNew').value.trim()
       : fwSel.value;
     const typeOfJobSel = document.getElementById('typeOfJob');
-    const typeOfJob  = typeOfJobSel.style.display !== 'none' && typeOfJobSel.value
-      ? typeOfJobSel.value
-      : document.getElementById('typeOfJobDisplay').textContent;
+    let typeOfJob;
+    if (typeOfJobSel.style.display !== 'none' && typeOfJobSel.value) {
+      typeOfJob = typeOfJobSel.value === '__custom__'
+        ? document.getElementById('typeOfJobCustom').value.trim()
+        : typeOfJobSel.value;
+    } else {
+      typeOfJob = document.getElementById('typeOfJobDisplay').textContent;
+    }
     const objective  = document.getElementById('objective').value;
     if (!fieldWell) { alert('Please select or enter a Field / Well'); return; }
     if (!typeOfJob || typeOfJob === '—') { alert('Please select a Type of Job'); return; }
