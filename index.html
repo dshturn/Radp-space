@@ -1357,7 +1357,7 @@
       const vp = page.getViewport({ scale: _pdfScale });
       const canvas = document.createElement('canvas');
       canvas.width = vp.width; canvas.height = vp.height;
-      canvas.style.cssText = 'display:block;width:100%;margin-bottom:4px;';
+      canvas.style.cssText = 'display:block;margin:0 auto 4px;';
       container.appendChild(canvas);
       await page.render({ canvasContext: canvas.getContext('2d', { willReadFrequently: true }), viewport: vp }).promise;
     }
