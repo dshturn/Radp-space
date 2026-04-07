@@ -313,11 +313,17 @@
       <button class="tab" onclick="showContractorTab('equipment', this)">Equipment</button>
     </div>
     <div id="ct-personnel" class="ct-section active">
-      <button class="add-btn" onclick="openAddPersonnel()">+ Add Personnel</button>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
+        <button class="add-btn" style="margin-bottom:0;" onclick="openAddPersonnel()">+ Add Personnel</button>
+        <input type="text" id="personnelSearch" placeholder="Search personnel…" oninput="filterCards('personnelList',this.value)" style="flex:1;margin-bottom:0;padding:8px 12px;font-size:13px;">
+      </div>
       <div id="personnelList"><div class="skel-card"><div class="skeleton skel-line medium"></div><div class="skeleton skel-line short"></div></div></div>
     </div>
     <div id="ct-equipment" class="ct-section">
-      <button class="add-btn" onclick="openAddEquipment()">+ Add Equipment</button>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
+        <button class="add-btn" style="margin-bottom:0;" onclick="openAddEquipment()">+ Add Equipment</button>
+        <input type="text" id="equipmentSearch" placeholder="Search equipment…" oninput="filterCards('equipmentList',this.value)" style="flex:1;margin-bottom:0;padding:8px 12px;font-size:13px;">
+      </div>
       <div id="equipmentList"><div class="skel-card"><div class="skeleton skel-line medium"></div><div class="skeleton skel-line full"></div><div class="skeleton skel-line short"></div></div></div>
     </div>
   </div>
@@ -572,7 +578,8 @@
 <!-- Assessment: Equipment Selector Modal -->
 <div id="asEquipModal" class="modal">
   <div class="modal-scroll">
-    <h3 style="color:#38bdf8;margin-bottom:16px;">Select Equipment</h3>
+    <h3 style="color:#38bdf8;margin-bottom:12px;">Select Equipment</h3>
+    <input type="text" placeholder="Search…" oninput="filterCheckboxList('equipSelectorList',this.value)" style="margin-bottom:12px;padding:8px 12px;font-size:13px;">
     <div id="equipSelectorList"></div>
     <div style="display:flex;gap:8px;margin-top:16px;">
       <button class="btn-primary" onclick="addSelectedEquipment()">Add Selected</button>
@@ -584,7 +591,8 @@
 <!-- Assessment: Personnel Selector Modal -->
 <div id="asPersModal" class="modal">
   <div class="modal-scroll">
-    <h3 style="color:#38bdf8;margin-bottom:16px;">Select Personnel</h3>
+    <h3 style="color:#38bdf8;margin-bottom:12px;">Select Personnel</h3>
+    <input type="text" placeholder="Search…" oninput="filterCheckboxList('persSelectorList',this.value)" style="margin-bottom:12px;padding:8px 12px;font-size:13px;">
     <div id="persSelectorList"></div>
     <div style="display:flex;gap:8px;margin-top:16px;">
       <button class="btn-primary" onclick="addSelectedPersonnel()">Add Selected</button>
@@ -1430,6 +1438,20 @@
       });
     });
   })();
+
+  function filterCards(listId, query) {
+    const q = query.toLowerCase();
+    document.querySelectorAll(`#${listId} .app-card`).forEach(card => {
+      card.style.display = card.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+  }
+
+  function filterCheckboxList(listId, query) {
+    const q = query.toLowerCase();
+    document.querySelectorAll(`#${listId} .checkbox-item`).forEach(item => {
+      item.style.display = item.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+  }
 
   function toggleCard(btn) {
     btn.closest('.app-card').classList.toggle('expanded');
