@@ -505,6 +505,10 @@
       <input type="date" id="persDocIssueDate" style="margin-bottom:12px;">
     </div>
     <div id="persDocAutoExpiryNote" style="display:none;font-size:12px;color:#64748b;margin-bottom:12px;">ℹ Expiry auto-calculated: 2 years from issue date</div>
+    <div id="persDocYearsExpWrap" style="display:none;">
+      <label for="persDocYearsExp">Years of Experience in O&G</label>
+      <input type="number" id="persDocYearsExp" placeholder="e.g. 5" min="0" max="60" style="margin-bottom:12px;">
+    </div>
     <div id="persDocExpiryDateWrap">
       <label for="persDocExpiryDate">Expiry Date</label>
       <input type="date" id="persDocExpiryDate" style="margin-bottom:12px;">
@@ -1123,7 +1127,7 @@
       <div class="card-header">
         <div>
           <div class="card-title">${p.full_name}</div>
-          <div class="doc-name" style="margin-top:4px;">${p.position || ''} · ID: ${p.national_id || '—'}</div>
+          <div class="doc-name" style="margin-top:4px;">${p.position || ''} · ID: ${p.national_id || '—'}${p.years_experience != null ? ' · ' + p.years_experience + ' yrs exp' : ''}</div>
         </div>
         <button class="btn-danger" onclick="deletePersRecord(${p.id})" title="Delete">🗑</button>
       </div>
@@ -1141,9 +1145,11 @@
     document.getElementById('persDocFileInput').value      = '';
     document.getElementById('persDocFileName').textContent = '';
     document.getElementById('persDocFileBtn').style.borderColor = '';
-    document.getElementById('persDocIssueDateWrap').style.display  = cfg.noIssue  ? 'none' : 'block';
-    document.getElementById('persDocExpiryDateWrap').style.display = cfg.noExpiry ? 'none' : 'block';
+    document.getElementById('persDocIssueDateWrap').style.display  = cfg.noIssue    ? 'none' : 'block';
+    document.getElementById('persDocExpiryDateWrap').style.display = cfg.noExpiry   ? 'none' : 'block';
     document.getElementById('persDocAutoExpiryNote').style.display = cfg.autoExpiry ? 'block' : 'none';
+    document.getElementById('persDocYearsExpWrap').style.display   = typeName === 'CV' ? 'block' : 'none';
+    document.getElementById('persDocYearsExp').value = '';
     document.getElementById('addPersDocModal').classList.add('open');
   }
 
@@ -1175,6 +1181,16 @@
       method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal' },
       body: JSON.stringify({ personnel_id: parseInt(personId), doc_type_name: typeName, is_mandatory: mandatory, file_url: fileUrl, issue_date: issueDate || null, expiry_date: expDate || null })
     });
+    // If CV, also save years of experience onto the personnel record
+    if (typeName === 'CV') {
+      const yrs = parseInt(document.getElementById('persDocYearsExp').value);
+      if (!isNaN(yrs)) {
+        await fetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${personId}`, {
+          method: 'PATCH', headers: { ...getHeaders(), Prefer: 'return=minimal' },
+          body: JSON.stringify({ years_experience: yrs })
+        });
+      }
+    }
     closeModal('addPersDocModal');
     loadPersonnel();
   }
