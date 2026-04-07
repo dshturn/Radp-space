@@ -33,8 +33,8 @@
     .slide-in-left  { animation: slideInLeft  0.28s cubic-bezier(0.22,1,0.36,1) both; }
 
     /* === Nav === */
-    #mainNav { background: #1e293b; border-bottom: 1px solid #334155; padding: 10px 24px; min-height: 44px; display: none; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
-    .nav-links { display: flex; gap: 16px; flex-wrap: wrap; }
+    #mainNav { background: #1e293b; border-bottom: 1px solid #334155; padding: 10px 24px; min-height: 44px; display: none; justify-content: flex-end; align-items: center; gap: 12px; position: relative; }
+    .nav-links { display: flex; gap: 16px; flex-wrap: wrap; position: absolute; left: 50%; transform: translateX(-50%); }
     #mainNav a { color: #94a3b8; font-size: 13px; text-decoration: none; cursor: pointer; transition: color 0.2s ease; position: relative; user-select: none; -webkit-user-select: none; }
     #mainNav a::after { content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 2px; background: #38bdf8; border-radius: 2px; transition: width 0.22s ease; }
     #mainNav a:hover::after, #mainNav a.active::after { width: 100%; }
