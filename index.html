@@ -1299,28 +1299,35 @@
     loadPersonnel();
   }
 
-  function openDoc(url) {
+  async function openDoc(url) {
     const isImage = /\.(png|jpe?g|gif|webp|bmp)(\?|$)/i.test(url);
     const isPdf   = /\.pdf(\?|$)/i.test(url);
     const body    = document.getElementById('docViewerBody');
     const title   = document.getElementById('docViewerTitle');
     const dl      = document.getElementById('docViewerDownload');
     const box     = document.getElementById('docViewerBox');
-    // Properly encode the URL preserving already-encoded sequences
-    const safeUrl = url.split('/').map((seg, i) => i < 3 ? seg : encodeURIComponent(decodeURIComponent(seg))).join('/');
     title.textContent = decodeURIComponent(url.split('/').pop().split('?')[0]);
-    dl.href = safeUrl;
+    dl.href = url;
     // reset size/position
     box.style.top = '2.5vh'; box.style.left = '2.5vw';
     box.style.width = '95vw'; box.style.height = '95vh';
-    if (isImage) {
-      body.innerHTML = `<img src="${safeUrl}" style="max-width:100%;display:block;margin:auto;padding:16px;">`;
-    } else if (isPdf) {
-      body.innerHTML = `<iframe src="${safeUrl}" style="width:100%;height:100%;border:none;display:block;"></iframe>`;
-    } else {
-      body.innerHTML = `<div style="padding:32px;text-align:center;color:#94a3b8;">Preview not available for this file type.<br><br><a href="${safeUrl}" target="_blank" style="color:#38bdf8;">Open in new tab</a></div>`;
-    }
     document.getElementById('docViewerModal').style.display = 'block';
+    body.innerHTML = `<div style="padding:32px;text-align:center;color:#94a3b8;">Loading…</div>`;
+    try {
+      const res  = await fetch(url, { headers: { apikey: SUPABASE_KEY } });
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      dl.href = blobUrl; dl.download = title.textContent;
+      if (isImage) {
+        body.innerHTML = `<img src="${blobUrl}" style="max-width:100%;display:block;margin:auto;padding:16px;">`;
+      } else if (isPdf) {
+        body.innerHTML = `<iframe src="${blobUrl}" style="width:100%;height:100%;border:none;display:block;"></iframe>`;
+      } else {
+        body.innerHTML = `<div style="padding:32px;text-align:center;color:#94a3b8;">Preview not available.<br><br><a href="${blobUrl}" target="_blank" style="color:#38bdf8;">Open in new tab</a></div>`;
+      }
+    } catch(e) {
+      body.innerHTML = `<div style="padding:32px;text-align:center;color:#fda4af;">Failed to load file.</div>`;
+    }
   }
 
   function closeDocViewer() {
