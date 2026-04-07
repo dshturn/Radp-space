@@ -865,8 +865,8 @@
     }).join('') : `<div class="doc-date" style="padding:8px 0;">No documents yet</div>`;
 
     // Alert badge on card if any docs are expired/expiring
-    const expiredCount  = docs.filter(d => { if (!d.expiry_date) return false; return new Date(d.expiry_date) < today; }).length;
-    const expiringCount = docs.filter(d => { if (!d.expiry_date) return false; const e = new Date(d.expiry_date); return e >= today && e <= in30; }).length;
+    const expiredCount  = docs.filter(d => { if (!d.expiry_date) return false; return new Date(d.expiry_date) < _today; }).length;
+    const expiringCount = docs.filter(d => { if (!d.expiry_date) return false; const e = new Date(d.expiry_date); return e >= _today && e <= _in30; }).length;
     const alertBadge = expiredCount  > 0 ? `<span style="background:#4c0519;color:#fda4af;font-size:11px;font-weight:bold;padding:3px 8px;border-radius:20px;">⚠ ${expiredCount} EXPIRED</span>`
                      : expiringCount > 0 ? `<span style="background:#422006;color:#fbbf24;font-size:11px;font-weight:bold;padding:3px 8px;border-radius:20px;">⚠ ${expiringCount} EXPIRING</span>`
                      : '';
