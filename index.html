@@ -1322,17 +1322,20 @@
       if (isImage) {
         body.innerHTML = `<img src="${blobUrl}" style="max-width:100%;display:block;margin:auto;padding:16px;">`;
       } else if (isPdf) {
-        body.innerHTML = `<div id="pdfCanvas" style="padding:8px;"></div>`;
+        body.innerHTML = `<div id="pdfCanvas" style="padding:0;"></div>`;
         const arrayBuf = await blob.arrayBuffer();
         pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
         const pdf = await pdfjsLib.getDocument({ data: arrayBuf }).promise;
         const container = document.getElementById('pdfCanvas');
+        const containerWidth = body.clientWidth;
         for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i);
-          const vp = page.getViewport({ scale: 1.5 });
+          const baseVp = page.getViewport({ scale: 1 });
+          const scale = containerWidth / baseVp.width;
+          const vp = page.getViewport({ scale });
           const canvas = document.createElement('canvas');
           canvas.width = vp.width; canvas.height = vp.height;
-          canvas.style.cssText = 'display:block;margin:0 auto 8px;max-width:100%;';
+          canvas.style.cssText = 'display:block;width:100%;margin-bottom:4px;';
           container.appendChild(canvas);
           await page.render({ canvasContext: canvas.getContext('2d', { willReadFrequently: true }), viewport: vp }).promise;
         }
