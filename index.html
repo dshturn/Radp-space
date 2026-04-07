@@ -428,8 +428,14 @@
 <div class="modal" id="ctEquipModal">
   <div class="modal-box">
     <h3>Add Equipment</h3>
-    <input type="text" id="equipName" placeholder="Equipment name">
-    <input type="text" id="equipSerial" placeholder="Serial number">
+    <label for="equipSelect">Equipment Type</label>
+    <select id="equipSelect" onchange="onEquipSelectChange(this)"></select>
+    <div id="newEquipNameWrap" style="display:none;">
+      <label for="equipName">New Equipment Name</label>
+      <input type="text" id="equipName" placeholder="Enter equipment name" autocomplete="off">
+    </div>
+    <label for="equipSerial">Serial Number</label>
+    <input type="text" id="equipSerial" placeholder="Serial number" autocomplete="off">
     <div class="modal-btns">
       <button class="btn-cancel" onclick="closeModal('ctEquipModal')">Cancel</button>
       <button class="btn-save" onclick="addEquipment()">Save</button>
@@ -707,68 +713,47 @@
     section.classList.add('active', animClass);
     section.addEventListener('animationend', () => section.classList.remove(animClass), { once: true });
   }
-  function openAddEquipment() { document.getElementById('ctEquipModal').classList.add('open'); }
+  async function openAddEquipment() {
+    const u = getUser(), h = getHeaders();
+    const templates = await apiFetch(`${SUPABASE_URL}/rest/v1/equipment_templates?service_line=eq.${encodeURIComponent(u.service_line)}&order=name`, { headers: h }) || [];
+    document.getElementById('equipSelect').innerHTML =
+      '<option value="">Select equipment type...</option>'
+      + templates.map(t => `<option value="${t.id}">${t.name}</option>`).join('')
+      + '<option value="__new__">+ Add new equipment type...</option>';
+    document.getElementById('newEquipNameWrap').style.display = 'none';
+    document.getElementById('equipName').value  = '';
+    document.getElementById('equipSerial').value = '';
+    document.getElementById('ctEquipModal').classList.add('open');
+  }
+  function onEquipSelectChange(sel) {
+    document.getElementById('newEquipNameWrap').style.display = sel.value === '__new__' ? 'block' : 'none';
+  }
   function openAddPersonnel() { document.getElementById('ctPersModal').classList.add('open'); }
   function closeModal(id)     { document.getElementById(id).classList.remove('open'); }
 
   // ═══ EQUIPMENT ═══
   async function loadEquipment() {
-    const h = getHeaders(), u = getUser();
+    const h = getHeaders();
 
-    // Load templates (recommended pre-defined items) and actual items in parallel
-    const [templates, items] = await Promise.all([
-      apiFetch(`${SUPABASE_URL}/rest/v1/equipment_templates?service_line=eq.${encodeURIComponent(u.service_line)}&order=name`, { headers: h }),
-      apiFetch(`${SUPABASE_URL}/rest/v1/equipment_items?select=*&order=created_at`, { headers: h })
-    ]);
-    if (!templates || !items) return;
+    const items = await apiFetch(`${SUPABASE_URL}/rest/v1/equipment_items?select=*&order=created_at`, { headers: h });
+    if (!items) return;
 
-    // Load docs for all existing items
-    const itemIds = items.map(i => i.id).join(',');
+    const activeItems = items.filter(i => !i.dismissed);
+
+    // Load docs for active items
+    const itemIds = activeItems.map(i => i.id).join(',');
     let docs = [];
     if (itemIds) docs = await apiFetch(`${SUPABASE_URL}/rest/v1/documents?equipment_item_id=in.(${itemIds})&select=*&order=uploaded_at.desc`, { headers: h }) || [];
     const docsByItem = {};
     docs.forEach(d => { if (!docsByItem[d.equipment_item_id]) docsByItem[d.equipment_item_id] = []; docsByItem[d.equipment_item_id].push(d); });
 
-    const itemsByTmpl = {};
-    const dismissedTmplIds = new Set();
-    items.forEach(i => {
-      if (i.equipment_template_id) {
-        // dismissed is per-user — only hide template for the user who dismissed it
-        if (i.dismissed && i.contractor_id === u.id) dismissedTmplIds.add(i.equipment_template_id);
-        else if (!i.dismissed) itemsByTmpl[i.equipment_template_id] = i;
-      }
-    });
-
-    // Build unified list: recommended templates first, then everything else
-    const cards = [];
-    const renderedItemIds = new Set();
-
-    // Recommended (from this service line's templates)
-    templates.forEach(t => {
-      if (dismissedTmplIds.has(t.id)) return;
-      const item = itemsByTmpl[t.id];
-      if (item) {
-        cards.push(equipItemCard(item, t.name, true, docsByItem[item.id] || []));
-        renderedItemIds.add(item.id);
-      } else {
-        cards.push(equipTemplateCard(t));
-      }
-    });
-
-    // All remaining registered items: custom items OR items from a different
-    // service line's templates (e.g. team member registered under different SL)
-    items.filter(i => !i.dismissed && !renderedItemIds.has(i.id)).forEach(i => {
-      cards.push(equipItemCard(i, i.name || 'Equipment', false, docsByItem[i.id] || []));
-    });
-
-    document.getElementById('equipmentList').innerHTML = cards.length
-      ? cards.join('')
+    document.getElementById('equipmentList').innerHTML = activeItems.length
+      ? activeItems.map(i => equipItemCard(i, i.name || 'Equipment', docsByItem[i.id] || [])).join('')
       : '<div class="empty">No equipment yet. Click "+ Add Equipment" to start.</div>';
 
     // ── Mini dashboard: equipment + docs stats ──
     const today = new Date(); today.setHours(0,0,0,0);
     const in30  = new Date(today); in30.setDate(in30.getDate() + 30);
-    const registeredItems = items.filter(i => !i.dismissed);
     let totalDocs = 0, expiredDocs = 0, expiringDocs = 0;
     docs.forEach(d => {
       totalDocs++;
@@ -778,14 +763,12 @@
         else if (exp <= in30) expiringDocs++;
       }
     });
-    // Equipment tile
     const eqEl   = document.getElementById('dashEquip');
     const eqSub  = document.getElementById('dashEquipSub');
     const eqTile = eqEl.closest('.dash-tile');
-    eqEl.textContent  = registeredItems.length;
-    eqSub.textContent = registeredItems.length === 1 ? '1 registered' : `${registeredItems.length} registered`;
-    eqTile.className  = 'dash-tile ' + (registeredItems.length > 0 ? 'ok' : 'info');
-    // Docs tile
+    eqEl.textContent  = activeItems.length;
+    eqSub.textContent = `${activeItems.length} registered`;
+    eqTile.className  = 'dash-tile ' + (activeItems.length > 0 ? 'ok' : 'info');
     const dcEl   = document.getElementById('dashDocs');
     const dcSub  = document.getElementById('dashDocsSub');
     const dcTile = dcEl.closest('.dash-tile');
@@ -802,38 +785,8 @@
     }
   }
 
-  // Card for a template not yet registered (show serial number input)
-  function equipTemplateCard(t) {
-    return `<div class="app-card">
-      <div class="card-header">
-        <div class="card-title">${t.name}</div>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <span class="badge" style="background:#1e3a5f;color:#93c5fd;">Recommended</span>
-          <button class="btn-danger" onclick="dismissTemplate('${t.id}')" title="Remove from list">🗑</button>
-        </div>
-      </div>
-      <div style="font-size:12px;color:#64748b;margin-bottom:10px;">Enter serial number to register this equipment</div>
-      <div class="sn-row">
-        <input type="text" placeholder="Serial number" id="sn_${t.id}">
-        <button onclick="saveSerialNumber('${t.id}','${t.name}')">Register</button>
-      </div>
-    </div>`;
-  }
-
-  async function dismissTemplate(templateId) {
-    if (!confirm('Remove this recommended item from your list?')) return;
-    await fetch(`${SUPABASE_URL}/rest/v1/equipment_items`, {
-      method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal' },
-      body: JSON.stringify({ contractor_id: getUser().id, equipment_template_id: parseInt(templateId), dismissed: true })
-    });
-    loadEquipment();
-  }
-
   // Card for a registered equipment item
-  function equipItemCard(item, name, recommended, docs) {
-    const badge = recommended
-      ? `<span class="badge" style="background:#1e3a5f;color:#93c5fd;">Recommended</span>`
-      : '';
+  function equipItemCard(item, name, docs) {
 
     const _today = new Date(); _today.setHours(0,0,0,0);
     const _in30  = new Date(_today); _in30.setDate(_in30.getDate() + 30);
@@ -876,7 +829,6 @@
         <div class="card-title">${name}</div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           ${alertBadge}
-          ${badge}
           <button class="btn-danger" onclick="deleteEquipItem(${item.id})" title="Delete equipment">🗑</button>
         </div>
       </div>
@@ -888,27 +840,41 @@
     </div>`;
   }
 
-  async function saveSerialNumber(templateId, templateName) {
-    const sn = document.getElementById(`sn_${templateId}`).value.trim();
-    if (!sn) { alert('Please enter serial number'); return; }
-    await fetch(`${SUPABASE_URL}/rest/v1/equipment_items`, {
-      method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal' },
-      body: JSON.stringify({ contractor_id: getUser().id, equipment_template_id: parseInt(templateId), serial_number: sn, name: templateName })
-    });
-    loadEquipment();
-  }
-
   async function addEquipment() {
-    const name   = document.getElementById('equipName').value.trim();
+    const selEl  = document.getElementById('equipSelect');
+    const tmplId = selEl.value;
     const serial = document.getElementById('equipSerial').value.trim();
-    if (!name || !serial) { alert('Please fill name and serial number'); return; }
+    if (!tmplId)  { alert('Please select an equipment type'); return; }
+    if (!serial)  { alert('Please enter a serial number'); return; }
+
+    let finalTemplateId = null;
+    let finalName       = '';
+
+    if (tmplId === '__new__') {
+      const customName = document.getElementById('equipName').value.trim();
+      if (!customName) { alert('Please enter the equipment name'); return; }
+      // Save new type to equipment_templates so it appears for the whole team
+      const u = getUser();
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/equipment_templates`, {
+        method: 'POST',
+        headers: { ...getHeaders(), Prefer: 'return=representation' },
+        body: JSON.stringify({ name: customName, service_line: u.service_line })
+      });
+      if (res.ok) {
+        const [newTmpl] = await res.json();
+        finalTemplateId = newTmpl?.id || null;
+      }
+      finalName = customName;
+    } else {
+      finalTemplateId = parseInt(tmplId);
+      finalName = selEl.options[selEl.selectedIndex].text;
+    }
+
     await fetch(`${SUPABASE_URL}/rest/v1/equipment_items`, {
       method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal' },
-      body: JSON.stringify({ contractor_id: getUser().id, serial_number: serial, name })
+      body: JSON.stringify({ contractor_id: getUser().id, equipment_template_id: finalTemplateId, serial_number: serial, name: finalName })
     });
     closeModal('ctEquipModal');
-    document.getElementById('equipName').value = '';
-    document.getElementById('equipSerial').value = '';
     loadEquipment();
   }
 
