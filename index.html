@@ -418,7 +418,15 @@
 
 <!-- Document Viewer Modal -->
 <div id="docViewerModal" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.6);">
-  <div id="docViewerBox" style="position:fixed;top:2.5vh;left:2.5vw;width:95vw;height:95vh;background:#1e293b;border-radius:10px;border:1px solid #334155;display:flex;flex-direction:column;overflow:hidden;resize:both;min-width:320px;min-height:240px;box-shadow:0 24px 80px rgba(0,0,0,0.6);">
+  <div id="docViewerBox" style="position:fixed;top:2.5vh;left:2.5vw;width:95vw;height:95vh;background:#1e293b;border-radius:10px;border:1px solid #334155;display:flex;flex-direction:column;overflow:hidden;min-width:320px;min-height:240px;box-shadow:0 24px 80px rgba(0,0,0,0.6);">
+    <div class="dv-resize" data-dir="n"  style="position:absolute;top:-4px;left:8px;right:8px;height:8px;cursor:n-resize;z-index:10;"></div>
+    <div class="dv-resize" data-dir="s"  style="position:absolute;bottom:-4px;left:8px;right:8px;height:8px;cursor:s-resize;z-index:10;"></div>
+    <div class="dv-resize" data-dir="w"  style="position:absolute;left:-4px;top:8px;bottom:8px;width:8px;cursor:w-resize;z-index:10;"></div>
+    <div class="dv-resize" data-dir="e"  style="position:absolute;right:-4px;top:8px;bottom:8px;width:8px;cursor:e-resize;z-index:10;"></div>
+    <div class="dv-resize" data-dir="nw" style="position:absolute;top:-4px;left:-4px;width:16px;height:16px;cursor:nw-resize;z-index:11;"></div>
+    <div class="dv-resize" data-dir="ne" style="position:absolute;top:-4px;right:-4px;width:16px;height:16px;cursor:ne-resize;z-index:11;"></div>
+    <div class="dv-resize" data-dir="sw" style="position:absolute;bottom:-4px;left:-4px;width:16px;height:16px;cursor:sw-resize;z-index:11;"></div>
+    <div class="dv-resize" data-dir="se" style="position:absolute;bottom:-4px;right:-4px;width:16px;height:16px;cursor:se-resize;z-index:11;"></div>
     <div id="docViewerHeader" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #334155;flex-shrink:0;cursor:grab;user-select:none;">
       <span id="docViewerTitle" style="font-size:14px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;margin-right:12px;"></span>
       <div style="display:flex;gap:8px;flex-shrink:0;">
@@ -1316,26 +1324,58 @@
     document.getElementById('docViewerBody').innerHTML = '';
   }
 
-  // Drag logic for doc viewer
+  // Drag + resize logic for doc viewer
   (function() {
-    let dragging = false, ox = 0, oy = 0;
+    let mode = null, startX, startY, startL, startT, startW, startH;
+    const MIN_W = 320, MIN_H = 240;
+
     document.addEventListener('DOMContentLoaded', () => {
-      const header = document.getElementById('docViewerHeader');
-      const box    = document.getElementById('docViewerBox');
+      const header  = document.getElementById('docViewerHeader');
+      const box     = document.getElementById('docViewerBox');
+
+      function getRect() {
+        return { l: box.offsetLeft, t: box.offsetTop, w: box.offsetWidth, h: box.offsetHeight };
+      }
+
       header.addEventListener('mousedown', e => {
         if (e.target.tagName === 'BUTTON' || e.target.tagName === 'A') return;
-        dragging = true;
-        ox = e.clientX - box.offsetLeft;
-        oy = e.clientY - box.offsetTop;
+        mode = 'drag';
+        const r = getRect();
+        startX = e.clientX; startY = e.clientY;
+        startL = r.l; startT = r.t;
         header.style.cursor = 'grabbing';
+        e.preventDefault();
       });
+
+      document.querySelectorAll('.dv-resize').forEach(handle => {
+        handle.addEventListener('mousedown', e => {
+          mode = handle.dataset.dir;
+          const r = getRect();
+          startX = e.clientX; startY = e.clientY;
+          startL = r.l; startT = r.t; startW = r.w; startH = r.h;
+          e.preventDefault();
+        });
+      });
+
       document.addEventListener('mousemove', e => {
-        if (!dragging) return;
-        box.style.left = Math.max(0, e.clientX - ox) + 'px';
-        box.style.top  = Math.max(0, e.clientY - oy) + 'px';
+        if (!mode) return;
+        const dx = e.clientX - startX, dy = e.clientY - startY;
+        if (mode === 'drag') {
+          box.style.left = Math.max(0, startL + dx) + 'px';
+          box.style.top  = Math.max(0, startT + dy) + 'px';
+          return;
+        }
+        let l = startL, t = startT, w = startW, h = startH;
+        if (mode.includes('e')) w = Math.max(MIN_W, startW + dx);
+        if (mode.includes('s')) h = Math.max(MIN_H, startH + dy);
+        if (mode.includes('w')) { w = Math.max(MIN_W, startW - dx); l = startL + startW - w; }
+        if (mode.includes('n')) { h = Math.max(MIN_H, startH - dy); t = startT + startH - h; }
+        box.style.left = l + 'px'; box.style.top = t + 'px';
+        box.style.width = w + 'px'; box.style.height = h + 'px';
       });
+
       document.addEventListener('mouseup', () => {
-        dragging = false;
+        mode = null;
         header.style.cursor = 'grab';
       });
     });
