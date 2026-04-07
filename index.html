@@ -579,7 +579,7 @@
 <div id="asEquipModal" class="modal">
   <div class="modal-scroll">
     <h3 style="color:#38bdf8;margin-bottom:12px;">Select Equipment</h3>
-    <input type="text" placeholder="Search…" oninput="filterCheckboxList('equipSelectorList',this.value)" style="margin-bottom:12px;padding:8px 12px;font-size:13px;">
+    <input type="text" id="equipSelectorSearch" name="equipSelectorSearch" placeholder="Search…" oninput="filterCheckboxList('equipSelectorList',this.value)" style="margin-bottom:12px;padding:8px 12px;font-size:13px;">
     <div id="equipSelectorList"></div>
     <div style="display:flex;gap:8px;margin-top:16px;">
       <button class="btn-primary" onclick="addSelectedEquipment()">Add Selected</button>
@@ -592,7 +592,7 @@
 <div id="asPersModal" class="modal">
   <div class="modal-scroll">
     <h3 style="color:#38bdf8;margin-bottom:12px;">Select Personnel</h3>
-    <input type="text" placeholder="Search…" oninput="filterCheckboxList('persSelectorList',this.value)" style="margin-bottom:12px;padding:8px 12px;font-size:13px;">
+    <input type="text" id="persSelectorSearch" name="persSelectorSearch" placeholder="Search…" oninput="filterCheckboxList('persSelectorList',this.value)" style="margin-bottom:12px;padding:8px 12px;font-size:13px;">
     <div id="persSelectorList"></div>
     <div style="display:flex;gap:8px;margin-top:16px;">
       <button class="btn-primary" onclick="addSelectedPersonnel()">Add Selected</button>
