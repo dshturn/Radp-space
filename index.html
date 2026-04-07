@@ -337,10 +337,17 @@
         <h2>New Assessment</h2>
         <label for="requestId">SharePoint Request ID</label>
         <input type="text" id="requestId" placeholder="e.g. 176">
-        <label for="fieldWell">Field / Well</label>
-        <input type="text" id="fieldWell" placeholder="e.g. MANIFA/MNIF-123">
-        <label for="typeOfJob">Type of Job</label>
-        <select id="typeOfJob"><option value="">Select type of job...</option></select>
+        <label for="fieldWellSelect">Field / Well</label>
+        <select id="fieldWellSelect" onchange="onFieldWellChange(this)"></select>
+        <div id="fieldWellNewWrap" style="display:none;">
+          <input type="text" id="fieldWellNew" placeholder="e.g. MANIFA/MNIF-123" autocomplete="off">
+        </div>
+        <label>Type of Job</label>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+          <span id="typeOfJobDisplay" style="font-size:14px;color:#e2e8f0;flex:1;"></span>
+          <button type="button" onclick="toggleTypeOfJobEdit()" style="background:#334155;color:#e2e8f0;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:13px;white-space:nowrap;">Change</button>
+        </div>
+        <select id="typeOfJob" style="display:none;margin-bottom:14px;"><option value="">Select type of job...</option></select>
         <label for="objective">Objective</label>
         <textarea id="objective" placeholder="Short summary of the job objective"></textarea>
         <button class="btn-primary" onclick="createAssessment()">Create Assessment</button>
@@ -1305,11 +1312,34 @@
     loadServiceLines();
   }
   async function loadServiceLines() {
+    const u     = getUser();
     const res   = await fetch(`${SUPABASE_URL}/rest/v1/service_lines?select=name&order=name`, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } });
     const lines = await res.json();
     const sel   = document.getElementById('typeOfJob');
     sel.innerHTML = '<option value="">Select type of job...</option>'
-      + lines.map(l => `<option value="${l.name}">${l.name}</option>`).join('');
+      + lines.map(l => `<option value="${l.name}"${l.name === u.service_line ? ' selected' : ''}>${l.name}</option>`).join('');
+    document.getElementById('typeOfJobDisplay').textContent = u.service_line || '—';
+    document.getElementById('typeOfJob').style.display = 'none';
+
+    const fwRes  = await apiFetch(`${SUPABASE_URL}/rest/v1/assessments?select=field_well&contractor_id=eq.${u.id}&field_well=not.is.null&order=field_well`, { headers: getHeaders() });
+    const unique = [...new Set((fwRes || []).map(r => r.field_well).filter(Boolean))];
+    document.getElementById('fieldWellSelect').innerHTML =
+      '<option value="">Select field / well...</option>'
+      + unique.map(v => `<option value="${v}">${v}</option>`).join('')
+      + '<option value="__new__">+ Add new field / well...</option>';
+    document.getElementById('fieldWellNewWrap').style.display = 'none';
+    document.getElementById('fieldWellNew').value = '';
+  }
+
+  function onFieldWellChange(sel) {
+    document.getElementById('fieldWellNewWrap').style.display = sel.value === '__new__' ? 'block' : 'none';
+    if (sel.value === '__new__') document.getElementById('fieldWellNew').focus();
+  }
+
+  function toggleTypeOfJobEdit() {
+    const sel = document.getElementById('typeOfJob');
+    const visible = sel.style.display !== 'none';
+    sel.style.display = visible ? 'none' : 'block';
   }
   function showDetail(id) {
     currentAssessmentId = id;
@@ -1353,11 +1383,18 @@
       </div>`).join('');
   }
   async function createAssessment() {
-    const requestId = document.getElementById('requestId').value;
-    const fieldWell  = document.getElementById('fieldWell').value;
-    const typeOfJob  = document.getElementById('typeOfJob').value;
+    const requestId  = document.getElementById('requestId').value;
+    const fwSel      = document.getElementById('fieldWellSelect');
+    const fieldWell  = fwSel.value === '__new__'
+      ? document.getElementById('fieldWellNew').value.trim()
+      : fwSel.value;
+    const typeOfJobSel = document.getElementById('typeOfJob');
+    const typeOfJob  = typeOfJobSel.style.display !== 'none' && typeOfJobSel.value
+      ? typeOfJobSel.value
+      : document.getElementById('typeOfJobDisplay').textContent;
     const objective  = document.getElementById('objective').value;
-    if (!fieldWell || !typeOfJob) { alert('Please fill Field/Well and Type of Job'); return; }
+    if (!fieldWell) { alert('Please select or enter a Field / Well'); return; }
+    if (!typeOfJob || typeOfJob === '—') { alert('Please select a Type of Job'); return; }
     const res  = await fetch(`${SUPABASE_URL}/rest/v1/assessments`, {
       method: 'POST', headers: { ...getHeaders(), Prefer: 'return=representation' },
       body: JSON.stringify({ contractor_id: getUser().id, field_well: fieldWell, type_of_job: typeOfJob, objective, sharepoint_request_id: requestId || null })
