@@ -6,7 +6,6 @@
   <title>RADP</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛢</text></svg>">
   <link rel="manifest" href="/manifest.json">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <meta name="theme-color" content="#1e293b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="RADP">
@@ -1322,20 +1321,8 @@
       if (isImage) {
         body.innerHTML = `<img src="${blobUrl}" style="max-width:100%;display:block;margin:auto;padding:16px;">`;
       } else if (isPdf) {
-        body.innerHTML = `<div id="pdfCanvas" style="padding:8px;"></div>`;
-        const arrayBuf = await blob.arrayBuffer();
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-        const pdf = await pdfjsLib.getDocument({ data: arrayBuf }).promise;
-        const container = document.getElementById('pdfCanvas');
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const vp = page.getViewport({ scale: 1.5 });
-          const canvas = document.createElement('canvas');
-          canvas.width = vp.width; canvas.height = vp.height;
-          canvas.style.cssText = 'display:block;margin:0 auto 8px;max-width:100%;';
-          container.appendChild(canvas);
-          await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
-        }
+        window.open(blobUrl, '_blank');
+        closeDocViewer();
       } else {
         body.innerHTML = `<div style="padding:32px;text-align:center;color:#94a3b8;">Preview not available.<br><br><a href="${blobUrl}" target="_blank" style="color:#38bdf8;">Open in new tab</a></div>`;
       }
