@@ -308,16 +308,16 @@
       </div>
     </div>
     <div class="tabs">
-      <button class="tab active" onclick="showContractorTab('equipment', this)">Equipment</button>
-      <button class="tab" onclick="showContractorTab('personnel', this)">Personnel</button>
+      <button class="tab active" onclick="showContractorTab('personnel', this)">Personnel</button>
+      <button class="tab" onclick="showContractorTab('equipment', this)">Equipment</button>
     </div>
-    <div id="ct-equipment" class="ct-section active">
-      <button class="add-btn" onclick="openAddEquipment()">+ Add Equipment</button>
-      <div id="equipmentList"><div class="skel-card"><div class="skeleton skel-line medium"></div><div class="skeleton skel-line full"></div><div class="skeleton skel-line short"></div></div></div>
-    </div>
-    <div id="ct-personnel" class="ct-section">
+    <div id="ct-personnel" class="ct-section active">
       <button class="add-btn" onclick="openAddPersonnel()">+ Add Personnel</button>
       <div id="personnelList"><div class="skel-card"><div class="skeleton skel-line medium"></div><div class="skeleton skel-line short"></div></div></div>
+    </div>
+    <div id="ct-equipment" class="ct-section">
+      <button class="add-btn" onclick="openAddEquipment()">+ Add Equipment</button>
+      <div id="equipmentList"><div class="skel-card"><div class="skeleton skel-line medium"></div><div class="skeleton skel-line full"></div><div class="skeleton skel-line short"></div></div></div>
     </div>
   </div>
 </div>
@@ -750,7 +750,7 @@
   }
 
   // ═══ CONTRACTOR TABS ═══
-  const CT_ORDER = { equipment: 0, personnel: 1 };
+  const CT_ORDER = { personnel: 0, equipment: 1 };
   function showContractorTab(tab, el) {
     const current    = document.querySelector('#contractor-page .ct-section.active')?.id?.replace('ct-', '') || 'equipment';
     const goingRight = CT_ORDER[tab] > CT_ORDER[current];
