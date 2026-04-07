@@ -1483,7 +1483,9 @@
       + '<option value="__custom__">+ Add custom type of job...</option>';
     document.getElementById('typeOfJobCustomWrap').style.display = 'none';
 
-    const fwRes  = await apiFetch(`${SUPABASE_URL}/rest/v1/assessments?select=field_well&contractor_id=eq.${u.id}&field_well=not.is.null&order=field_well`, { headers: getHeaders() });
+    const teamIds = await apiFetch(`${SUPABASE_URL}/rest/v1/rpc/get_team_member_ids`, { method: 'POST', headers: getHeaders(), body: '{}' });
+    const idList = (teamIds || []).join(',') || u.id;
+    const fwRes  = await apiFetch(`${SUPABASE_URL}/rest/v1/assessments?select=field_well&contractor_id=in.(${idList})&field_well=not.is.null&order=field_well`, { headers: getHeaders() });
     const unique = [...new Set((fwRes || []).map(r => r.field_well).filter(Boolean))];
     document.getElementById('fieldWellSelect').innerHTML =
       '<option value="">Select field / well...</option>'
