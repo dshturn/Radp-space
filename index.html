@@ -696,7 +696,7 @@
     // Load templates (recommended pre-defined items) and actual items in parallel
     const [templates, items] = await Promise.all([
       apiFetch(`${SUPABASE_URL}/rest/v1/equipment_templates?service_line=eq.${encodeURIComponent(u.service_line)}&order=name`, { headers: h }),
-      apiFetch(`${SUPABASE_URL}/rest/v1/equipment_items?contractor_id=eq.${u.id}&select=*`, { headers: h })
+      apiFetch(`${SUPABASE_URL}/rest/v1/equipment_items?select=*&order=created_at`, { headers: h })
     ]);
     if (!templates || !items) return;
 
@@ -711,8 +711,9 @@
     const dismissedTmplIds = new Set();
     items.forEach(i => {
       if (i.equipment_template_id) {
-        if (i.dismissed) dismissedTmplIds.add(i.equipment_template_id);
-        else itemsByTmpl[i.equipment_template_id] = i;
+        // dismissed is per-user — only hide template for the user who dismissed it
+        if (i.dismissed && i.contractor_id === u.id) dismissedTmplIds.add(i.equipment_template_id);
+        else if (!i.dismissed) itemsByTmpl[i.equipment_template_id] = i;
       }
     });
 
@@ -968,7 +969,7 @@
 
   async function loadPersonnel() {
     const u = getUser();
-    const people = await apiFetch(`${SUPABASE_URL}/rest/v1/personnel?contractor_id=eq.${u.id}&select=*`, { headers: getHeaders() });
+    const people = await apiFetch(`${SUPABASE_URL}/rest/v1/personnel?select=*&order=created_at`, { headers: getHeaders() });
     if (!people) return;
     const list = document.getElementById('personnelList');
     if (!people.length) { list.innerHTML = '<div class="empty">No personnel added yet</div>'; }
