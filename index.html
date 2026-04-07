@@ -478,9 +478,16 @@
 <div class="modal" id="ctPersModal">
   <div class="modal-box">
     <h3>Add Personnel</h3>
-    <input type="text" id="persName" placeholder="Full name">
-    <input type="text" id="persPosition" placeholder="Position / Role">
-    <input type="text" id="persCert" placeholder="Certificate number">
+    <label for="persName">Full Name</label>
+    <input type="text" id="persName" placeholder="Full name" autocomplete="off">
+    <label for="persPositionSelect">Position / Role</label>
+    <select id="persPositionSelect" onchange="onPersPositionChange(this)"></select>
+    <div id="newPersPositionWrap" style="display:none;">
+      <label for="persPositionNew">New Position Name</label>
+      <input type="text" id="persPositionNew" placeholder="Enter position name" autocomplete="off">
+    </div>
+    <label for="persNationalId">ID (IQAMA / NATIONAL)</label>
+    <input type="text" id="persNationalId" placeholder="ID number" autocomplete="off">
     <div class="modal-btns">
       <button class="btn-cancel" onclick="closeModal('ctPersModal')">Cancel</button>
       <button class="btn-save" onclick="addPersonnel()">Save</button>
@@ -728,7 +735,21 @@
   function onEquipSelectChange(sel) {
     document.getElementById('newEquipNameWrap').style.display = sel.value === '__new__' ? 'block' : 'none';
   }
-  function openAddPersonnel() { document.getElementById('ctPersModal').classList.add('open'); }
+  async function openAddPersonnel() {
+    const positions = await apiFetch(`${SUPABASE_URL}/rest/v1/personnel_positions?select=name&order=name`, { headers: getHeaders() }) || [];
+    document.getElementById('persPositionSelect').innerHTML =
+      '<option value="">Select position...</option>'
+      + positions.map(p => `<option value="${p.name}">${p.name}</option>`).join('')
+      + '<option value="__new__">+ Add new position...</option>';
+    document.getElementById('newPersPositionWrap').style.display = 'none';
+    document.getElementById('persName').value         = '';
+    document.getElementById('persPositionNew').value  = '';
+    document.getElementById('persNationalId').value   = '';
+    document.getElementById('ctPersModal').classList.add('open');
+  }
+  function onPersPositionChange(sel) {
+    document.getElementById('newPersPositionWrap').style.display = sel.value === '__new__' ? 'block' : 'none';
+  }
   function closeModal(id)     { document.getElementById(id).classList.remove('open'); }
 
   // ═══ EQUIPMENT ═══
@@ -959,13 +980,26 @@
 
   // ═══ PERSONNEL ═══
   async function addPersonnel() {
-    const name = document.getElementById('persName').value;
-    const position = document.getElementById('persPosition').value;
-    const cert = document.getElementById('persCert').value;
-    if (!name) { alert('Please enter full name'); return; }
+    const name       = document.getElementById('persName').value.trim();
+    const selEl      = document.getElementById('persPositionSelect');
+    const nationalId = document.getElementById('persNationalId').value.trim();
+    if (!name)           { alert('Please enter full name'); return; }
+    if (!selEl.value)    { alert('Please select a position'); return; }
+
+    let position = selEl.value;
+    if (position === '__new__') {
+      const newPos = document.getElementById('persPositionNew').value.trim();
+      if (!newPos) { alert('Please enter a position name'); return; }
+      await fetch(`${SUPABASE_URL}/rest/v1/personnel_positions`, {
+        method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal' },
+        body: JSON.stringify({ name: newPos })
+      });
+      position = newPos;
+    }
+
     await fetch(`${SUPABASE_URL}/rest/v1/personnel`, {
       method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal' },
-      body: JSON.stringify({ contractor_id: getUser().id, full_name: name, position, certificate_number: cert })
+      body: JSON.stringify({ contractor_id: getUser().id, full_name: name, position, national_id: nationalId })
     });
     closeModal('ctPersModal'); loadPersonnel();
   }
@@ -980,8 +1014,8 @@
       list.innerHTML = people.map(p => `
         <div class="app-card">
           <div class="card-header"><div class="card-title">${p.full_name}</div><span class="badge ${p.ai_status || 'pending'}">${p.ai_status || 'pending'}</span></div>
-          <div class="doc-name">${p.position || ''} · Cert: ${p.certificate_number || '—'}</div>
-          <div class="doc-date" style="margin-top:6px">Issue: ${p.issue_date || '—'} · Expiry: ${p.expiry_date || 'Not set'}</div>
+          <div class="doc-name">${p.position || ''} · ID: ${p.national_id || '—'}</div>
+          <div class="doc-date" style="margin-top:6px">Expiry: ${p.expiry_date || 'Not set'}</div>
           <button class="upload-btn" style="margin-top:10px" onclick="uploadPersonnelDoc('${p.id}')">↑ Upload Certificate</button>
         </div>`).join('');
     }
@@ -1139,13 +1173,13 @@
       </div>`).join('');
   }
   async function loadSelectedPersonnel(id) {
-    const items = await apiFetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?assessment_id=eq.${id}&select=*,personnel(full_name,position,certificate_number)`, { headers: getHeaders() });
+    const items = await apiFetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?assessment_id=eq.${id}&select=*,personnel(full_name,position,national_id)`, { headers: getHeaders() });
     if (!items) return;
     const el = document.getElementById('selectedPersonnel');
     if (!items.length) { el.innerHTML = '<div class="empty">No personnel selected</div>'; return; }
     el.innerHTML = items.map(i => `
       <div class="item-row">
-        <div class="item-info"><div class="item-name">${i.personnel?.full_name || '—'}</div><div class="item-detail">${i.personnel?.position || ''} · Cert: ${i.personnel?.certificate_number || '—'}</div></div>
+        <div class="item-info"><div class="item-name">${i.personnel?.full_name || '—'}</div><div class="item-detail">${i.personnel?.position || ''} · ID: ${i.personnel?.national_id || '—'}</div></div>
         <button class="btn-danger" onclick="removePersonnel(${i.id})">Remove</button>
       </div>`).join('');
   }
@@ -1234,7 +1268,7 @@
     personnel.forEach(p => {
       const per = p.personnel, expiry = per?.expiry_date || '';
       if (expiry && expiry !== '—' && expiry !== '-') allExpiries.push(new Date(expiry));
-      persRows += `<tr><td>${pNum++}</td><td>${per?.full_name||'—'}</td><td>${per?.years_experience||'—'}</td><td>${per?.position||'—'}</td><td>${per?.certificate_number||'—'}</td><td style="${getExpiryStyle(expiry)}">${expiry||'—'}</td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td></tr>`;
+      persRows += `<tr><td>${pNum++}</td><td>${per?.full_name||'—'}</td><td>${per?.years_experience||'—'}</td><td>${per?.position||'—'}</td><td>${per?.national_id||'—'}</td><td style="${getExpiryStyle(expiry)}">${expiry||'—'}</td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td></tr>`;
     });
     let equipRows = '', eNum = 1;
     equipment.forEach(e => {
