@@ -1102,10 +1102,12 @@
                       : cfg.noIssue  ? `Expiry: ${d.expiry_date || '—'}`
                       : cfg.noExpiry ? `Issue: ${d.issue_date || '—'}`
                       : `Issue: ${d.issue_date || '—'} · Expiry: ${d.expiry_date || '—'}`;
+        const yrsStr  = t.name === 'CV' && p.years_experience != null ? `<div class="doc-date">${p.years_experience} yrs exp in O&G</div>` : '';
         return `<div class="doc-row" style="${rowBorder}">
           <div style="flex:1">
             <div class="doc-name" style="display:flex;align-items:center;gap:6px;">${t.name} ${mandBadge}</div>
             ${dateStr ? `<div class="doc-date">${dateStr}</div>` : ''}
+            ${yrsStr}
           </div>
           <div style="display:flex;align-items:center;gap:8px;">
             ${fileBtn}
