@@ -1027,7 +1027,8 @@
 
     let fileUrl = null;
     if (file) {
-      const path = `equipment/${getUser().id}/${currentDocItemId}/${Date.now()}_${file.name}`;
+      const safeName = file.name.replace(/[^\x00-\x7F]/g, c => encodeURIComponent(c)).replace(/\s+/g, '_');
+      const path = `equipment/${getUser().id}/${currentDocItemId}/${Date.now()}_${safeName}`;
       const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/equipment-docs/${path}`, {
         method: 'POST',
         headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${getToken()}`, 'Content-Type': file.type },
@@ -1252,7 +1253,8 @@
 
     let fileUrl = null;
     if (file) {
-      const path = `personnel/${personId}/${typeName.replace(/[^a-z0-9]/gi,'_')}/${Date.now()}_${file.name}`;
+      const safeName = file.name.replace(/[^\x00-\x7F]/g, c => encodeURIComponent(c)).replace(/\s+/g, '_');
+      const path = `personnel/${personId}/${typeName.replace(/[^a-z0-9]/gi,'_')}/${Date.now()}_${safeName}`;
       const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/personnel-docs/${path}`, {
         method: 'POST',
         headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${getToken()}`, 'Content-Type': file.type },
