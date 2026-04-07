@@ -170,6 +170,19 @@
     .btn-delete  { background: #7f1d1d; color: #fca5a5; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: background 0.2s, transform 0.15s; }
     .btn-delete:hover  { background: #991b1b; transform: translateY(-1px); }
 
+    /* Mini dashboard */
+    .mini-dash { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+    @media (max-width: 520px) { .mini-dash { grid-template-columns: repeat(2, 1fr); } }
+    .dash-tile { background: #1e293b; border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; animation: fadeSlideUp 0.35s cubic-bezier(0.22,1,0.36,1) both; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .dash-tile:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+    .dash-val { font-size: 26px; font-weight: bold; line-height: 1; }
+    .dash-lbl { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.6px; }
+    .dash-sub { font-size: 11px; margin-top: 2px; }
+    .dash-tile.ok   .dash-val { color: #6ee7b7; }
+    .dash-tile.warn .dash-val { color: #fbbf24; }
+    .dash-tile.bad  .dash-val { color: #fda4af; }
+    .dash-tile.info .dash-val { color: #93c5fd; }
+
     /* Skeleton */
     .skeleton { background: linear-gradient(90deg,#1e293b 25%,#2a3a50 50%,#1e293b 75%); background-size: 500px 100%; animation: shimmer 1.5s ease infinite; border-radius: 8px; }
     .skel-card { background: #1e293b; border-radius: 10px; padding: 16px; margin-bottom: 12px; }
@@ -263,6 +276,28 @@
     <div class="welcome">
       <h2 id="welcomeMsg">Welcome</h2>
       <p id="companyInfo"></p>
+    </div>
+    <div class="mini-dash" id="miniDash">
+      <div class="dash-tile info" style="animation-delay:0ms">
+        <div class="dash-val" id="dashEquip">—</div>
+        <div class="dash-lbl">Equipment</div>
+        <div class="dash-sub" id="dashEquipSub" style="color:#64748b"></div>
+      </div>
+      <div class="dash-tile info" style="animation-delay:60ms">
+        <div class="dash-val" id="dashDocs">—</div>
+        <div class="dash-lbl">Documents</div>
+        <div class="dash-sub" id="dashDocsSub" style="color:#64748b"></div>
+      </div>
+      <div class="dash-tile info" style="animation-delay:120ms">
+        <div class="dash-val" id="dashPersonnel">—</div>
+        <div class="dash-lbl">Personnel</div>
+        <div class="dash-sub" id="dashPersonnelSub" style="color:#64748b"></div>
+      </div>
+      <div class="dash-tile info" style="animation-delay:180ms">
+        <div class="dash-val" id="dashAssessments">—</div>
+        <div class="dash-lbl">Assessments</div>
+        <div class="dash-sub" id="dashAssessmentsSub" style="color:#64748b"></div>
+      </div>
     </div>
     <div class="tabs">
       <button class="tab active" onclick="showContractorTab('equipment', this)">Equipment</button>
@@ -492,7 +527,7 @@
       ? history.replaceState({ page: name }, '', PAGE_URLS[name])
       : history.pushState({ page: name }, '', PAGE_URLS[name]);
 
-    if (name === 'contractor') { loadEquipment(); loadPersonnel(); }
+    if (name === 'contractor') { loadEquipment(); loadPersonnel(); loadDashAssessments(); }
     if (name === 'assessment') { loadAssessments(); }
     if (name === 'register')   { loadRegisterOptions(); }
   }
@@ -703,6 +738,42 @@
     document.getElementById('equipmentList').innerHTML = cards.length
       ? cards.join('')
       : '<div class="empty">No equipment yet. Click "+ Add Equipment" to start.</div>';
+
+    // ── Mini dashboard: equipment + docs stats ──
+    const today = new Date(); today.setHours(0,0,0,0);
+    const in30  = new Date(today); in30.setDate(in30.getDate() + 30);
+    const registeredItems = items.filter(i => !i.dismissed);
+    let totalDocs = 0, expiredDocs = 0, expiringDocs = 0;
+    docs.forEach(d => {
+      totalDocs++;
+      if (d.expiry_date) {
+        const exp = new Date(d.expiry_date);
+        if (exp < today)      expiredDocs++;
+        else if (exp <= in30) expiringDocs++;
+      }
+    });
+    // Equipment tile
+    const eqEl   = document.getElementById('dashEquip');
+    const eqSub  = document.getElementById('dashEquipSub');
+    const eqTile = eqEl.closest('.dash-tile');
+    eqEl.textContent  = registeredItems.length;
+    eqSub.textContent = registeredItems.length === 1 ? '1 registered' : `${registeredItems.length} registered`;
+    eqTile.className  = 'dash-tile ' + (registeredItems.length > 0 ? 'ok' : 'info');
+    // Docs tile
+    const dcEl   = document.getElementById('dashDocs');
+    const dcSub  = document.getElementById('dashDocsSub');
+    const dcTile = dcEl.closest('.dash-tile');
+    dcEl.textContent = totalDocs;
+    if (expiredDocs > 0) {
+      dcSub.textContent = `${expiredDocs} expired`; dcSub.style.color = '#fda4af';
+      dcTile.className = 'dash-tile bad';
+    } else if (expiringDocs > 0) {
+      dcSub.textContent = `${expiringDocs} expiring soon`; dcSub.style.color = '#fbbf24';
+      dcTile.className = 'dash-tile warn';
+    } else {
+      dcSub.textContent = totalDocs > 0 ? 'All valid' : 'No documents'; dcSub.style.color = '#64748b';
+      dcTile.className = 'dash-tile ' + (totalDocs > 0 ? 'ok' : 'info');
+    }
   }
 
   // Card for a template not yet registered (show serial number input)
@@ -900,14 +971,43 @@
     const people = await apiFetch(`${SUPABASE_URL}/rest/v1/personnel?contractor_id=eq.${u.id}&select=*`, { headers: getHeaders() });
     if (!people) return;
     const list = document.getElementById('personnelList');
-    if (!people.length) { list.innerHTML = '<div class="empty">No personnel added yet</div>'; return; }
-    list.innerHTML = people.map(p => `
-      <div class="app-card">
-        <div class="card-header"><div class="card-title">${p.full_name}</div><span class="badge ${p.ai_status || 'pending'}">${p.ai_status || 'pending'}</span></div>
-        <div class="doc-name">${p.position || ''} · Cert: ${p.certificate_number || '—'}</div>
-        <div class="doc-date" style="margin-top:6px">Issue: ${p.issue_date || '—'} · Expiry: ${p.expiry_date || 'Not set'}</div>
-        <button class="upload-btn" style="margin-top:10px" onclick="uploadPersonnelDoc('${p.id}')">↑ Upload Certificate</button>
-      </div>`).join('');
+    if (!people.length) { list.innerHTML = '<div class="empty">No personnel added yet</div>'; }
+    else {
+      list.innerHTML = people.map(p => `
+        <div class="app-card">
+          <div class="card-header"><div class="card-title">${p.full_name}</div><span class="badge ${p.ai_status || 'pending'}">${p.ai_status || 'pending'}</span></div>
+          <div class="doc-name">${p.position || ''} · Cert: ${p.certificate_number || '—'}</div>
+          <div class="doc-date" style="margin-top:6px">Issue: ${p.issue_date || '—'} · Expiry: ${p.expiry_date || 'Not set'}</div>
+          <button class="upload-btn" style="margin-top:10px" onclick="uploadPersonnelDoc('${p.id}')">↑ Upload Certificate</button>
+        </div>`).join('');
+    }
+    // ── Mini dashboard: personnel tile ──
+    const approved = people.filter(p => p.ai_status === 'approved').length;
+    const pending  = people.filter(p => !p.ai_status || p.ai_status === 'pending').length;
+    const pEl   = document.getElementById('dashPersonnel');
+    const pSub  = document.getElementById('dashPersonnelSub');
+    const pTile = pEl.closest('.dash-tile');
+    pEl.textContent  = people.length;
+    pSub.textContent = pending > 0 ? `${pending} pending review` : (people.length > 0 ? 'All approved' : 'None added');
+    pSub.style.color = pending > 0 ? '#fbbf24' : '#64748b';
+    pTile.className  = 'dash-tile ' + (pending > 0 ? 'warn' : people.length > 0 ? 'ok' : 'info');
+  }
+
+  // ── Mini dashboard: assessments tile ──
+  async function loadDashAssessments() {
+    const u = getUser();
+    const assessments = await apiFetch(`${SUPABASE_URL}/rest/v1/assessments?contractor_id=eq.${u.id}&select=id,status`, { headers: getHeaders() });
+    const aEl   = document.getElementById('dashAssessments');
+    const aSub  = document.getElementById('dashAssessmentsSub');
+    const aTile = aEl.closest('.dash-tile');
+    if (!assessments) return;
+    const total    = assessments.length;
+    const approved = assessments.filter(a => a.status === 'approved').length;
+    const draft    = assessments.filter(a => !a.status || a.status === 'draft').length;
+    aEl.textContent  = total;
+    aSub.textContent = draft > 0 ? `${draft} in progress` : (total > 0 ? `${approved} approved` : 'None yet');
+    aSub.style.color = '#64748b';
+    aTile.className  = 'dash-tile ' + (total > 0 ? 'ok' : 'info');
   }
 
   // ═══ PERSONNEL FILE UPLOAD ═══
