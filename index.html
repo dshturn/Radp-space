@@ -342,7 +342,7 @@
         <div id="fieldWellNewWrap" style="display:none;">
           <input type="text" id="fieldWellNew" placeholder="e.g. MANIFA/MNIF-123" autocomplete="off">
         </div>
-        <label>Type of Job</label>
+        <label for="typeOfJob">Type of Job</label>
         <select id="typeOfJob" style="margin-bottom:14px;" onchange="onTypeOfJobChange(this)"><option value="">Select type of job...</option></select>
         <div id="typeOfJobCustomWrap" style="display:none;">
           <input type="text" id="typeOfJobCustom" placeholder="Enter custom type of job" autocomplete="off">
@@ -1395,6 +1395,12 @@
     const objective  = document.getElementById('objective').value;
     if (!fieldWell) { alert('Please select or enter a Field / Well'); return; }
     if (!typeOfJob || typeOfJob === '—') { alert('Please select a Type of Job'); return; }
+    if (typeOfJobSel.value === '__custom__' && typeOfJob) {
+      await fetch(`${SUPABASE_URL}/rest/v1/service_lines`, {
+        method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal' },
+        body: JSON.stringify({ name: typeOfJob })
+      });
+    }
     const res  = await fetch(`${SUPABASE_URL}/rest/v1/assessments`, {
       method: 'POST', headers: { ...getHeaders(), Prefer: 'return=representation' },
       body: JSON.stringify({ contractor_id: getUser().id, field_well: fieldWell, type_of_job: typeOfJob, objective, sharepoint_request_id: requestId || null })
