@@ -430,7 +430,10 @@
     <div class="dv-resize" data-dir="se" style="position:absolute;bottom:-4px;right:-4px;width:16px;height:16px;cursor:se-resize;z-index:11;"></div>
     <div id="docViewerHeader" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #334155;flex-shrink:0;cursor:grab;user-select:none;">
       <span id="docViewerTitle" style="font-size:14px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;margin-right:12px;"></span>
-      <div style="display:flex;gap:8px;flex-shrink:0;">
+      <div style="display:flex;gap:8px;flex-shrink:0;align-items:center;">
+        <button id="docZoomOut" onclick="zoomPdf(-0.2)" style="display:none;background:#334155;color:#e2e8f0;border:none;padding:7px 12px;border-radius:6px;cursor:pointer;font-size:16px;line-height:1;">−</button>
+        <span id="docZoomLevel" style="display:none;font-size:13px;color:#94a3b8;min-width:40px;text-align:center;"></span>
+        <button id="docZoomIn" onclick="zoomPdf(0.2)" style="display:none;background:#334155;color:#e2e8f0;border:none;padding:7px 12px;border-radius:6px;cursor:pointer;font-size:16px;line-height:1;">+</button>
         <a id="docViewerDownload" href="#" download style="background:#059669;color:white;border:none;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:13px;text-decoration:none;">↓ Download</a>
         <button onclick="closeDocViewer()" style="background:#334155;color:#e2e8f0;border:none;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:13px;">✕ Close</button>
       </div>
@@ -1319,26 +1322,21 @@
       const blob = await res.blob();
       const blobUrl = URL.createObjectURL(blob);
       dl.href = blobUrl; dl.download = title.textContent;
+      document.getElementById('docZoomIn').style.display  = 'none';
+      document.getElementById('docZoomOut').style.display = 'none';
+      document.getElementById('docZoomLevel').style.display = 'none';
       if (isImage) {
         body.innerHTML = `<img src="${blobUrl}" style="max-width:100%;display:block;margin:auto;padding:16px;">`;
       } else if (isPdf) {
         body.innerHTML = `<div id="pdfCanvas" style="padding:0;"></div>`;
         const arrayBuf = await blob.arrayBuffer();
         pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
-        const pdf = await pdfjsLib.getDocument({ data: arrayBuf }).promise;
-        const container = document.getElementById('pdfCanvas');
-        const containerWidth = body.clientWidth;
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const baseVp = page.getViewport({ scale: 1 });
-          const scale = containerWidth / baseVp.width;
-          const vp = page.getViewport({ scale });
-          const canvas = document.createElement('canvas');
-          canvas.width = vp.width; canvas.height = vp.height;
-          canvas.style.cssText = 'display:block;width:100%;margin-bottom:4px;';
-          container.appendChild(canvas);
-          await page.render({ canvasContext: canvas.getContext('2d', { willReadFrequently: true }), viewport: vp }).promise;
-        }
+        _currentPdf = await pdfjsLib.getDocument({ data: arrayBuf }).promise;
+        _pdfScale = body.clientWidth / (await _currentPdf.getPage(1)).getViewport({ scale: 1 }).width;
+        await _renderPdf();
+        document.getElementById('docZoomIn').style.display  = 'block';
+        document.getElementById('docZoomOut').style.display = 'block';
+        document.getElementById('docZoomLevel').style.display = 'block';
       } else {
         body.innerHTML = `<div style="padding:32px;text-align:center;color:#94a3b8;">Preview not available.<br><br><a href="${blobUrl}" target="_blank" style="color:#38bdf8;">Open in new tab</a></div>`;
       }
@@ -1347,9 +1345,33 @@
     }
   }
 
+  let _currentPdf = null, _pdfScale = 1;
+
+  async function _renderPdf() {
+    const container = document.getElementById('pdfCanvas');
+    if (!container || !_currentPdf) return;
+    container.innerHTML = '';
+    document.getElementById('docZoomLevel').textContent = Math.round(_pdfScale * 100) + '%';
+    for (let i = 1; i <= _currentPdf.numPages; i++) {
+      const page = await _currentPdf.getPage(i);
+      const vp = page.getViewport({ scale: _pdfScale });
+      const canvas = document.createElement('canvas');
+      canvas.width = vp.width; canvas.height = vp.height;
+      canvas.style.cssText = 'display:block;width:100%;margin-bottom:4px;';
+      container.appendChild(canvas);
+      await page.render({ canvasContext: canvas.getContext('2d', { willReadFrequently: true }), viewport: vp }).promise;
+    }
+  }
+
+  async function zoomPdf(delta) {
+    _pdfScale = Math.max(0.4, Math.min(5, _pdfScale + delta));
+    await _renderPdf();
+  }
+
   function closeDocViewer() {
     document.getElementById('docViewerModal').style.display = 'none';
     document.getElementById('docViewerBody').innerHTML = '';
+    _currentPdf = null;
   }
 
   // Drag + resize logic for doc viewer
