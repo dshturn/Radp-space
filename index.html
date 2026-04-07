@@ -844,7 +844,9 @@
         else if (exp <= in30) { statusColor = '#fbbf24'; statusText = 'EXPIRING'; }
       }
       const fileBtn = d.file_url ? `<a href="${d.file_url}" target="_blank" style="color:#38bdf8;font-size:11px;text-decoration:none;">📎 View</a>` : '';
-      return `<div class="doc-row">
+      const rowBorder = statusText === 'EXPIRED'  ? 'border-left:3px solid #fda4af;padding-left:8px;'
+                      : statusText === 'EXPIRING' ? 'border-left:3px solid #fbbf24;padding-left:8px;' : '';
+      return `<div class="doc-row" style="${rowBorder}">
         <div style="flex:1">
           <div class="doc-name">${typeName}</div>
           <div class="doc-date">Issue: ${d.issue_date || '—'} · Expiry: ${expiry || '—'}</div>
@@ -857,10 +859,18 @@
       </div>`;
     }).join('') : `<div class="doc-date" style="padding:8px 0;">No documents yet</div>`;
 
+    // Alert badge on card if any docs are expired/expiring
+    const expiredCount  = docs.filter(d => { if (!d.expiry_date) return false; return new Date(d.expiry_date) < today; }).length;
+    const expiringCount = docs.filter(d => { if (!d.expiry_date) return false; const e = new Date(d.expiry_date); return e >= today && e <= in30; }).length;
+    const alertBadge = expiredCount  > 0 ? `<span style="background:#4c0519;color:#fda4af;font-size:11px;font-weight:bold;padding:3px 8px;border-radius:20px;">⚠ ${expiredCount} EXPIRED</span>`
+                     : expiringCount > 0 ? `<span style="background:#422006;color:#fbbf24;font-size:11px;font-weight:bold;padding:3px 8px;border-radius:20px;">⚠ ${expiringCount} EXPIRING</span>`
+                     : '';
+
     return `<div class="app-card">
       <div class="card-header">
         <div class="card-title">${name}</div>
-        <div style="display:flex;gap:8px;align-items:center;">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          ${alertBadge}
           ${badge}
           <button class="btn-danger" onclick="deleteEquipItem(${item.id})" title="Delete equipment">🗑</button>
         </div>
