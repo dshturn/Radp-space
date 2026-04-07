@@ -487,7 +487,7 @@
       <input type="text" id="persPositionNew" placeholder="Enter position name" autocomplete="off">
     </div>
     <label for="persNationalId">ID (IQAMA / NATIONAL)</label>
-    <input type="text" id="persNationalId" placeholder="ID number" autocomplete="off">
+    <input type="text" id="persNationalId" placeholder="10-digit ID number" maxlength="10" pattern="\d{10}" autocomplete="off" inputmode="numeric">
     <div class="modal-btns">
       <button class="btn-cancel" onclick="closeModal('ctPersModal')">Cancel</button>
       <button class="btn-save" onclick="addPersonnel()">Save</button>
@@ -1015,6 +1015,7 @@
     const nationalId = document.getElementById('persNationalId').value.trim();
     if (!name)           { alert('Please enter full name'); return; }
     if (!selEl.value)    { alert('Please select a position'); return; }
+    if (!/^\d{10}$/.test(nationalId)) { alert('ID must be exactly 10 digits'); return; }
 
     let position = selEl.value;
     if (position === '__new__') {
