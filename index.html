@@ -236,7 +236,14 @@
       <span class="auth-label">Password</span>
       <input type="password" id="regPassword" placeholder="Min 6 characters">
       <span class="auth-label">Company</span>
-      <select id="regCompany"><option value="">Select company...</option></select>
+      <select id="regCompany" onchange="onCompanyChange(this)"><option value="">Select company...</option></select>
+      <div id="newCompanyWrap" style="display:none;margin-top:-10px;margin-bottom:16px;">
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="newCompanyName" placeholder="Enter company name" style="flex:1;margin-bottom:0;">
+          <button type="button" onclick="addNewCompany()" style="background:#059669;color:white;border:none;padding:10px 14px;border-radius:8px;cursor:pointer;font-size:13px;white-space:nowrap;transition:background 0.2s;">Add</button>
+        </div>
+        <div id="newCompanyMsg" style="font-size:12px;margin-top:6px;"></div>
+      </div>
       <span class="auth-label">Service Line</span>
       <select id="regServiceLine"><option value="">Select service line...</option></select>
       <button class="btn-main" onclick="register()">Create Account</button>
@@ -522,13 +529,49 @@
 
   // ═══ REGISTER ═══
   async function loadRegisterOptions() {
-    if (document.getElementById('regCompany').options.length > 1) return;
     const [c, s] = await Promise.all([
       fetch(`${SUPABASE_URL}/rest/v1/companies?select=name&order=name`, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }).then(r => r.json()),
       fetch(`${SUPABASE_URL}/rest/v1/service_lines?select=name&order=name`, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }).then(r => r.json())
     ]);
-    c.forEach(x => document.getElementById('regCompany').innerHTML    += `<option>${x.name}</option>`);
+    const sel = document.getElementById('regCompany');
+    const current = sel.value;
+    sel.innerHTML = '<option value="">Select company...</option>';
+    c.forEach(x => sel.innerHTML += `<option value="${x.name}">${x.name}</option>`);
+    sel.innerHTML += `<option value="__new__">+ Add new company...</option>`;
+    if (current) sel.value = current;
     s.forEach(x => document.getElementById('regServiceLine').innerHTML += `<option>${x.name}</option>`);
+  }
+
+  function onCompanyChange(sel) {
+    const wrap = document.getElementById('newCompanyWrap');
+    if (sel.value === '__new__') {
+      wrap.style.display = 'block';
+      document.getElementById('newCompanyName').focus();
+    } else {
+      wrap.style.display = 'none';
+    }
+  }
+
+  async function addNewCompany() {
+    const name = document.getElementById('newCompanyName').value.trim();
+    const msg  = document.getElementById('newCompanyMsg');
+    if (!name) { msg.style.color = '#fda4af'; msg.textContent = 'Please enter a company name.'; return; }
+    msg.style.color = '#94a3b8'; msg.textContent = 'Adding...';
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/companies`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Prefer: 'return=minimal' },
+      body: JSON.stringify({ name })
+    });
+    if (res.ok || res.status === 201) {
+      msg.style.color = '#6ee7b7'; msg.textContent = `"${name}" added!`;
+      document.getElementById('newCompanyName').value = '';
+      await loadRegisterOptions();
+      document.getElementById('regCompany').value = name;
+      document.getElementById('newCompanyWrap').style.display = 'none';
+      msg.textContent = '';
+    } else {
+      msg.style.color = '#fda4af'; msg.textContent = 'Failed to add. It may already exist.';
+    }
   }
 
   async function register() {
@@ -538,8 +581,8 @@
     const company     = document.getElementById('regCompany').value;
     const serviceLine = document.getElementById('regServiceLine').value;
     const msg         = document.getElementById('registerMsg');
-    if (!fullName || !email || !password || !company || !serviceLine) {
-      msg.className = 'auth-msg error'; msg.textContent = 'Please fill all fields.'; return;
+    if (!fullName || !email || !password || !company || !serviceLine || company === '__new__') {
+      msg.className = 'auth-msg error'; msg.textContent = company === '__new__' ? 'Please finish adding your company first.' : 'Please fill all fields.'; return;
     }
     const res  = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
       method: 'POST',
