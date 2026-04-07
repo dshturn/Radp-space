@@ -1,7 +1,9 @@
 {
   "rewrites": [
-    { "source": "/contractor", "destination": "/shell.html" },
-    { "source": "/assessment", "destination": "/shell.html" }
+    { "source": "/contractor", "destination": "/index.html" },
+    { "source": "/assessment", "destination": "/index.html" },
+    { "source": "/login",      "destination": "/index.html" },
+    { "source": "/register",   "destination": "/index.html" }
   ],
   "headers": [
     {
