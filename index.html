@@ -474,7 +474,11 @@
     <label for="docIssueDate" style="color:#94a3b8;font-size:13px;margin-bottom:6px;display:block;">Issue Date</label>
     <input type="date" id="docIssueDate" style="margin-bottom:12px;">
     <label for="docExpiryDate" style="color:#94a3b8;font-size:13px;margin-bottom:6px;display:block;">Expiry Date</label>
-    <input type="date" id="docExpiryDate" style="margin-bottom:12px;">
+    <input type="date" id="docExpiryDate" style="margin-bottom:8px;">
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#94a3b8;margin-bottom:12px;cursor:pointer;">
+      <input type="checkbox" id="docNoExpiry" onchange="document.getElementById('docExpiryDate').disabled=this.checked;if(this.checked)document.getElementById('docExpiryDate').value='';" style="width:auto;margin:0;">
+      Not Applicable / No Expiry Date
+    </label>
     <label for="docFileInput" style="color:#94a3b8;font-size:13px;margin-bottom:6px;display:block;">Attachment <span style="color:#fda4af;">*</span></label>
     <button type="button" id="docFileBtn" onclick="document.getElementById('docFileInput').click()" style="background:#1e293b;border:1px dashed #334155;color:#94a3b8;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:13px;width:100%;margin-bottom:4px;transition:border-color 0.2s,color 0.2s;">📎 Choose file</button>
     <div id="docFileName" style="font-size:12px;color:#64748b;margin-bottom:12px;"></div>
@@ -969,6 +973,8 @@
     document.getElementById('docTypeCustom').value = '';
     document.getElementById('docIssueDate').value = '';
     document.getElementById('docExpiryDate').value = '';
+    document.getElementById('docNoExpiry').checked = false;
+    document.getElementById('docExpiryDate').disabled = false;
     document.getElementById('docFileInput').value = '';
     document.getElementById('docFileName').textContent = '';
     document.getElementById('addDocModal').classList.add('open');
@@ -989,7 +995,8 @@
     const typeCustom = document.getElementById('docTypeCustom').value.trim();
     const typeName   = typeSelect === '__new__' ? typeCustom : typeSelect;
     const issueDate  = document.getElementById('docIssueDate').value;
-    const expiryDate = document.getElementById('docExpiryDate').value;
+    const noExpiry   = document.getElementById('docNoExpiry').checked;
+    const expiryDate = noExpiry ? null : document.getElementById('docExpiryDate').value;
     const file       = document.getElementById('docFileInput').files[0];
 
     if (!typeName) { alert('Please select or enter a document type'); return; }
