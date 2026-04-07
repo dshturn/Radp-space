@@ -884,7 +884,7 @@
         </div>
       </div>
       <div class="sn-info" style="margin-bottom:10px;">S/N: ${item.serial_number || '—'}</div>
-      <div style="border-top:1px solid #334155;padding-top:10px;margin-top:4px;">
+      <div style="border-top:1px solid #334155;padding-top:0;margin-top:4px;">
         ${docsHtml}
         <button class="upload-btn" style="margin-top:10px;" onclick="openAddDoc(${item.id})">+ Add Document</button>
       </div>
@@ -1131,11 +1131,11 @@
       <div class="card-header">
         <div>
           <div class="card-title">${p.full_name}</div>
-          <div class="doc-name" style="margin-top:4px;">${p.position || ''} · ID: ${p.national_id || '—'}${p.years_experience != null ? ' · ' + p.years_experience + ' yrs exp' : ''}</div>
+          <div class="doc-name" style="margin-top:4px;">${p.position || ''} · ID: ${p.national_id || '—'}</div>
         </div>
         <button class="btn-danger" onclick="deletePersRecord(${p.id})" title="Delete">🗑</button>
       </div>
-      <div style="border-top:1px solid #334155;padding-top:10px;margin-top:8px;">${docRows}</div>
+      <div style="border-top:1px solid #334155;padding-top:0;margin-top:8px;">${docRows}</div>
     </div>`;
   }
 
