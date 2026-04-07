@@ -1137,13 +1137,20 @@
       }
     }).join('');
 
+    const expiredCount  = docs.filter(d => d.expiry_date && new Date(d.expiry_date) < today).length;
+    const expiringCount = docs.filter(d => { if (!d.expiry_date) return false; const e = new Date(d.expiry_date); return e >= today && e <= in30; }).length;
+    const alertBadge = expiredCount  > 0 ? `<span style="background:#4c0519;color:#fda4af;font-size:11px;font-weight:bold;padding:3px 8px;border-radius:20px;">⚠ ${expiredCount} EXPIRED</span>`
+                     : expiringCount > 0 ? `<span style="background:#422006;color:#fbbf24;font-size:11px;font-weight:bold;padding:3px 8px;border-radius:20px;">⚠ ${expiringCount} EXPIRING</span>`
+                     : '';
+
     return `<div class="app-card">
       <div class="card-header">
         <div>
           <div class="card-title">${p.full_name}</div>
           <div class="doc-name" style="margin-top:4px;">${p.position || ''} · ID: ${p.national_id || '—'}</div>
         </div>
-        <div style="display:flex;gap:8px;align-items:center;">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          ${alertBadge}
           <button class="btn-toggle" onclick="toggleCard(this)" title="Expand">▾</button>
           <button class="btn-danger" onclick="deletePersRecord(${p.id})" title="Delete">🗑</button>
         </div>
