@@ -417,13 +417,13 @@
 </div>
 
 <!-- Document Viewer Modal -->
-<div class="modal" id="docViewerModal" style="z-index:2000;">
-  <div class="modal-box" style="max-width:860px;width:95vw;max-height:90vh;display:flex;flex-direction:column;padding:0;overflow:hidden;">
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #334155;flex-shrink:0;">
+<div id="docViewerModal" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.6);">
+  <div id="docViewerBox" style="position:fixed;top:2.5vh;left:2.5vw;width:95vw;height:95vh;background:#1e293b;border-radius:10px;border:1px solid #334155;display:flex;flex-direction:column;overflow:hidden;resize:both;min-width:320px;min-height:240px;box-shadow:0 24px 80px rgba(0,0,0,0.6);">
+    <div id="docViewerHeader" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #334155;flex-shrink:0;cursor:grab;user-select:none;">
       <span id="docViewerTitle" style="font-size:14px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;margin-right:12px;"></span>
       <div style="display:flex;gap:8px;flex-shrink:0;">
         <a id="docViewerDownload" href="#" download style="background:#059669;color:white;border:none;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:13px;text-decoration:none;">↓ Download</a>
-        <button onclick="closeModal('docViewerModal')" style="background:#334155;color:#e2e8f0;border:none;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:13px;">✕ Close</button>
+        <button onclick="closeDocViewer()" style="background:#334155;color:#e2e8f0;border:none;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:13px;">✕ Close</button>
       </div>
     </div>
     <div id="docViewerBody" style="flex:1;overflow:auto;min-height:0;background:#0f172a;"></div>
@@ -1295,17 +1295,51 @@
     const body    = document.getElementById('docViewerBody');
     const title   = document.getElementById('docViewerTitle');
     const dl      = document.getElementById('docViewerDownload');
+    const box     = document.getElementById('docViewerBox');
     title.textContent = decodeURIComponent(url.split('/').pop().split('?')[0]);
     dl.href = url;
+    // reset size/position
+    box.style.top = '2.5vh'; box.style.left = '2.5vw';
+    box.style.width = '95vw'; box.style.height = '95vh';
     if (isImage) {
       body.innerHTML = `<img src="${url}" style="max-width:100%;display:block;margin:auto;padding:16px;">`;
     } else if (isPdf) {
-      body.innerHTML = `<iframe src="${url}" style="width:100%;height:75vh;border:none;"></iframe>`;
+      body.innerHTML = `<iframe src="${url}" style="width:100%;height:100%;border:none;display:block;"></iframe>`;
     } else {
       body.innerHTML = `<div style="padding:32px;text-align:center;color:#94a3b8;">Preview not available for this file type.<br><br><a href="${url}" target="_blank" style="color:#38bdf8;">Open in new tab</a></div>`;
     }
-    document.getElementById('docViewerModal').classList.add('open');
+    document.getElementById('docViewerModal').style.display = 'block';
   }
+
+  function closeDocViewer() {
+    document.getElementById('docViewerModal').style.display = 'none';
+    document.getElementById('docViewerBody').innerHTML = '';
+  }
+
+  // Drag logic for doc viewer
+  (function() {
+    let dragging = false, ox = 0, oy = 0;
+    document.addEventListener('DOMContentLoaded', () => {
+      const header = document.getElementById('docViewerHeader');
+      const box    = document.getElementById('docViewerBox');
+      header.addEventListener('mousedown', e => {
+        if (e.target.tagName === 'BUTTON' || e.target.tagName === 'A') return;
+        dragging = true;
+        ox = e.clientX - box.offsetLeft;
+        oy = e.clientY - box.offsetTop;
+        header.style.cursor = 'grabbing';
+      });
+      document.addEventListener('mousemove', e => {
+        if (!dragging) return;
+        box.style.left = Math.max(0, e.clientX - ox) + 'px';
+        box.style.top  = Math.max(0, e.clientY - oy) + 'px';
+      });
+      document.addEventListener('mouseup', () => {
+        dragging = false;
+        header.style.cursor = 'grab';
+      });
+    });
+  })();
 
   function toggleCard(btn) {
     btn.closest('.app-card').classList.toggle('expanded');
