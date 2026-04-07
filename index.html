@@ -495,6 +495,28 @@
   </div>
 </div>
 
+<!-- Personnel: Add Document Modal -->
+<div class="modal" id="addPersDocModal">
+  <div class="modal-box">
+    <h3>Add Document</h3>
+    <div id="persDocTypeName" style="font-size:14px;font-weight:bold;color:#38bdf8;margin-bottom:14px;"></div>
+    <label for="persDocIssueDate">Issue Date</label>
+    <input type="date" id="persDocIssueDate" style="margin-bottom:12px;">
+    <label for="persDocExpiryDate">Expiry Date</label>
+    <input type="date" id="persDocExpiryDate" style="margin-bottom:12px;">
+    <label style="color:#94a3b8;font-size:13px;margin-bottom:6px;display:block;">Attachment <span style="color:#fda4af;">*</span></label>
+    <button type="button" id="persDocFileBtn" onclick="document.getElementById('persDocFileInput').click()" style="background:#1e293b;border:1px dashed #334155;color:#94a3b8;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:13px;width:100%;margin-bottom:4px;transition:border-color 0.2s,color 0.2s;">📎 Choose file</button>
+    <div id="persDocFileName" style="font-size:12px;color:#64748b;margin-bottom:12px;"></div>
+    <input type="file" id="persDocFileInput" accept=".pdf,.jpg,.jpeg,.png" onchange="document.getElementById('persDocFileName').textContent = this.files[0]?.name || ''">
+    <input type="hidden" id="persDocPersonId">
+    <input type="hidden" id="persDocIsMandatory">
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('addPersDocModal')">Cancel</button>
+      <button class="btn-save" onclick="savePersDocument()">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- Assessment: Equipment Selector Modal -->
 <div id="asEquipModal" class="modal">
   <div class="modal-scroll">
@@ -518,8 +540,6 @@
     </div>
   </div>
 </div>
-
-<input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png">
 
 <script>
   const SUPABASE_URL = 'https://fslleuedqlxpjnerruzt.supabase.co';
@@ -1004,31 +1024,152 @@
     closeModal('ctPersModal'); loadPersonnel();
   }
 
+  const PERS_DOC_TYPES = [
+    { name: 'CV',               mandatory: true  },
+    { name: 'Medical Report',   mandatory: true  },
+    { name: 'Fire Fighting',    mandatory: true  },
+    { name: 'H2S & SCBA',       mandatory: true  },
+    { name: 'First Aid',        mandatory: true  },
+    { name: 'Well Control',     mandatory: false },
+    { name: 'HUET',             mandatory: false },
+  ];
+
   async function loadPersonnel() {
-    const u = getUser();
-    const people = await apiFetch(`${SUPABASE_URL}/rest/v1/personnel?select=*&order=created_at`, { headers: getHeaders() });
+    const h = getHeaders();
+    const people = await apiFetch(`${SUPABASE_URL}/rest/v1/personnel?select=*&order=created_at`, { headers: h });
     if (!people) return;
+
+    // Load all personnel docs in one shot
+    const personIds = people.map(p => p.id).join(',');
+    let persDocs = [];
+    if (personIds) persDocs = await apiFetch(`${SUPABASE_URL}/rest/v1/personnel_documents?personnel_id=in.(${personIds})&select=*&order=uploaded_at.desc`, { headers: h }) || [];
+    const docsByPerson = {};
+    persDocs.forEach(d => { if (!docsByPerson[d.personnel_id]) docsByPerson[d.personnel_id] = []; docsByPerson[d.personnel_id].push(d); });
+
     const list = document.getElementById('personnelList');
     if (!people.length) { list.innerHTML = '<div class="empty">No personnel added yet</div>'; }
-    else {
-      list.innerHTML = people.map(p => `
-        <div class="app-card">
-          <div class="card-header"><div class="card-title">${p.full_name}</div><span class="badge ${p.ai_status || 'pending'}">${p.ai_status || 'pending'}</span></div>
-          <div class="doc-name">${p.position || ''} · ID: ${p.national_id || '—'}</div>
-          <div class="doc-date" style="margin-top:6px">Expiry: ${p.expiry_date || 'Not set'}</div>
-          <button class="upload-btn" style="margin-top:10px" onclick="uploadPersonnelDoc('${p.id}')">↑ Upload Certificate</button>
-        </div>`).join('');
-    }
+    else { list.innerHTML = people.map(p => personnelCard(p, docsByPerson[p.id] || [])).join(''); }
+
     // ── Mini dashboard: personnel tile ──
-    const approved = people.filter(p => p.ai_status === 'approved').length;
-    const pending  = people.filter(p => !p.ai_status || p.ai_status === 'pending').length;
+    // Count people with any missing mandatory doc
+    let missingMandatory = 0;
+    people.forEach(p => {
+      const uploaded = new Set((docsByPerson[p.id] || []).map(d => d.doc_type_name));
+      const missing  = PERS_DOC_TYPES.filter(t => t.mandatory && !uploaded.has(t.name));
+      if (missing.length > 0) missingMandatory++;
+    });
     const pEl   = document.getElementById('dashPersonnel');
     const pSub  = document.getElementById('dashPersonnelSub');
     const pTile = pEl.closest('.dash-tile');
     pEl.textContent  = people.length;
-    pSub.textContent = pending > 0 ? `${pending} pending review` : (people.length > 0 ? 'All approved' : 'None added');
-    pSub.style.color = pending > 0 ? '#fbbf24' : '#64748b';
-    pTile.className  = 'dash-tile ' + (pending > 0 ? 'warn' : people.length > 0 ? 'ok' : 'info');
+    pSub.textContent = missingMandatory > 0 ? `${missingMandatory} docs missing` : (people.length > 0 ? 'All docs uploaded' : 'None added');
+    pSub.style.color = missingMandatory > 0 ? '#fbbf24' : '#64748b';
+    pTile.className  = 'dash-tile ' + (missingMandatory > 0 ? 'warn' : people.length > 0 ? 'ok' : 'info');
+  }
+
+  function personnelCard(p, docs) {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const in30  = new Date(today); in30.setDate(in30.getDate() + 30);
+    const docMap = {};
+    docs.forEach(d => { docMap[d.doc_type_name] = d; });
+
+    const docRows = PERS_DOC_TYPES.map(t => {
+      const d = docMap[t.name];
+      const mandBadge = t.mandatory
+        ? `<span style="font-size:10px;color:#93c5fd;background:#1e3a5f;padding:2px 6px;border-radius:10px;">Required</span>`
+        : `<span style="font-size:10px;color:#a78bfa;background:#2d1b69;padding:2px 6px;border-radius:10px;">Optional</span>`;
+
+      if (d) {
+        let statusColor = '#6ee7b7', statusText = 'VALID', rowBorder = '';
+        if (d.expiry_date) {
+          const exp = new Date(d.expiry_date);
+          if (exp < today)      { statusColor = '#fda4af'; statusText = 'EXPIRED';  rowBorder = 'border-left:3px solid #fda4af;padding-left:8px;'; }
+          else if (exp <= in30) { statusColor = '#fbbf24'; statusText = 'EXPIRING'; rowBorder = 'border-left:3px solid #fbbf24;padding-left:8px;'; }
+        }
+        const fileBtn = d.file_url ? `<a href="${d.file_url}" target="_blank" style="color:#38bdf8;font-size:11px;text-decoration:none;">📎 View</a>` : '';
+        return `<div class="doc-row" style="${rowBorder}">
+          <div style="flex:1">
+            <div class="doc-name" style="display:flex;align-items:center;gap:6px;">${t.name} ${mandBadge}</div>
+            <div class="doc-date">Issue: ${d.issue_date || '—'} · Expiry: ${d.expiry_date || '—'}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            ${fileBtn}
+            <span style="color:${statusColor};font-size:11px;font-weight:bold;">${statusText}</span>
+            <button class="btn-danger" onclick="deletePersDoc(${d.id})">✕</button>
+          </div>
+        </div>`;
+      } else {
+        return `<div class="doc-row">
+          <div style="flex:1">
+            <div class="doc-name" style="display:flex;align-items:center;gap:6px;">${t.name} ${mandBadge}</div>
+            <div class="doc-date" style="color:#475569;">Not uploaded</div>
+          </div>
+          <button class="upload-btn" onclick="openAddPersDoc(${p.id},'${t.name}',${t.mandatory})">↑ Upload</button>
+        </div>`;
+      }
+    }).join('');
+
+    return `<div class="app-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">${p.full_name}</div>
+          <div class="doc-name" style="margin-top:4px;">${p.position || ''} · ID: ${p.national_id || '—'}</div>
+        </div>
+        <button class="btn-danger" onclick="deletePersRecord(${p.id})" title="Delete">🗑</button>
+      </div>
+      <div style="border-top:1px solid #334155;padding-top:10px;margin-top:8px;">${docRows}</div>
+    </div>`;
+  }
+
+  function openAddPersDoc(personId, typeName, mandatory) {
+    document.getElementById('persDocPersonId').value    = personId;
+    document.getElementById('persDocIsMandatory').value = mandatory;
+    document.getElementById('persDocTypeName').textContent = typeName;
+    document.getElementById('persDocIssueDate').value   = '';
+    document.getElementById('persDocExpiryDate').value  = '';
+    document.getElementById('persDocFileInput').value   = '';
+    document.getElementById('persDocFileName').textContent = '';
+    document.getElementById('persDocFileBtn').style.borderColor = '';
+    document.getElementById('addPersDocModal').classList.add('open');
+  }
+
+  async function savePersDocument() {
+    const personId  = document.getElementById('persDocPersonId').value;
+    const typeName  = document.getElementById('persDocTypeName').textContent;
+    const mandatory = document.getElementById('persDocIsMandatory').value === 'true';
+    const issueDate = document.getElementById('persDocIssueDate').value;
+    const expDate   = document.getElementById('persDocExpiryDate').value;
+    const file      = document.getElementById('persDocFileInput').files[0];
+    if (!file) { alert('Please attach a file — attachment is required'); document.getElementById('persDocFileBtn').style.borderColor = '#fda4af'; return; }
+
+    const path = `personnel/${personId}/${typeName.replace(/[^a-z0-9]/gi,'_')}/${Date.now()}_${file.name}`;
+    const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/personnel-docs/${path}`, {
+      method: 'POST',
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${getToken()}`, 'Content-Type': file.type },
+      body: file
+    });
+    if (!uploadRes.ok) { alert('File upload failed. Please try again.'); return; }
+    const fileUrl = `${SUPABASE_URL}/storage/v1/object/public/personnel-docs/${path}`;
+
+    await fetch(`${SUPABASE_URL}/rest/v1/personnel_documents`, {
+      method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal' },
+      body: JSON.stringify({ personnel_id: parseInt(personId), doc_type_name: typeName, is_mandatory: mandatory, file_url: fileUrl, issue_date: issueDate || null, expiry_date: expDate || null })
+    });
+    closeModal('addPersDocModal');
+    loadPersonnel();
+  }
+
+  async function deletePersDoc(id) {
+    if (!confirm('Delete this document?')) return;
+    await fetch(`${SUPABASE_URL}/rest/v1/personnel_documents?id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
+    loadPersonnel();
+  }
+
+  async function deletePersRecord(id) {
+    if (!confirm('Delete this personnel record and all their documents?')) return;
+    await fetch(`${SUPABASE_URL}/rest/v1/personnel_documents?personnel_id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
+    await fetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
+    loadPersonnel();
   }
 
   // ── Mini dashboard: assessments tile ──
@@ -1048,32 +1189,6 @@
     aTile.className  = 'dash-tile ' + (total > 0 ? 'ok' : 'info');
   }
 
-  // ═══ PERSONNEL FILE UPLOAD ═══
-  function uploadPersonnelDoc(personId) { document.getElementById('fileInput').dataset.personId = personId; document.getElementById('fileInput').click(); }
-
-  document.getElementById('fileInput').onchange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const personId = e.target.dataset.personId;
-    const path = `personnel/${getUser().id}/${personId}/${Date.now()}_${file.name}`;
-    const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/personnel-docs/${path}`, {
-      method: 'POST',
-      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${getToken()}`, 'Content-Type': file.type },
-      body: file
-    });
-    if (uploadRes.ok) {
-      const fileUrl = `${SUPABASE_URL}/storage/v1/object/public/personnel-docs/${path}`;
-      await fetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${personId}`, {
-        method: 'PATCH', headers: { ...getHeaders(), Prefer: 'return=minimal' },
-        body: JSON.stringify({ file_url: fileUrl, ai_status: 'pending' })
-      });
-      alert('Certificate uploaded!');
-      loadPersonnel();
-    } else {
-      alert('Upload failed. Please try again.');
-    }
-    e.target.value = '';
-  };
 
   // ═══ ASSESSMENT ═══
   let currentAssessmentId = null;
