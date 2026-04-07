@@ -1,9 +1,11 @@
 {
   "rewrites": [
-    { "source": "/contractor", "destination": "/index.html" },
-    { "source": "/assessment", "destination": "/index.html" },
-    { "source": "/login",      "destination": "/index.html" },
-    { "source": "/register",   "destination": "/index.html" }
+    { "source": "/contractor",       "destination": "/index.html" },
+    { "source": "/assessment",       "destination": "/index.html" },
+    { "source": "/login",            "destination": "/index.html" },
+    { "source": "/register",         "destination": "/index.html" },
+    { "source": "/admin",            "destination": "/index.html" },
+    { "source": "/admin/dashboard",  "destination": "/index.html" }
   ],
   "headers": [
     {
