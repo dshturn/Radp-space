@@ -739,22 +739,25 @@
       }
     });
 
-    // Build unified list: recommended templates first, then custom items
+    // Build unified list: recommended templates first, then everything else
     const cards = [];
+    const renderedItemIds = new Set();
 
-    // Recommended (from templates)
+    // Recommended (from this service line's templates)
     templates.forEach(t => {
       if (dismissedTmplIds.has(t.id)) return;
       const item = itemsByTmpl[t.id];
       if (item) {
         cards.push(equipItemCard(item, t.name, true, docsByItem[item.id] || []));
+        renderedItemIds.add(item.id);
       } else {
         cards.push(equipTemplateCard(t));
       }
     });
 
-    // Custom items (no template)
-    items.filter(i => !i.equipment_template_id).forEach(i => {
+    // All remaining registered items: custom items OR items from a different
+    // service line's templates (e.g. team member registered under different SL)
+    items.filter(i => !i.dismissed && !renderedItemIds.has(i.id)).forEach(i => {
       cards.push(equipItemCard(i, i.name || 'Equipment', false, docsByItem[i.id] || []));
     });
 
