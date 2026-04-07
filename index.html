@@ -1640,7 +1640,7 @@
       const isAdded = !!rowId;
       return `<div class="checkbox-item" style="${isAdded ? 'opacity:0.6;' : ''}">
         ${isAdded
-          ? `<div style="flex:1"><span style="color:#94a3b8;font-size:13px;">${i.equipment_templates?.name || i.model || '—'}</span><span style="color:#64748b;font-size:12px;"> · S/N: ${i.serial_number || '—'}</span><span style="color:#64748b;font-size:11px;font-style:italic;"> · Already added</span></div><button onclick="removeEquipment(${rowId},true)" style="background:#4c0519;color:#fda4af;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px;flex-shrink:0;">Remove</button>`
+          ? `<div style="flex:1"><span style="color:#94a3b8;font-size:13px;">${i.equipment_templates?.name || i.model || '—'}</span><span style="color:#64748b;font-size:12px;"> · S/N: ${i.serial_number || '—'}</span><span style="color:#64748b;font-size:11px;font-style:italic;"> · Already added</span></div><button class="btn-danger" onclick="event.stopPropagation();removeEquipment(${rowId},true)">Remove</button>`
           : `<input type="checkbox" id="eq_${i.id}" value="${i.id}"><label for="eq_${i.id}"><strong>${i.equipment_templates?.name || i.model || '—'}</strong><span style="color:#64748b;font-size:12px;"> · S/N: ${i.serial_number || '—'}</span></label>`
         }
       </div>`;
@@ -1677,7 +1677,7 @@
       const isAdded = !!rowId;
       return `<div class="checkbox-item" style="${isAdded ? 'opacity:0.6;' : ''}">
         ${isAdded
-          ? `<div style="flex:1"><span style="color:#94a3b8;font-size:13px;">${p.full_name}</span><span style="color:#64748b;font-size:12px;"> · ${p.position || ''}</span><span style="color:#64748b;font-size:11px;font-style:italic;"> · Already added</span></div><button onclick="removePersonnel(${rowId},true)" style="background:#4c0519;color:#fda4af;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px;flex-shrink:0;">Remove</button>`
+          ? `<div style="flex:1"><span style="color:#94a3b8;font-size:13px;">${p.full_name}</span><span style="color:#64748b;font-size:12px;"> · ${p.position || ''}</span><span style="color:#64748b;font-size:11px;font-style:italic;"> · Already added</span></div><button class="btn-danger" onclick="event.stopPropagation();removePersonnel(${rowId},true)">Remove</button>`
           : `<input type="checkbox" id="per_${p.id}" value="${p.id}"><label for="per_${p.id}"><strong>${p.full_name}</strong><span style="color:#64748b;font-size:12px;"> · ${p.position || ''}</span></label>`
         }
       </div>`;
