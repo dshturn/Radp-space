@@ -211,9 +211,9 @@
     <div class="auth-card">
       <h1>RADP Login</h1>
       <p class="auth-subtitle">Contractor portal</p>
-      <span class="auth-label">Email</span>
+      <label class="auth-label" for="loginEmail">Email</label>
       <input type="email" id="loginEmail" placeholder="you@company.com">
-      <span class="auth-label">Password</span>
+      <label class="auth-label" for="loginPassword">Password</label>
       <input type="password" id="loginPassword" placeholder="Password" onkeydown="if(event.key==='Enter') login()">
       <button class="btn-main" onclick="login()">Login</button>
       <div id="loginMsg" class="auth-msg"></div>
@@ -229,13 +229,13 @@
     <div class="auth-card">
       <h1>RADP Registration</h1>
       <p class="auth-subtitle">Create your contractor account</p>
-      <span class="auth-label">Full Name</span>
+      <label class="auth-label" for="regFullName">Full Name</label>
       <input type="text" id="regFullName" placeholder="John Smith">
-      <span class="auth-label">Email</span>
+      <label class="auth-label" for="regEmail">Email</label>
       <input type="email" id="regEmail" placeholder="you@company.com">
-      <span class="auth-label">Password</span>
+      <label class="auth-label" for="regPassword">Password</label>
       <input type="password" id="regPassword" placeholder="Min 6 characters">
-      <span class="auth-label">Company</span>
+      <label class="auth-label" for="regCompany">Company</label>
       <select id="regCompany" onchange="onCompanyChange(this)"><option value="">Select company...</option></select>
       <div id="newCompanyWrap" style="display:none;margin-top:-10px;margin-bottom:16px;">
         <div style="display:flex;gap:8px;">
@@ -244,7 +244,7 @@
         </div>
         <div id="newCompanyMsg" style="font-size:12px;margin-top:6px;"></div>
       </div>
-      <span class="auth-label">Service Line</span>
+      <label class="auth-label" for="regServiceLine">Service Line</label>
       <select id="regServiceLine"><option value="">Select service line...</option></select>
       <button class="btn-main" onclick="register()">Create Account</button>
       <div id="registerMsg" class="auth-msg"></div>
@@ -288,13 +288,13 @@
     <div id="createView" class="as-view">
       <div class="app-card">
         <h2>New Assessment</h2>
-        <label>SharePoint Request ID</label>
+        <label for="requestId">SharePoint Request ID</label>
         <input type="text" id="requestId" placeholder="e.g. 176">
-        <label>Field / Well</label>
+        <label for="fieldWell">Field / Well</label>
         <input type="text" id="fieldWell" placeholder="e.g. MANIFA/MNIF-123">
-        <label>Type of Job</label>
+        <label for="typeOfJob">Type of Job</label>
         <select id="typeOfJob"><option value="">Select type of job...</option></select>
-        <label>Objective</label>
+        <label for="objective">Objective</label>
         <textarea id="objective" placeholder="Short summary of the job objective"></textarea>
         <button class="btn-primary" onclick="createAssessment()">Create Assessment</button>
         <button style="margin-left:8px;background:#334155;color:#e2e8f0;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;" onclick="showList()">Cancel</button>
@@ -336,9 +336,9 @@
     <div class="auth-card">
       <h1>Admin Login</h1>
       <p class="auth-subtitle">RADP Admin Panel</p>
-      <span class="auth-label">Email</span>
+      <label class="auth-label" for="adminEmail">Email</label>
       <input type="email" id="adminEmail" placeholder="Admin email">
-      <span class="auth-label">Password</span>
+      <label class="auth-label" for="adminPassword">Password</label>
       <input type="password" id="adminPassword" placeholder="Password" onkeydown="if(event.key==='Enter') adminLogin()">
       <button class="btn-main" onclick="adminLogin()">Login</button>
       <div id="adminLoginMsg" class="auth-msg"></div>
@@ -378,7 +378,7 @@
 <div class="modal" id="addDocModal">
   <div class="modal-box">
     <h3>Add Document</h3>
-    <label style="color:#94a3b8;font-size:13px;margin-bottom:6px;display:block;">Document Type</label>
+    <label for="docTypeSelect" style="color:#94a3b8;font-size:13px;margin-bottom:6px;display:block;">Document Type</label>
     <select id="docTypeSelect" onchange="onDocTypeChange(this)" style="margin-bottom:12px;">
       <option value="">Select type...</option>
       <option>Maintenance</option>
@@ -390,11 +390,11 @@
       <option value="__new__">+ New document type...</option>
     </select>
     <input type="text" id="docTypeCustom" placeholder="Enter document type name" style="display:none;margin-bottom:12px;">
-    <label style="color:#94a3b8;font-size:13px;margin-bottom:6px;display:block;">Issue Date</label>
+    <label for="docIssueDate" style="color:#94a3b8;font-size:13px;margin-bottom:6px;display:block;">Issue Date</label>
     <input type="date" id="docIssueDate" style="margin-bottom:12px;">
-    <label style="color:#94a3b8;font-size:13px;margin-bottom:6px;display:block;">Expiry Date</label>
+    <label for="docExpiryDate" style="color:#94a3b8;font-size:13px;margin-bottom:6px;display:block;">Expiry Date</label>
     <input type="date" id="docExpiryDate" style="margin-bottom:12px;">
-    <label style="color:#94a3b8;font-size:13px;margin-bottom:6px;display:block;">Attachment <span style="color:#fda4af;">*</span></label>
+    <label for="docFileInput" style="color:#94a3b8;font-size:13px;margin-bottom:6px;display:block;">Attachment <span style="color:#fda4af;">*</span></label>
     <button type="button" id="docFileBtn" onclick="document.getElementById('docFileInput').click()" style="background:#1e293b;border:1px dashed #334155;color:#94a3b8;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:13px;width:100%;margin-bottom:4px;transition:border-color 0.2s,color 0.2s;">📎 Choose file</button>
     <div id="docFileName" style="font-size:12px;color:#64748b;margin-bottom:12px;"></div>
     <input type="file" id="docFileInput" accept=".pdf,.jpg,.jpeg,.png" onchange="document.getElementById('docFileName').textContent = this.files[0]?.name || ''">
