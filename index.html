@@ -211,11 +211,13 @@
     <div class="auth-card">
       <h1>RADP Login</h1>
       <p class="auth-subtitle">Contractor portal</p>
-      <label class="auth-label" for="loginEmail">Email</label>
-      <input type="email" id="loginEmail" placeholder="you@company.com">
-      <label class="auth-label" for="loginPassword">Password</label>
-      <input type="password" id="loginPassword" placeholder="Password" onkeydown="if(event.key==='Enter') login()">
-      <button class="btn-main" onclick="login()">Login</button>
+      <form onsubmit="login();return false;">
+        <label class="auth-label" for="loginEmail">Email</label>
+        <input type="email" id="loginEmail" placeholder="you@company.com" autocomplete="email">
+        <label class="auth-label" for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
+        <button type="submit" class="btn-main">Login</button>
+      </form>
       <div id="loginMsg" class="auth-msg"></div>
       <button class="auth-link" onclick="showPage('register')">New contractor? Register here</button>
       <button class="auth-link" style="color:#475569;margin-top:4px;" onclick="showPage('home')">← Back to Home</button>
@@ -229,24 +231,26 @@
     <div class="auth-card">
       <h1>RADP Registration</h1>
       <p class="auth-subtitle">Create your contractor account</p>
-      <label class="auth-label" for="regFullName">Full Name</label>
-      <input type="text" id="regFullName" placeholder="John Smith">
-      <label class="auth-label" for="regEmail">Email</label>
-      <input type="email" id="regEmail" placeholder="you@company.com">
-      <label class="auth-label" for="regPassword">Password</label>
-      <input type="password" id="regPassword" placeholder="Min 6 characters">
-      <label class="auth-label" for="regCompany">Company</label>
-      <select id="regCompany" onchange="onCompanyChange(this)"><option value="">Select company...</option></select>
-      <div id="newCompanyWrap" style="display:none;margin-top:-10px;margin-bottom:16px;">
-        <div style="display:flex;gap:8px;">
-          <input type="text" id="newCompanyName" placeholder="Enter company name" style="flex:1;margin-bottom:0;">
-          <button type="button" onclick="addNewCompany()" style="background:#059669;color:white;border:none;padding:10px 14px;border-radius:8px;cursor:pointer;font-size:13px;white-space:nowrap;transition:background 0.2s;">Add</button>
+      <form onsubmit="register();return false;">
+        <label class="auth-label" for="regFullName">Full Name</label>
+        <input type="text" id="regFullName" placeholder="John Smith" autocomplete="name">
+        <label class="auth-label" for="regEmail">Email</label>
+        <input type="email" id="regEmail" placeholder="you@company.com" autocomplete="email">
+        <label class="auth-label" for="regPassword">Password</label>
+        <input type="password" id="regPassword" placeholder="Min 6 characters" autocomplete="new-password">
+        <label class="auth-label" for="regCompany">Company</label>
+        <select id="regCompany" onchange="onCompanyChange(this)"><option value="">Select company...</option></select>
+        <div id="newCompanyWrap" style="display:none;margin-top:-10px;margin-bottom:16px;">
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="newCompanyName" placeholder="Enter company name" style="flex:1;margin-bottom:0;">
+            <button type="button" onclick="addNewCompany()" style="background:#059669;color:white;border:none;padding:10px 14px;border-radius:8px;cursor:pointer;font-size:13px;white-space:nowrap;transition:background 0.2s;">Add</button>
+          </div>
+          <div id="newCompanyMsg" style="font-size:12px;margin-top:6px;"></div>
         </div>
-        <div id="newCompanyMsg" style="font-size:12px;margin-top:6px;"></div>
-      </div>
-      <label class="auth-label" for="regServiceLine">Service Line</label>
-      <select id="regServiceLine"><option value="">Select service line...</option></select>
-      <button class="btn-main" onclick="register()">Create Account</button>
+        <label class="auth-label" for="regServiceLine">Service Line</label>
+        <select id="regServiceLine"><option value="">Select service line...</option></select>
+        <button type="submit" class="btn-main">Create Account</button>
+      </form>
       <div id="registerMsg" class="auth-msg"></div>
       <button class="auth-link" onclick="showPage('login')">Already have an account? Login</button>
     </div>
@@ -336,11 +340,13 @@
     <div class="auth-card">
       <h1>Admin Login</h1>
       <p class="auth-subtitle">RADP Admin Panel</p>
-      <label class="auth-label" for="adminEmail">Email</label>
-      <input type="email" id="adminEmail" placeholder="Admin email">
-      <label class="auth-label" for="adminPassword">Password</label>
-      <input type="password" id="adminPassword" placeholder="Password" onkeydown="if(event.key==='Enter') adminLogin()">
-      <button class="btn-main" onclick="adminLogin()">Login</button>
+      <form onsubmit="adminLogin();return false;">
+        <label class="auth-label" for="adminEmail">Email</label>
+        <input type="email" id="adminEmail" placeholder="Admin email" autocomplete="email">
+        <label class="auth-label" for="adminPassword">Password</label>
+        <input type="password" id="adminPassword" placeholder="Password" autocomplete="current-password">
+        <button type="submit" class="btn-main">Login</button>
+      </form>
       <div id="adminLoginMsg" class="auth-msg"></div>
       <button class="auth-link" style="color:#475569;margin-top:8px;" onclick="showPage('home')">← Back to Home</button>
     </div>
@@ -797,14 +803,17 @@
 
   async function deleteEquipItem(id) {
     if (!confirm('Delete this equipment and all its documents?')) return;
-    await fetch(`${SUPABASE_URL}/rest/v1/documents?equipment_item_id=eq.${id}`, { method: 'DELETE', headers: getHeaders() });
-    await fetch(`${SUPABASE_URL}/rest/v1/equipment_items?id=eq.${id}`, { method: 'DELETE', headers: getHeaders() });
+    const h = { ...getHeaders(), Prefer: 'return=minimal' };
+    const r1 = await fetch(`${SUPABASE_URL}/rest/v1/documents?equipment_item_id=eq.${id}`, { method: 'DELETE', headers: h });
+    const r2 = await fetch(`${SUPABASE_URL}/rest/v1/equipment_items?id=eq.${id}`, { method: 'DELETE', headers: h });
+    if (!r2.ok) { alert('Delete failed: ' + r2.status); }
     loadEquipment();
   }
 
   async function deleteDoc(id) {
     if (!confirm('Delete this document?')) return;
-    await fetch(`${SUPABASE_URL}/rest/v1/documents?id=eq.${id}`, { method: 'DELETE', headers: getHeaders() });
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/documents?id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
+    if (!r.ok) { alert('Delete failed: ' + r.status); }
     loadEquipment();
   }
 
