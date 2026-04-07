@@ -500,10 +500,15 @@
   <div class="modal-box">
     <h3>Add Document</h3>
     <div id="persDocTypeName" style="font-size:14px;font-weight:bold;color:#38bdf8;margin-bottom:14px;"></div>
-    <label for="persDocIssueDate">Issue Date</label>
-    <input type="date" id="persDocIssueDate" style="margin-bottom:12px;">
-    <label for="persDocExpiryDate">Expiry Date</label>
-    <input type="date" id="persDocExpiryDate" style="margin-bottom:12px;">
+    <div id="persDocIssueDateWrap">
+      <label for="persDocIssueDate">Issue Date</label>
+      <input type="date" id="persDocIssueDate" style="margin-bottom:12px;">
+    </div>
+    <div id="persDocAutoExpiryNote" style="display:none;font-size:12px;color:#64748b;margin-bottom:12px;">ℹ Expiry auto-calculated: 2 years from issue date</div>
+    <div id="persDocExpiryDateWrap">
+      <label for="persDocExpiryDate">Expiry Date</label>
+      <input type="date" id="persDocExpiryDate" style="margin-bottom:12px;">
+    </div>
     <label style="color:#94a3b8;font-size:13px;margin-bottom:6px;display:block;">Attachment <span style="color:#fda4af;">*</span></label>
     <button type="button" id="persDocFileBtn" onclick="document.getElementById('persDocFileInput').click()" style="background:#1e293b;border:1px dashed #334155;color:#94a3b8;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:13px;width:100%;margin-bottom:4px;transition:border-color 0.2s,color 0.2s;">📎 Choose file</button>
     <div id="persDocFileName" style="font-size:12px;color:#64748b;margin-bottom:12px;"></div>
@@ -1025,8 +1030,8 @@
   }
 
   const PERS_DOC_TYPES = [
-    { name: 'CV',               mandatory: true  },
-    { name: 'Medical Report',   mandatory: true  },
+    { name: 'CV',               mandatory: true,  noIssue: true,  noExpiry: true              },
+    { name: 'Medical Report',   mandatory: true,  noIssue: false, noExpiry: true, autoExpiry: 2 },
     { name: 'Fire Fighting',    mandatory: true  },
     { name: 'H2S & SCBA',       mandatory: true  },
     { name: 'First Aid',        mandatory: true  },
@@ -1087,10 +1092,15 @@
           else if (exp <= in30) { statusColor = '#fbbf24'; statusText = 'EXPIRING'; rowBorder = 'border-left:3px solid #fbbf24;padding-left:8px;'; }
         }
         const fileBtn = d.file_url ? `<a href="${d.file_url}" target="_blank" style="color:#38bdf8;font-size:11px;text-decoration:none;">📎 View</a>` : '';
+        const cfg     = PERS_DOC_TYPES.find(x => x.name === t.name) || {};
+        const dateStr = cfg.noIssue && cfg.noExpiry ? ''
+                      : cfg.noIssue  ? `Expiry: ${d.expiry_date || '—'}`
+                      : cfg.noExpiry ? `Issue: ${d.issue_date || '—'}`
+                      : `Issue: ${d.issue_date || '—'} · Expiry: ${d.expiry_date || '—'}`;
         return `<div class="doc-row" style="${rowBorder}">
           <div style="flex:1">
             <div class="doc-name" style="display:flex;align-items:center;gap:6px;">${t.name} ${mandBadge}</div>
-            <div class="doc-date">Issue: ${d.issue_date || '—'} · Expiry: ${d.expiry_date || '—'}</div>
+            ${dateStr ? `<div class="doc-date">${dateStr}</div>` : ''}
           </div>
           <div style="display:flex;align-items:center;gap:8px;">
             ${fileBtn}
@@ -1122,14 +1132,18 @@
   }
 
   function openAddPersDoc(personId, typeName, mandatory) {
-    document.getElementById('persDocPersonId').value    = personId;
-    document.getElementById('persDocIsMandatory').value = mandatory;
+    const cfg = PERS_DOC_TYPES.find(t => t.name === typeName) || {};
+    document.getElementById('persDocPersonId').value       = personId;
+    document.getElementById('persDocIsMandatory').value    = mandatory;
     document.getElementById('persDocTypeName').textContent = typeName;
-    document.getElementById('persDocIssueDate').value   = '';
-    document.getElementById('persDocExpiryDate').value  = '';
-    document.getElementById('persDocFileInput').value   = '';
+    document.getElementById('persDocIssueDate').value      = '';
+    document.getElementById('persDocExpiryDate').value     = '';
+    document.getElementById('persDocFileInput').value      = '';
     document.getElementById('persDocFileName').textContent = '';
     document.getElementById('persDocFileBtn').style.borderColor = '';
+    document.getElementById('persDocIssueDateWrap').style.display  = cfg.noIssue  ? 'none' : 'block';
+    document.getElementById('persDocExpiryDateWrap').style.display = cfg.noExpiry ? 'none' : 'block';
+    document.getElementById('persDocAutoExpiryNote').style.display = cfg.autoExpiry ? 'block' : 'none';
     document.getElementById('addPersDocModal').classList.add('open');
   }
 
@@ -1137,9 +1151,15 @@
     const personId  = document.getElementById('persDocPersonId').value;
     const typeName  = document.getElementById('persDocTypeName').textContent;
     const mandatory = document.getElementById('persDocIsMandatory').value === 'true';
+    const cfg       = PERS_DOC_TYPES.find(t => t.name === typeName) || {};
     const issueDate = document.getElementById('persDocIssueDate').value;
-    const expDate   = document.getElementById('persDocExpiryDate').value;
-    const file      = document.getElementById('persDocFileInput').files[0];
+    let   expDate   = document.getElementById('persDocExpiryDate').value;
+    if (cfg.autoExpiry && issueDate) {
+      const d = new Date(issueDate);
+      d.setFullYear(d.getFullYear() + cfg.autoExpiry);
+      expDate = d.toISOString().split('T')[0];
+    }
+    const file = document.getElementById('persDocFileInput').files[0];
     if (!file) { alert('Please attach a file — attachment is required'); document.getElementById('persDocFileBtn').style.borderColor = '#fda4af'; return; }
 
     const path = `personnel/${personId}/${typeName.replace(/[^a-z0-9]/gi,'_')}/${Date.now()}_${file.name}`;
