@@ -513,12 +513,13 @@
       <label for="persDocExpiryDate">Expiry Date</label>
       <input type="date" id="persDocExpiryDate" style="margin-bottom:12px;">
     </div>
-    <label style="color:#94a3b8;font-size:13px;margin-bottom:6px;display:block;">Attachment <span style="color:#fda4af;">*</span></label>
+    <label id="persDocFileLabel" style="color:#94a3b8;font-size:13px;margin-bottom:6px;display:block;">Attachment <span id="persDocFileRequired" style="color:#fda4af;">*</span></label>
     <button type="button" id="persDocFileBtn" onclick="document.getElementById('persDocFileInput').click()" style="background:#1e293b;border:1px dashed #334155;color:#94a3b8;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:13px;width:100%;margin-bottom:4px;transition:border-color 0.2s,color 0.2s;">📎 Choose file</button>
     <div id="persDocFileName" style="font-size:12px;color:#64748b;margin-bottom:12px;"></div>
     <input type="file" id="persDocFileInput" accept=".pdf,.jpg,.jpeg,.png" onchange="document.getElementById('persDocFileName').textContent = this.files[0]?.name || ''">
     <input type="hidden" id="persDocPersonId">
     <input type="hidden" id="persDocIsMandatory">
+    <input type="hidden" id="persDocEditId">
     <div class="modal-btns">
       <button class="btn-cancel" onclick="closeModal('addPersDocModal')">Cancel</button>
       <button class="btn-save" onclick="savePersDocument()">Save</button>
@@ -1109,6 +1110,7 @@
           <div style="display:flex;align-items:center;gap:8px;">
             ${fileBtn}
             <span style="color:${statusColor};font-size:11px;font-weight:bold;">${statusText}</span>
+            <button class="btn-edit" onclick="editPersDoc(${d.id},${p.id},'${t.name}',${t.mandatory},'${d.issue_date||''}','${d.expiry_date||''}',${p.years_experience??'null'})" title="Edit">✏️</button>
             <button class="btn-danger" onclick="deletePersDoc(${d.id})">✕</button>
           </div>
         </div>`;
@@ -1149,11 +1151,34 @@
     document.getElementById('persDocExpiryDateWrap').style.display = cfg.noExpiry   ? 'none' : 'block';
     document.getElementById('persDocAutoExpiryNote').style.display = cfg.autoExpiry ? 'block' : 'none';
     document.getElementById('persDocYearsExpWrap').style.display   = typeName === 'CV' ? 'block' : 'none';
-    document.getElementById('persDocYearsExp').value = '';
+    document.getElementById('persDocYearsExp').value  = '';
+    document.getElementById('persDocEditId').value     = '';
+    document.getElementById('persDocFileRequired').style.display = 'inline';
+    document.getElementById('addPersDocModal').classList.add('open');
+  }
+
+  function editPersDoc(docId, personId, typeName, mandatory, issueDate, expiryDate, yearsExp) {
+    const cfg = PERS_DOC_TYPES.find(t => t.name === typeName) || {};
+    document.getElementById('persDocEditId').value         = docId;
+    document.getElementById('persDocPersonId').value       = personId;
+    document.getElementById('persDocIsMandatory').value    = mandatory;
+    document.getElementById('persDocTypeName').textContent = typeName;
+    document.getElementById('persDocIssueDate').value      = issueDate  || '';
+    document.getElementById('persDocExpiryDate').value     = expiryDate || '';
+    document.getElementById('persDocFileInput').value      = '';
+    document.getElementById('persDocFileName').textContent = 'Keep existing file (or choose a new one to replace)';
+    document.getElementById('persDocFileBtn').style.borderColor = '';
+    document.getElementById('persDocIssueDateWrap').style.display  = cfg.noIssue    ? 'none' : 'block';
+    document.getElementById('persDocExpiryDateWrap').style.display = cfg.noExpiry   ? 'none' : 'block';
+    document.getElementById('persDocAutoExpiryNote').style.display = cfg.autoExpiry ? 'block' : 'none';
+    document.getElementById('persDocYearsExpWrap').style.display   = typeName === 'CV' ? 'block' : 'none';
+    document.getElementById('persDocYearsExp').value  = yearsExp != null ? yearsExp : '';
+    document.getElementById('persDocFileRequired').style.display = 'none'; // not required when editing
     document.getElementById('addPersDocModal').classList.add('open');
   }
 
   async function savePersDocument() {
+    const editId    = document.getElementById('persDocEditId').value;
     const personId  = document.getElementById('persDocPersonId').value;
     const typeName  = document.getElementById('persDocTypeName').textContent;
     const mandatory = document.getElementById('persDocIsMandatory').value === 'true';
@@ -1166,21 +1191,35 @@
       expDate = d.toISOString().split('T')[0];
     }
     const file = document.getElementById('persDocFileInput').files[0];
-    if (!file) { alert('Please attach a file — attachment is required'); document.getElementById('persDocFileBtn').style.borderColor = '#fda4af'; return; }
+    if (!file && !editId) { alert('Please attach a file — attachment is required'); document.getElementById('persDocFileBtn').style.borderColor = '#fda4af'; return; }
 
-    const path = `personnel/${personId}/${typeName.replace(/[^a-z0-9]/gi,'_')}/${Date.now()}_${file.name}`;
-    const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/personnel-docs/${path}`, {
-      method: 'POST',
-      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${getToken()}`, 'Content-Type': file.type },
-      body: file
-    });
-    if (!uploadRes.ok) { alert('File upload failed. Please try again.'); return; }
-    const fileUrl = `${SUPABASE_URL}/storage/v1/object/public/personnel-docs/${path}`;
+    let fileUrl = null;
+    if (file) {
+      const path = `personnel/${personId}/${typeName.replace(/[^a-z0-9]/gi,'_')}/${Date.now()}_${file.name}`;
+      const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/personnel-docs/${path}`, {
+        method: 'POST',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${getToken()}`, 'Content-Type': file.type },
+        body: file
+      });
+      if (!uploadRes.ok) { alert('File upload failed. Please try again.'); return; }
+      fileUrl = `${SUPABASE_URL}/storage/v1/object/public/personnel-docs/${path}`;
+    }
 
-    await fetch(`${SUPABASE_URL}/rest/v1/personnel_documents`, {
-      method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal' },
-      body: JSON.stringify({ personnel_id: parseInt(personId), doc_type_name: typeName, is_mandatory: mandatory, file_url: fileUrl, issue_date: issueDate || null, expiry_date: expDate || null })
-    });
+    const payload = { issue_date: issueDate || null, expiry_date: expDate || null };
+    if (fileUrl) payload.file_url = fileUrl;
+
+    if (editId) {
+      await fetch(`${SUPABASE_URL}/rest/v1/personnel_documents?id=eq.${editId}`, {
+        method: 'PATCH', headers: { ...getHeaders(), Prefer: 'return=minimal' },
+        body: JSON.stringify(payload)
+      });
+    } else {
+      await fetch(`${SUPABASE_URL}/rest/v1/personnel_documents`, {
+        method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal' },
+        body: JSON.stringify({ personnel_id: parseInt(personId), doc_type_name: typeName, is_mandatory: mandatory, ...payload })
+      });
+    }
+
     // If CV, also save years of experience onto the personnel record
     if (typeName === 'CV') {
       const yrs = parseInt(document.getElementById('persDocYearsExp').value);
