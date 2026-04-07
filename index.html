@@ -265,11 +265,8 @@
       <button class="tab" onclick="showContractorTab('personnel', this)">Personnel</button>
     </div>
     <div id="ct-equipment" class="ct-section active">
-      <div class="section-label">Mandatory Equipment</div>
-      <div id="mandatoryList"><div class="skel-card"><div class="skeleton skel-line medium"></div><div class="skeleton skel-line full"></div><div class="skeleton skel-line short"></div></div></div>
-      <div class="section-label" style="margin-top:20px">Additional Equipment</div>
       <button class="add-btn" onclick="openAddEquipment()">+ Add Equipment</button>
-      <div id="additionalList"></div>
+      <div id="equipmentList"><div class="skel-card"><div class="skeleton skel-line medium"></div><div class="skeleton skel-line full"></div><div class="skeleton skel-line short"></div></div></div>
     </div>
     <div id="ct-personnel" class="ct-section">
       <button class="add-btn" onclick="openAddPersonnel()">+ Add Personnel</button>
@@ -370,10 +367,40 @@
     <h3>Add Equipment</h3>
     <input type="text" id="equipName" placeholder="Equipment name">
     <input type="text" id="equipSerial" placeholder="Serial number">
-    <input type="text" id="equipModel" placeholder="Model (optional)">
     <div class="modal-btns">
       <button class="btn-cancel" onclick="closeModal('ctEquipModal')">Cancel</button>
       <button class="btn-save" onclick="addEquipment()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Document Modal -->
+<div class="modal" id="addDocModal">
+  <div class="modal-box">
+    <h3>Add Document</h3>
+    <label style="color:#94a3b8;font-size:13px;margin-bottom:6px;display:block;">Document Type</label>
+    <select id="docTypeSelect" onchange="onDocTypeChange(this)" style="margin-bottom:12px;">
+      <option value="">Select type...</option>
+      <option>Maintenance</option>
+      <option>COC</option>
+      <option>MPI</option>
+      <option>HT</option>
+      <option>Visual</option>
+      <option>Load Test</option>
+      <option value="__new__">+ New document type...</option>
+    </select>
+    <input type="text" id="docTypeCustom" placeholder="Enter document type name" style="display:none;margin-bottom:12px;">
+    <label style="color:#94a3b8;font-size:13px;margin-bottom:6px;display:block;">Issue Date</label>
+    <input type="date" id="docIssueDate" style="margin-bottom:12px;">
+    <label style="color:#94a3b8;font-size:13px;margin-bottom:6px;display:block;">Expiry Date</label>
+    <input type="date" id="docExpiryDate" style="margin-bottom:12px;">
+    <label style="color:#94a3b8;font-size:13px;margin-bottom:6px;display:block;">Attachment (optional)</label>
+    <button type="button" onclick="document.getElementById('docFileInput').click()" style="background:#1e293b;border:1px dashed #334155;color:#94a3b8;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:13px;width:100%;margin-bottom:4px;transition:border-color 0.2s;">📎 Choose file</button>
+    <div id="docFileName" style="font-size:12px;color:#64748b;margin-bottom:12px;"></div>
+    <input type="file" id="docFileInput" accept=".pdf,.jpg,.jpeg,.png" onchange="document.getElementById('docFileName').textContent = this.files[0]?.name || ''">
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('addDocModal')">Cancel</button>
+      <button class="btn-save" onclick="saveDocument()">Save</button>
     </div>
   </div>
 </div>
@@ -622,68 +649,205 @@
   // ═══ EQUIPMENT ═══
   async function loadEquipment() {
     const h = getHeaders(), u = getUser();
-    const templates = await apiFetch(`${SUPABASE_URL}/rest/v1/equipment_templates?service_line=eq.${encodeURIComponent(u.service_line)}&order=name`, { headers: h });
-    if (!templates) return;
-    const items = await apiFetch(`${SUPABASE_URL}/rest/v1/equipment_items?contractor_id=eq.${u.id}&select=*`, { headers: h });
-    if (!items) return;
-    const itemsByTmpl = {};
-    items.forEach(i => { itemsByTmpl[i.equipment_template_id] = i; });
-    const tmplIds = templates.map(t => t.id).join(',');
-    let allDocTypes = [];
-    if (tmplIds) allDocTypes = await apiFetch(`${SUPABASE_URL}/rest/v1/document_types?equipment_template_id=in.(${tmplIds})&select=*`, { headers: h }) || [];
+
+    // Load templates (recommended pre-defined items) and actual items in parallel
+    const [templates, items] = await Promise.all([
+      apiFetch(`${SUPABASE_URL}/rest/v1/equipment_templates?service_line=eq.${encodeURIComponent(u.service_line)}&order=name`, { headers: h }),
+      apiFetch(`${SUPABASE_URL}/rest/v1/equipment_items?contractor_id=eq.${u.id}&select=*`, { headers: h })
+    ]);
+    if (!templates || !items) return;
+
+    // Load docs for all existing items
     const itemIds = items.map(i => i.id).join(',');
-    let uploadedDocs = [];
-    if (itemIds) uploadedDocs = await apiFetch(`${SUPABASE_URL}/rest/v1/documents?equipment_item_id=in.(${itemIds})&select=*`, { headers: h }) || [];
+    let docs = [];
+    if (itemIds) docs = await apiFetch(`${SUPABASE_URL}/rest/v1/documents?equipment_item_id=in.(${itemIds})&select=*&order=uploaded_at.desc`, { headers: h }) || [];
     const docsByItem = {};
-    uploadedDocs.forEach(d => { if (!docsByItem[d.equipment_item_id]) docsByItem[d.equipment_item_id] = []; docsByItem[d.equipment_item_id].push(d); });
-    const mandatory = templates.filter(t => t.is_mandatory);
-    document.getElementById('mandatoryList').innerHTML = mandatory.length
-      ? mandatory.map(t => equipCard(t, itemsByTmpl[t.id], true, allDocTypes.filter(dt => dt.equipment_template_id === t.id), itemsByTmpl[t.id] ? (docsByItem[itemsByTmpl[t.id].id] || []) : [])).join('')
-      : '<div class="empty">No mandatory equipment defined</div>';
-    const additional = items.filter(i => !i.equipment_template_id);
-    document.getElementById('additionalList').innerHTML = additional.map(i => customEquipCard(i)).join('');
+    docs.forEach(d => { if (!docsByItem[d.equipment_item_id]) docsByItem[d.equipment_item_id] = []; docsByItem[d.equipment_item_id].push(d); });
+
+    const itemsByTmpl = {};
+    items.forEach(i => { if (i.equipment_template_id) itemsByTmpl[i.equipment_template_id] = i; });
+
+    // Build unified list: recommended templates first, then custom items
+    const cards = [];
+
+    // Recommended (from templates)
+    templates.forEach(t => {
+      const item = itemsByTmpl[t.id];
+      if (item) {
+        cards.push(equipItemCard(item, t.name, true, docsByItem[item.id] || []));
+      } else {
+        cards.push(equipTemplateCard(t));
+      }
+    });
+
+    // Custom items (no template)
+    items.filter(i => !i.equipment_template_id).forEach(i => {
+      cards.push(equipItemCard(i, i.name || 'Equipment', false, docsByItem[i.id] || []));
+    });
+
+    document.getElementById('equipmentList').innerHTML = cards.length
+      ? cards.join('')
+      : '<div class="empty">No equipment yet. Click "+ Add Equipment" to start.</div>';
   }
 
-  function equipCard(template, item, mandatory, docTypes, docs) {
-    const badge = mandatory ? '<span class="badge mandatory">Required</span>' : '<span class="badge optional">Optional</span>';
-    if (item) {
-      const docsHtml = docTypes.map(dt => {
-        const uploaded = docs.find(d => d.document_type_id === dt.id);
-        const status   = uploaded ? (uploaded.ai_status || 'pending') : 'missing';
-        const colors   = { valid: '#6ee7b7', expired: '#fda4af', missing: '#94a3b8', pending: '#fbbf24' };
-        const dateInfo = uploaded ? `Issue: ${uploaded.issue_date || '—'} · Expiry: ${uploaded.expiry_date || '—'}` : 'Not uploaded';
-        return `<div class="doc-row"><div style="flex:1"><div class="doc-name">${dt.document_name}</div><div class="doc-date">${dateInfo}</div></div><div style="display:flex;align-items:center;gap:8px"><span style="color:${colors[status]||'#fbbf24'};font-size:11px;font-weight:bold">${status.toUpperCase()}</span><button class="upload-btn" onclick="uploadEquipDoc('${item.id}','${dt.id}')">↑ Upload</button></div></div>`;
-      }).join('');
-      return `<div class="app-card"><div class="card-header"><div class="card-title">${template.name}</div>${badge}</div><div class="sn-info">S/N: ${item.serial_number || '—'} · Model: ${item.model || '—'}</div>${docsHtml || '<div class="doc-name">No document types defined</div>'}</div>`;
-    }
-    return `<div class="app-card"><div class="card-header"><div class="card-title">${template.name}</div>${badge}</div><div class="sn-row"><input type="text" placeholder="Serial number" id="sn_${template.id}"><input type="text" placeholder="Model" id="model_${template.id}"><button onclick="saveSerialNumber('${template.id}')">Save</button></div></div>`;
+  // Card for a template not yet registered (show serial number input)
+  function equipTemplateCard(t) {
+    return `<div class="app-card">
+      <div class="card-header">
+        <div class="card-title">${t.name}</div>
+        <span class="badge mandatory" style="background:#1e3a5f;color:#93c5fd;">Recommended</span>
+      </div>
+      <div style="font-size:12px;color:#64748b;margin-bottom:10px;">Enter serial number to register this equipment</div>
+      <div class="sn-row">
+        <input type="text" placeholder="Serial number" id="sn_${t.id}">
+        <button onclick="saveSerialNumber('${t.id}','${t.name}')">Register</button>
+      </div>
+    </div>`;
   }
 
-  function customEquipCard(item) {
-    return `<div class="app-card"><div class="card-header"><div class="card-title">${item.model || 'Custom Equipment'}</div><span class="badge optional">Additional</span></div><div class="sn-info">S/N: ${item.serial_number || '—'}</div><button class="upload-btn" style="margin-top:10px" onclick="uploadEquipDoc('${item.id}',null)">↑ Upload Document</button></div>`;
+  // Card for a registered equipment item
+  function equipItemCard(item, name, recommended, docs) {
+    const badge = recommended
+      ? `<span class="badge" style="background:#1e3a5f;color:#93c5fd;">Recommended</span>`
+      : '';
+
+    const docsHtml = docs.length ? docs.map(d => {
+      const typeName = d.doc_type_name || '—';
+      const expiry   = d.expiry_date;
+      const today    = new Date(); today.setHours(0,0,0,0);
+      const in30     = new Date(today); in30.setDate(in30.getDate() + 30);
+      let statusColor = '#6ee7b7', statusText = 'VALID';
+      if (expiry) {
+        const exp = new Date(expiry);
+        if (exp < today)      { statusColor = '#fda4af'; statusText = 'EXPIRED'; }
+        else if (exp <= in30) { statusColor = '#fbbf24'; statusText = 'EXPIRING'; }
+      }
+      const fileBtn = d.file_url ? `<a href="${d.file_url}" target="_blank" style="color:#38bdf8;font-size:11px;text-decoration:none;">📎 View</a>` : '';
+      return `<div class="doc-row">
+        <div style="flex:1">
+          <div class="doc-name">${typeName}</div>
+          <div class="doc-date">Issue: ${d.issue_date || '—'} · Expiry: ${expiry || '—'}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          ${fileBtn}
+          <span style="color:${statusColor};font-size:11px;font-weight:bold;">${statusText}</span>
+          <button class="btn-danger" onclick="deleteDoc(${d.id})">✕</button>
+        </div>
+      </div>`;
+    }).join('') : `<div class="doc-date" style="padding:8px 0;">No documents yet</div>`;
+
+    return `<div class="app-card">
+      <div class="card-header">
+        <div class="card-title">${name}</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          ${badge}
+          <button class="btn-danger" onclick="deleteEquipItem(${item.id})" title="Delete equipment">🗑</button>
+        </div>
+      </div>
+      <div class="sn-info" style="margin-bottom:10px;">S/N: ${item.serial_number || '—'}</div>
+      <div style="border-top:1px solid #334155;padding-top:10px;margin-top:4px;">
+        ${docsHtml}
+        <button class="upload-btn" style="margin-top:10px;" onclick="openAddDoc(${item.id})">+ Add Document</button>
+      </div>
+    </div>`;
   }
 
-  async function saveSerialNumber(templateId) {
-    const sn = document.getElementById(`sn_${templateId}`).value;
-    const model = document.getElementById(`model_${templateId}`).value;
+  async function saveSerialNumber(templateId, templateName) {
+    const sn = document.getElementById(`sn_${templateId}`).value.trim();
     if (!sn) { alert('Please enter serial number'); return; }
     await fetch(`${SUPABASE_URL}/rest/v1/equipment_items`, {
       method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal' },
-      body: JSON.stringify({ contractor_id: getUser().id, equipment_template_id: parseInt(templateId), serial_number: sn, model })
+      body: JSON.stringify({ contractor_id: getUser().id, equipment_template_id: parseInt(templateId), serial_number: sn, name: templateName })
     });
     loadEquipment();
   }
 
   async function addEquipment() {
-    const name = document.getElementById('equipName').value;
-    const serial = document.getElementById('equipSerial').value;
-    const model = document.getElementById('equipModel').value;
+    const name   = document.getElementById('equipName').value.trim();
+    const serial = document.getElementById('equipSerial').value.trim();
     if (!name || !serial) { alert('Please fill name and serial number'); return; }
     await fetch(`${SUPABASE_URL}/rest/v1/equipment_items`, {
       method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal' },
-      body: JSON.stringify({ contractor_id: getUser().id, serial_number: serial, model: name })
+      body: JSON.stringify({ contractor_id: getUser().id, serial_number: serial, name })
     });
-    closeModal('ctEquipModal'); loadEquipment();
+    closeModal('ctEquipModal');
+    document.getElementById('equipName').value = '';
+    document.getElementById('equipSerial').value = '';
+    loadEquipment();
+  }
+
+  async function deleteEquipItem(id) {
+    if (!confirm('Delete this equipment and all its documents?')) return;
+    await fetch(`${SUPABASE_URL}/rest/v1/documents?equipment_item_id=eq.${id}`, { method: 'DELETE', headers: getHeaders() });
+    await fetch(`${SUPABASE_URL}/rest/v1/equipment_items?id=eq.${id}`, { method: 'DELETE', headers: getHeaders() });
+    loadEquipment();
+  }
+
+  async function deleteDoc(id) {
+    if (!confirm('Delete this document?')) return;
+    await fetch(`${SUPABASE_URL}/rest/v1/documents?id=eq.${id}`, { method: 'DELETE', headers: getHeaders() });
+    loadEquipment();
+  }
+
+  // ─── Add Document Modal ───
+  let currentDocItemId = null;
+  function openAddDoc(itemId) {
+    currentDocItemId = itemId;
+    document.getElementById('docTypeSelect').value = '';
+    document.getElementById('docTypeCustom').style.display = 'none';
+    document.getElementById('docTypeCustom').value = '';
+    document.getElementById('docIssueDate').value = '';
+    document.getElementById('docExpiryDate').value = '';
+    document.getElementById('docFileInput').value = '';
+    document.getElementById('docFileName').textContent = '';
+    document.getElementById('addDocModal').classList.add('open');
+  }
+
+  function onDocTypeChange(sel) {
+    const custom = document.getElementById('docTypeCustom');
+    if (sel.value === '__new__') {
+      custom.style.display = 'block';
+      custom.focus();
+    } else {
+      custom.style.display = 'none';
+    }
+  }
+
+  async function saveDocument() {
+    const typeSelect = document.getElementById('docTypeSelect').value;
+    const typeCustom = document.getElementById('docTypeCustom').value.trim();
+    const typeName   = typeSelect === '__new__' ? typeCustom : typeSelect;
+    const issueDate  = document.getElementById('docIssueDate').value;
+    const expiryDate = document.getElementById('docExpiryDate').value;
+    const file       = document.getElementById('docFileInput').files[0];
+
+    if (!typeName) { alert('Please select or enter a document type'); return; }
+
+    let fileUrl = null;
+    if (file) {
+      const path = `equipment/${getUser().id}/${currentDocItemId}/${Date.now()}_${file.name}`;
+      const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/equipment-docs/${path}`, {
+        method: 'POST',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${getToken()}`, 'Content-Type': file.type },
+        body: file
+      });
+      if (uploadRes.ok) fileUrl = `${SUPABASE_URL}/storage/v1/object/public/equipment-docs/${path}`;
+    }
+
+    await fetch(`${SUPABASE_URL}/rest/v1/documents`, {
+      method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal' },
+      body: JSON.stringify({
+        equipment_item_id: currentDocItemId,
+        doc_type_name: typeName,
+        issue_date:  issueDate  || null,
+        expiry_date: expiryDate || null,
+        file_url:    fileUrl,
+        ai_status:   'pending'
+      })
+    });
+
+    closeModal('addDocModal');
+    loadEquipment();
   }
 
   // ═══ PERSONNEL ═══
@@ -714,36 +878,27 @@
       </div>`).join('');
   }
 
-  // ═══ FILE UPLOAD ═══
-  let currentUploadItemId = null, currentUploadDocTypeId = null, currentUploadType = null;
-  function uploadEquipDoc(itemId, docTypeId)  { currentUploadItemId = itemId; currentUploadDocTypeId = docTypeId; currentUploadType = 'equipment'; document.getElementById('fileInput').click(); }
-  function uploadPersonnelDoc(personId)       { currentUploadItemId = personId; currentUploadDocTypeId = null; currentUploadType = 'personnel'; document.getElementById('fileInput').click(); }
+  // ═══ PERSONNEL FILE UPLOAD ═══
+  function uploadPersonnelDoc(personId) { document.getElementById('fileInput').dataset.personId = personId; document.getElementById('fileInput').click(); }
 
   document.getElementById('fileInput').onchange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    const bucket = currentUploadType === 'equipment' ? 'equipment-docs' : 'personnel-docs';
-    const path   = `${currentUploadType}/${getUser().id}/${currentUploadItemId}/${Date.now()}_${file.name}`;
-    const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/${bucket}/${path}`, {
+    const personId = e.target.dataset.personId;
+    const path = `personnel/${getUser().id}/${personId}/${Date.now()}_${file.name}`;
+    const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/personnel-docs/${path}`, {
       method: 'POST',
       headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${getToken()}`, 'Content-Type': file.type },
       body: file
     });
     if (uploadRes.ok) {
-      const fileUrl = `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${path}`;
-      if (currentUploadType === 'equipment') {
-        await fetch(`${SUPABASE_URL}/rest/v1/documents`, {
-          method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal' },
-          body: JSON.stringify({ equipment_item_id: parseInt(currentUploadItemId), document_type_id: currentUploadDocTypeId ? parseInt(currentUploadDocTypeId) : null, file_url: fileUrl, ai_status: 'pending' })
-        });
-      } else {
-        await fetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${currentUploadItemId}`, {
-          method: 'PATCH', headers: { ...getHeaders(), Prefer: 'return=minimal' },
-          body: JSON.stringify({ file_url: fileUrl, ai_status: 'pending' })
-        });
-      }
-      alert('File uploaded successfully!');
-      currentUploadType === 'equipment' ? loadEquipment() : loadPersonnel();
+      const fileUrl = `${SUPABASE_URL}/storage/v1/object/public/personnel-docs/${path}`;
+      await fetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${personId}`, {
+        method: 'PATCH', headers: { ...getHeaders(), Prefer: 'return=minimal' },
+        body: JSON.stringify({ file_url: fileUrl, ai_status: 'pending' })
+      });
+      alert('Certificate uploaded!');
+      loadPersonnel();
     } else {
       alert('Upload failed. Please try again.');
     }
