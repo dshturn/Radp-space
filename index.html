@@ -6,7 +6,7 @@
   <title>RADP</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛢</text></svg>">
   <link rel="manifest" href="/manifest.json">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="/pdf.min.js"></script>
   <meta name="theme-color" content="#1e293b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="RADP">
@@ -1324,7 +1324,7 @@
       } else if (isPdf) {
         body.innerHTML = `<div id="pdfCanvas" style="padding:8px;"></div>`;
         const arrayBuf = await blob.arrayBuffer();
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
         const pdf = await pdfjsLib.getDocument({ data: arrayBuf }).promise;
         const container = document.getElementById('pdfCanvas');
         for (let i = 1; i <= pdf.numPages; i++) {
