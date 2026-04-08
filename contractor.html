@@ -31,18 +31,22 @@
     .badge.valid { background: #064e3b; color: #6ee7b7; }
     .badge.expired { background: #4c0519; color: #fda4af; }
     .badge.pending { background: #422006; color: #fbbf24; }
-    .badge.mandatory { background: #1e3a5f; color: #93c5fd; }
-    .badge.optional { background: #2d1b69; color: #c4b5fd; }
     .doc-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #334155; flex-wrap: wrap; gap: 8px; }
     .doc-row:last-child { border-bottom: none; }
     .doc-name { font-size: 13px; color: #94a3b8; }
     .doc-date { font-size: 12px; color: #64748b; }
     .upload-btn { background: #0284c7; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
     .add-btn { background: #059669; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; margin-bottom: 16px; }
+    .add-sub-btn { background: #0f172a; color: #38bdf8; border: 1px solid #334155; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+    .add-sub-btn:hover { background: #1e3a5f; }
     .empty { color: #475569; text-align: center; padding: 32px; }
-    .sn-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-    .sn-row input { flex: 1; min-width: 120px; padding: 8px 12px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0; font-size: 13px; }
-    .sn-row button { background: #0284c7; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+    .sn-info { font-size: 13px; color: #94a3b8; margin-bottom: 10px; }
+    .subcomponents { margin-top: 14px; border-top: 1px solid #334155; padding-top: 14px; }
+    .subcomponents-label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+    .sub-card { background: #0f172a; border-radius: 8px; padding: 12px; margin-bottom: 8px; }
+    .sub-card:last-child { margin-bottom: 0; }
+    .sub-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px; }
+    .sub-card-title { font-size: 13px; font-weight: bold; color: #cbd5e1; }
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 100; justify-content: center; align-items: center; }
     .modal.open { display: flex; }
     .modal-box { background: #1e293b; padding: 24px; border-radius: 12px; width: 90%; max-width: 400px; }
@@ -53,8 +57,6 @@
     .btn-save { background: #0284c7; color: white; }
     .btn-cancel { background: #334155; color: #e2e8f0; }
     input[type="file"] { display: none; }
-    .section-label { font-size: 12px; color: #64748b; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
-    .sn-info { font-size: 13px; color: #94a3b8; margin-bottom: 10px; }
   </style>
 </head>
 <body>
@@ -86,11 +88,8 @@
   </div>
 
   <div id="equipment" class="section active">
-    <div class="section-label">Mandatory Equipment</div>
-    <div id="mandatoryList"><div class="empty">Loading...</div></div>
-    <div class="section-label" style="margin-top:20px">Additional Equipment</div>
     <button class="add-btn" onclick="openAddEquipment()">+ Add Equipment</button>
-    <div id="additionalList"></div>
+    <div id="equipmentList"><div class="empty">Loading...</div></div>
   </div>
 
   <div id="personnel" class="section">
@@ -99,6 +98,7 @@
   </div>
 </div>
 
+<!-- Add Equipment Modal -->
 <div class="modal" id="equipModal">
   <div class="modal-box">
     <h3>Add Equipment</h3>
@@ -112,6 +112,21 @@
   </div>
 </div>
 
+<!-- Add Sub-component Modal -->
+<div class="modal" id="subModal">
+  <div class="modal-box">
+    <h3 id="subModalTitle">Add Sub-component</h3>
+    <input type="text" id="subName" placeholder="Component name (e.g. Gauge, Valve)">
+    <input type="text" id="subSerial" placeholder="Serial number">
+    <input type="text" id="subModel" placeholder="Model (optional)">
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('subModal')">Cancel</button>
+      <button class="btn-save" onclick="addSubComponent()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Personnel Modal -->
 <div class="modal" id="personnelModal">
   <div class="modal-box">
     <h3>Add Personnel</h3>
@@ -153,8 +168,8 @@
   }
 
   let currentUploadItemId = null;
-  let currentUploadDocTypeId = null;
   let currentUploadType = null;
+  let currentSubParentId = null;
 
   function showTab(tab, el) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -169,120 +184,128 @@
     window.location.href = '/login.html';
   }
 
-  function openAddEquipment() { document.getElementById('equipModal').classList.add('open'); }
-  function openAddPersonnel() { document.getElementById('personnelModal').classList.add('open'); }
+  function openAddEquipment() {
+    document.getElementById('equipName').value = '';
+    document.getElementById('equipSerial').value = '';
+    document.getElementById('equipModel').value = '';
+    document.getElementById('equipModal').classList.add('open');
+  }
+
+  function openAddSubComponent(parentId, parentName) {
+    currentSubParentId = parentId;
+    document.getElementById('subModalTitle').textContent = `Add Sub-component to ${parentName}`;
+    document.getElementById('subName').value = '';
+    document.getElementById('subSerial').value = '';
+    document.getElementById('subModel').value = '';
+    document.getElementById('subModal').classList.add('open');
+  }
+
+  function openAddPersonnel() {
+    document.getElementById('personnelModal').classList.add('open');
+  }
+
   function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
   async function loadEquipment() {
-    const templates = await apiFetch(`${SUPABASE_URL}/rest/v1/equipment_templates?service_line=eq.${encodeURIComponent(user.service_line)}&order=name`, { headers });
-    if (!templates) return;
-    const items = await apiFetch(`${SUPABASE_URL}/rest/v1/equipment_items?contractor_id=eq.${user.id}&select=*`, { headers });
-    if (!items) return;
-    const itemsByTemplate = {};
-    items.forEach(i => { itemsByTemplate[i.equipment_template_id] = i; });
-    const tmplIds = templates.map(t => t.id).join(',');
-    let allDocTypes = [];
-    if (tmplIds) {
-      allDocTypes = await apiFetch(`${SUPABASE_URL}/rest/v1/document_types?equipment_template_id=in.(${tmplIds})&select=*`, { headers }) || [];
-    }
-    const itemIds = items.map(i => i.id).join(',');
-    let uploadedDocs = [];
-    if (itemIds) {
-      uploadedDocs = await apiFetch(`${SUPABASE_URL}/rest/v1/documents?equipment_item_id=in.(${itemIds})&select=*`, { headers }) || [];
+    const allItems = await apiFetch(`${SUPABASE_URL}/rest/v1/equipment_items?contractor_id=eq.${user.id}&select=*&order=id`, { headers });
+    if (!allItems) return;
+
+    const topLevel = allItems.filter(i => !i.parent_id);
+    const subsByParent = {};
+    allItems.filter(i => i.parent_id).forEach(i => {
+      if (!subsByParent[i.parent_id]) subsByParent[i.parent_id] = [];
+      subsByParent[i.parent_id].push(i);
+    });
+
+    const allIds = allItems.map(i => i.id).join(',');
+    let docs = [];
+    if (allIds) {
+      docs = await apiFetch(`${SUPABASE_URL}/rest/v1/documents?equipment_item_id=in.(${allIds})&select=*`, { headers }) || [];
     }
     const docsByItem = {};
-    uploadedDocs.forEach(d => {
+    docs.forEach(d => {
       if (!docsByItem[d.equipment_item_id]) docsByItem[d.equipment_item_id] = [];
       docsByItem[d.equipment_item_id].push(d);
     });
-    const mandatory = templates.filter(t => t.is_mandatory);
-    document.getElementById('mandatoryList').innerHTML = mandatory.length ? mandatory.map(t => {
-      const item = itemsByTemplate[t.id];
-      const docTypes = allDocTypes.filter(dt => dt.equipment_template_id === t.id);
-      const docs = item ? (docsByItem[item.id] || []) : [];
-      return equipCard(t, item, true, docTypes, docs);
-    }).join('') : '<div class="empty">No mandatory equipment defined</div>';
-    const additional = items.filter(i => !i.equipment_template_id);
-    document.getElementById('additionalList').innerHTML = additional.length ? additional.map(i => customEquipCard(i)).join('') : '';
-  }
 
-  function equipCard(template, item, mandatory, docTypes, docs) {
-    const badge = mandatory ? '<span class="badge mandatory">Required</span>' : '<span class="badge optional">Optional</span>';
-    if (item) {
-      const docsHtml = docTypes.map(dt => {
-        const uploaded = docs.find(d => d.document_type_id === dt.id);
-        const status = uploaded ? (uploaded.ai_status || 'pending') : 'missing';
-        const statusColors = { valid: '#6ee7b7', expired: '#fda4af', missing: '#94a3b8', pending: '#fbbf24' };
-        const color = statusColors[status] || '#fbbf24';
-        const dateInfo = uploaded ? `Issue: ${uploaded.issue_date || '—'} · Expiry: ${uploaded.expiry_date || '—'}` : 'Not uploaded';
-        return `<div class="doc-row">
-          <div style="flex:1">
-            <div class="doc-name">${dt.document_name}</div>
-            <div class="doc-date">${dateInfo}</div>
+    const list = document.getElementById('equipmentList');
+    if (!topLevel.length) {
+      list.innerHTML = '<div class="empty">No equipment added yet</div>';
+      return;
+    }
+
+    list.innerHTML = topLevel.map(item => {
+      const subs = subsByParent[item.id] || [];
+      const itemDocs = docsByItem[item.id] || [];
+      const subsHtml = subs.map(sub => {
+        const subDocs = docsByItem[sub.id] || [];
+        return `<div class="sub-card">
+          <div class="sub-card-header">
+            <div class="sub-card-title">${sub.name || sub.model || 'Sub-component'}</div>
+            <button class="upload-btn" onclick="uploadEquipDoc('${sub.id}')">↑ Upload</button>
           </div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="color:${color};font-size:11px;font-weight:bold">${status.toUpperCase()}</span>
-            <button class="upload-btn" onclick="uploadEquipDoc('${item.id}', '${dt.id}')">↑ Upload</button>
-          </div>
+          <div class="sn-info" style="font-size:12px;margin-bottom:6px">S/N: ${sub.serial_number || '—'} · Model: ${sub.model || '—'}</div>
+          ${docsHtml(subDocs)}
         </div>`;
       }).join('');
+
       return `<div class="card">
         <div class="card-header">
-          <div class="card-title">${template.name}</div>
-          ${badge}
+          <div class="card-title">${item.name || item.model || 'Equipment'}</div>
+          <button class="upload-btn" onclick="uploadEquipDoc('${item.id}')">↑ Upload</button>
         </div>
         <div class="sn-info">S/N: ${item.serial_number || '—'} · Model: ${item.model || '—'}</div>
-        ${docsHtml || '<div class="doc-name">No document types defined</div>'}
-      </div>`;
-    } else {
-      return `<div class="card">
-        <div class="card-header">
-          <div class="card-title">${template.name}</div>
-          ${badge}
-        </div>
-        <div class="sn-row">
-          <input type="text" placeholder="Serial number" id="sn_${template.id}">
-          <input type="text" placeholder="Model" id="model_${template.id}">
-          <button onclick="saveSerialNumber('${template.id}')">Save</button>
+        ${docsHtml(itemDocs)}
+        <div class="subcomponents">
+          <div class="subcomponents-label">Sub-components ${subs.length ? `(${subs.length})` : ''}</div>
+          ${subsHtml}
+          <button class="add-sub-btn" onclick="openAddSubComponent('${item.id}', '${(item.name || item.model || 'Equipment').replace(/'/g, "\\'")}')">+ Add Sub-component</button>
         </div>
       </div>`;
-    }
+    }).join('');
   }
 
-  function customEquipCard(item) {
-    return `<div class="card">
-      <div class="card-header">
-        <div class="card-title">${item.model || 'Custom Equipment'}</div>
-        <span class="badge optional">Additional</span>
-      </div>
-      <div class="sn-info">S/N: ${item.serial_number || '—'}</div>
-      <button class="upload-btn" style="margin-top:10px" onclick="uploadEquipDoc('${item.id}', null)">↑ Upload Document</button>
-    </div>`;
-  }
-
-  async function saveSerialNumber(templateId) {
-    const sn = document.getElementById(`sn_${templateId}`).value;
-    const model = document.getElementById(`model_${templateId}`).value;
-    if (!sn) { alert('Please enter serial number'); return; }
-    await fetch(`${SUPABASE_URL}/rest/v1/equipment_items`, {
-      method: 'POST',
-      headers: { ...headers, Prefer: 'return=minimal' },
-      body: JSON.stringify({ contractor_id: user.id, equipment_template_id: parseInt(templateId), serial_number: sn, model })
-    });
-    loadEquipment();
+  function docsHtml(docs) {
+    if (!docs.length) return '';
+    const statusColors = { valid: '#6ee7b7', expired: '#fda4af', missing: '#94a3b8', pending: '#fbbf24' };
+    return docs.map(d => {
+      const status = d.ai_status || 'pending';
+      const color = statusColors[status] || '#fbbf24';
+      return `<div class="doc-row">
+        <div style="flex:1">
+          <div class="doc-name">${d.original_filename || 'Document'}</div>
+          <div class="doc-date">Issue: ${d.issue_date || '—'} · Expiry: ${d.expiry_date || '—'}</div>
+        </div>
+        <span style="color:${color};font-size:11px;font-weight:bold">${status.toUpperCase()}</span>
+      </div>`;
+    }).join('');
   }
 
   async function addEquipment() {
-    const name = document.getElementById('equipName').value;
-    const serial = document.getElementById('equipSerial').value;
-    const model = document.getElementById('equipModel').value;
+    const name = document.getElementById('equipName').value.trim();
+    const serial = document.getElementById('equipSerial').value.trim();
+    const model = document.getElementById('equipModel').value.trim();
     if (!name || !serial) { alert('Please fill name and serial number'); return; }
     await fetch(`${SUPABASE_URL}/rest/v1/equipment_items`, {
       method: 'POST',
       headers: { ...headers, Prefer: 'return=minimal' },
-      body: JSON.stringify({ contractor_id: user.id, serial_number: serial, model: name })
+      body: JSON.stringify({ contractor_id: user.id, name, serial_number: serial, model: model || null })
     });
     closeModal('equipModal');
+    loadEquipment();
+  }
+
+  async function addSubComponent() {
+    const name = document.getElementById('subName').value.trim();
+    const serial = document.getElementById('subSerial').value.trim();
+    const model = document.getElementById('subModel').value.trim();
+    if (!name || !serial) { alert('Please fill name and serial number'); return; }
+    await fetch(`${SUPABASE_URL}/rest/v1/equipment_items`, {
+      method: 'POST',
+      headers: { ...headers, Prefer: 'return=minimal' },
+      body: JSON.stringify({ contractor_id: user.id, name, serial_number: serial, model: model || null, parent_id: currentSubParentId })
+    });
+    closeModal('subModal');
     loadEquipment();
   }
 
@@ -317,16 +340,14 @@
       </div>`).join('');
   }
 
-  function uploadEquipDoc(itemId, docTypeId) {
+  function uploadEquipDoc(itemId) {
     currentUploadItemId = itemId;
-    currentUploadDocTypeId = docTypeId;
     currentUploadType = 'equipment';
     document.getElementById('fileInput').click();
   }
 
   function uploadPersonnelDoc(personId) {
     currentUploadItemId = personId;
-    currentUploadDocTypeId = null;
     currentUploadType = 'personnel';
     document.getElementById('fileInput').click();
   }
@@ -349,8 +370,8 @@
           headers: { ...headers, Prefer: 'return=minimal' },
           body: JSON.stringify({
             equipment_item_id: parseInt(currentUploadItemId),
-            document_type_id: currentUploadDocTypeId ? parseInt(currentUploadDocTypeId) : null,
             file_url: fileUrl,
+            original_filename: file.name,
             ai_status: 'pending'
           })
         });
