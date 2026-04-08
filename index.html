@@ -1638,12 +1638,14 @@
     document.getElementById('equipSelectorList').innerHTML = items.map(i => {
       const rowId = addedMap[String(i.id)];
       const isAdded = !!rowId;
-      return `<div class="checkbox-item" style="${isAdded ? 'opacity:0.6;' : ''}">
-        ${isAdded
-          ? `<div style="flex:1"><span style="color:#94a3b8;font-size:13px;">${i.equipment_templates?.name || i.model || '—'}</span><span style="color:#64748b;font-size:12px;"> · S/N: ${i.serial_number || '—'}</span><span style="color:#64748b;font-size:11px;font-style:italic;"> · Already added</span></div><button class="btn-danger" onclick="event.stopPropagation();removeEquipment(${rowId},true)">Remove</button>`
-          : `<input type="checkbox" id="eq_${i.id}" value="${i.id}"><label for="eq_${i.id}"><strong>${i.equipment_templates?.name || i.model || '—'}</strong><span style="color:#64748b;font-size:12px;"> · S/N: ${i.serial_number || '—'}</span></label>`
-        }
-      </div>`;
+      return isAdded
+        ? `<div class="item-row" style="margin-bottom:8px;">
+            <div class="item-info"><div class="item-name" style="color:#64748b;">${i.equipment_templates?.name || i.model || '—'}</div><div class="item-detail">S/N: ${i.serial_number || '—'} · <em style="color:#475569;">Already added</em></div></div>
+            <button class="btn-danger" onclick="removeEquipment(${rowId},true)">Remove</button>
+          </div>`
+        : `<div class="checkbox-item">
+            <input type="checkbox" id="eq_${i.id}" value="${i.id}"><label for="eq_${i.id}"><strong>${i.equipment_templates?.name || i.model || '—'}</strong><span style="color:#64748b;font-size:12px;"> · S/N: ${i.serial_number || '—'}</span></label>
+          </div>`;
     }).join('') || '<div class="empty">No equipment in your database</div>';
     document.getElementById('asEquipModal').classList.add('open');
   }
@@ -1675,12 +1677,12 @@
     document.getElementById('persSelectorList').innerHTML = people.map(p => {
       const rowId = addedMap[String(p.id)];
       const isAdded = !!rowId;
-      return `<div class="checkbox-item" style="${isAdded ? 'opacity:0.6;' : ''}">
-        ${isAdded
-          ? `<div style="flex:1"><span style="color:#94a3b8;font-size:13px;">${p.full_name}</span><span style="color:#64748b;font-size:12px;"> · ${p.position || ''}</span><span style="color:#64748b;font-size:11px;font-style:italic;"> · Already added</span></div><button class="btn-danger" onclick="event.stopPropagation();removePersonnel(${rowId},true)">Remove</button>`
-          : `<input type="checkbox" id="per_${p.id}" value="${p.id}"><label for="per_${p.id}"><strong>${p.full_name}</strong><span style="color:#64748b;font-size:12px;"> · ${p.position || ''}</span></label>`
-        }
-      </div>`;
+      return isAdded
+        ? `<div class="item-row" style="margin-bottom:8px;">
+            <div class="item-info"><div class="item-name" style="color:#64748b;">${p.full_name}</div><div class="item-detail">${p.position || ''}<em style="color:#475569;"> · Already added</em></div></div>
+            <button class="btn-danger" onclick="removePersonnel(${rowId},true)">Remove</button>
+          </div>`
+        : `<div class="checkbox-item"><input type="checkbox" id="per_${p.id}" value="${p.id}"><label for="per_${p.id}"><strong>${p.full_name}</strong><span style="color:#64748b;font-size:12px;"> · ${p.position || ''}</span></label></div>`;
     }).join('') || '<div class="empty">No personnel in your database</div>';
     document.getElementById('asPersModal').classList.add('open');
   }
