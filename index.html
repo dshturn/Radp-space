@@ -130,6 +130,9 @@
     .sub-card-title { font-size: 13px; font-weight: bold; color: #cbd5e1; }
     .add-sub-btn { background: transparent; color: #38bdf8; border: 1px dashed #334155; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; margin-top: 4px; transition: border-color 0.2s, background 0.2s; }
     .add-sub-btn:hover { border-color: #38bdf8; background: rgba(56,189,248,0.05); }
+    .sub-child-card { background: #060d1a; border-radius: 6px; padding: 10px; margin-top: 6px; margin-left: 10px; border-left: 2px solid #1e3a5f; }
+    .sub-child-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 6px; }
+    .sub-child-title { font-size: 12px; font-weight: bold; color: #93c5fd; }
     .btn-reassign { background: none; border: 1px solid #334155; color: #94a3b8; padding: 4px 8px; border-radius: 5px; cursor: pointer; font-size: 11px; transition: border-color 0.2s, color 0.2s; }
     .btn-reassign:hover { border-color: #94a3b8; color: #e2e8f0; }
     .reassign-option { display: flex; align-items: center; gap: 10px; padding: 10px; background: #0f172a; border-radius: 8px; margin-bottom: 8px; cursor: pointer; border: 1px solid transparent; transition: border-color 0.2s; }
@@ -906,7 +909,7 @@
     docs.forEach(d => { if (!docsByItem[d.equipment_item_id]) docsByItem[d.equipment_item_id] = []; docsByItem[d.equipment_item_id].push(d); });
 
     document.getElementById('equipmentList').innerHTML = topLevel.length
-      ? topLevel.map(i => equipItemCard(i, i.name || 'Equipment', docsByItem[i.id] || [], subsByParent[i.id] || [], docsByItem)).join('')
+      ? topLevel.map(i => equipItemCard(i, i.name || 'Equipment', docsByItem[i.id] || [], subsByParent[i.id] || [], docsByItem, subsByParent)).join('')
       : '<div class="empty">No equipment yet. Click "+ Add Equipment" to start.</div>';
 
     // ── Mini dashboard: equipment + docs stats ──
@@ -944,7 +947,7 @@
   }
 
   // Card for a registered equipment item
-  function equipItemCard(item, name, docs, subs = [], docsByItem = {}) {
+  function equipItemCard(item, name, docs, subs = [], docsByItem = {}, subsByParent = {}) {
 
     const _today = new Date(); _today.setHours(0,0,0,0);
     const _in30  = new Date(_today); _in30.setDate(_in30.getDate() + 30);
@@ -998,6 +1001,35 @@
           <div style="display:flex;align-items:center;gap:8px;">${fileBtn}<span style="color:${statusColor};font-size:11px;font-weight:bold;">${statusText}</span><button class="btn-danger" onclick="deleteDoc(${d.id})">✕</button></div>
         </div>`;
       }).join('') : `<div class="doc-date" style="padding:4px 0;">No documents yet</div>`;
+      const subChildren = subsByParent[sub.id] || [];
+      const subChildrenHtml = subChildren.map(sc => {
+        const scDocs = docsByItem[sc.id] || [];
+        const scDocsHtml = scDocs.length ? scDocs.map(d => {
+          const expiry = d.expiry_date;
+          let statusColor = '#6ee7b7', statusText = 'VALID';
+          if (expiry) { const exp = new Date(expiry); if (exp < _today) { statusColor = '#fda4af'; statusText = 'EXPIRED'; } else if (exp <= _in30) { statusColor = '#fbbf24'; statusText = 'EXPIRING'; } }
+          const fileBtn = d.file_url ? `<button onclick="openDoc('${d.file_url}')" style="background:none;border:none;color:#38bdf8;font-size:11px;cursor:pointer;padding:0;text-decoration:underline;">📎 View</button>` : '';
+          return `<div class="doc-row" style="padding:4px 0;font-size:12px;">
+            <div style="flex:1"><div class="doc-name">${d.doc_type_name||'—'}</div><div class="doc-date">Issue: ${d.issue_date||'—'} · Expiry: ${expiry||'—'}</div></div>
+            <div style="display:flex;align-items:center;gap:6px;">${fileBtn}<span style="color:${statusColor};font-size:10px;font-weight:bold;">${statusText}</span><button class="btn-danger" onclick="deleteDoc(${d.id})">✕</button></div>
+          </div>`;
+        }).join('') : `<div class="doc-date" style="padding:3px 0;font-size:11px;">No documents yet</div>`;
+        return `<div class="sub-child-card">
+          <div class="sub-child-header">
+            <div>
+              <div class="sub-child-title">${sc.name || 'Sub-child'}</div>
+              <div class="doc-name" style="font-size:10px;margin-top:1px;">S/N: ${sc.serial_number || '—'}</div>
+            </div>
+            <div style="display:flex;gap:5px;align-items:center;">
+              <button class="upload-btn" style="font-size:11px;padding:4px 8px;" onclick="openAddDoc(${sc.id})">+ Doc</button>
+              <button class="btn-reassign" onclick="openReassignModal(${sc.id},'${(sc.name||'Sub-child').replace(/'/g,"\\'")}',${sub.id})" title="Change parent">⇄</button>
+              <button class="btn-danger" onclick="deleteEquipItem(${sc.id})" title="Delete">🗑</button>
+            </div>
+          </div>
+          ${scDocsHtml}
+        </div>`;
+      }).join('');
+
       return `<div class="sub-card">
         <div class="sub-card-header">
           <div>
@@ -1011,6 +1043,10 @@
           </div>
         </div>
         ${subDocsHtml}
+        ${subChildren.length || true ? `<div style="margin-top:8px;">
+          ${subChildrenHtml}
+          <button class="add-sub-btn" style="font-size:11px;padding:4px 10px;margin-top:6px;" onclick="openAddSubComponent(${sub.id},'${(sub.name||'Sub-component').replace(/'/g,"\\'")}')">+ Add Sub-child</button>
+        </div>` : ''}
       </div>`;
     }).join('');
 
@@ -1084,14 +1120,20 @@
     currentReassignItemId = itemId;
     document.getElementById('reassignTitle').textContent = `Change: ${itemName}`;
 
-    // Load all top-level items excluding self
+    // Load all items as potential parents (excluding self and own children to avoid cycles)
     const h = getHeaders();
     const allItems = await apiFetch(`${SUPABASE_URL}/rest/v1/equipment_items?select=*&order=created_at`, { headers: h });
-    const choices = (allItems || []).filter(i => !i.dismissed && !i.parent_id && i.id !== itemId);
+    const active = (allItems || []).filter(i => !i.dismissed && i.id !== itemId);
+    // Exclude direct children of self (can't make parent a child of its own child)
+    const directChildIds = new Set(active.filter(i => i.parent_id === itemId).map(i => i.id));
+    const choices = active.filter(i => !directChildIds.has(i.id));
 
     const sel = document.getElementById('reassignParentSelect');
     sel.innerHTML = choices.length
-      ? choices.map(i => `<option value="${i.id}">${i.name || 'Equipment'} · S/N: ${i.serial_number || '—'}</option>`).join('')
+      ? choices.map(i => {
+          const level = !i.parent_id ? 'Equipment' : 'Sub-component';
+          return `<option value="${i.id}">[${level}] ${i.name || 'Equipment'} · S/N: ${i.serial_number || '—'}</option>`;
+        }).join('')
       : '<option value="">No other equipment available</option>';
 
     // Pre-select radio based on current state
