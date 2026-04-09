@@ -123,6 +123,13 @@
     .btn-toggle { background: none; border: none; color: #64748b; font-size: 16px; cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: color 0.2s, transform 0.2s; line-height: 1; }
     .btn-toggle:hover { color: #94a3b8; }
     .app-card.expanded .btn-toggle { transform: rotate(180deg); }
+    .sub-section { margin-top: 16px; border-top: 1px solid #334155; padding-top: 12px; }
+    .sub-label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+    .sub-card { background: #0f172a; border-radius: 8px; padding: 12px; margin-bottom: 8px; }
+    .sub-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 6px; }
+    .sub-card-title { font-size: 13px; font-weight: bold; color: #cbd5e1; }
+    .add-sub-btn { background: transparent; color: #38bdf8; border: 1px dashed #334155; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; margin-top: 4px; transition: border-color 0.2s, background 0.2s; }
+    .add-sub-btn:hover { border-color: #38bdf8; background: rgba(56,189,248,0.05); }
 
     /* Modals */
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); backdrop-filter: blur(2px); z-index: 100; justify-content: center; align-items: center; animation: fadeIn 0.18s ease; }
@@ -487,6 +494,25 @@
   </div>
 </div>
 
+<!-- Add Sub-component Modal -->
+<div class="modal" id="ctSubModal">
+  <div class="modal-box">
+    <h3 id="ctSubModalTitle">Add Sub-component</h3>
+    <label for="subEquipSelect">Component Type</label>
+    <select id="subEquipSelect" onchange="onSubEquipSelectChange(this)"></select>
+    <div id="newSubNameWrap" style="display:none;">
+      <label for="subEquipName">New Component Name</label>
+      <input type="text" id="subEquipName" placeholder="e.g. Gauge, Valve" autocomplete="off">
+    </div>
+    <label for="subEquipSerial">Serial Number</label>
+    <input type="text" id="subEquipSerial" placeholder="Serial number" autocomplete="off">
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('ctSubModal')">Cancel</button>
+      <button class="btn-save" onclick="addSubComponent()">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- Add Document Modal -->
 <div class="modal" id="addDocModal">
   <div class="modal-box">
@@ -840,6 +866,12 @@
     if (!items) return;
 
     const activeItems = items.filter(i => !i.dismissed);
+    const topLevel = activeItems.filter(i => !i.parent_id);
+    const subsByParent = {};
+    activeItems.filter(i => i.parent_id).forEach(i => {
+      if (!subsByParent[i.parent_id]) subsByParent[i.parent_id] = [];
+      subsByParent[i.parent_id].push(i);
+    });
 
     // Load docs for active items
     const itemIds = activeItems.map(i => i.id).join(',');
@@ -848,8 +880,8 @@
     const docsByItem = {};
     docs.forEach(d => { if (!docsByItem[d.equipment_item_id]) docsByItem[d.equipment_item_id] = []; docsByItem[d.equipment_item_id].push(d); });
 
-    document.getElementById('equipmentList').innerHTML = activeItems.length
-      ? activeItems.map(i => equipItemCard(i, i.name || 'Equipment', docsByItem[i.id] || [])).join('')
+    document.getElementById('equipmentList').innerHTML = topLevel.length
+      ? topLevel.map(i => equipItemCard(i, i.name || 'Equipment', docsByItem[i.id] || [], subsByParent[i.id] || [], docsByItem)).join('')
       : '<div class="empty">No equipment yet. Click "+ Add Equipment" to start.</div>';
 
     // ── Mini dashboard: equipment + docs stats ──
@@ -887,7 +919,7 @@
   }
 
   // Card for a registered equipment item
-  function equipItemCard(item, name, docs) {
+  function equipItemCard(item, name, docs, subs = [], docsByItem = {}) {
 
     const _today = new Date(); _today.setHours(0,0,0,0);
     const _in30  = new Date(_today); _in30.setDate(_in30.getDate() + 30);
@@ -925,6 +957,37 @@
                      : expiringCount > 0 ? `<span style="background:#422006;color:#fbbf24;font-size:11px;font-weight:bold;padding:3px 8px;border-radius:20px;">⚠ ${expiringCount} EXPIRING</span>`
                      : '';
 
+    const subsHtml = subs.map(sub => {
+      const subDocs = docsByItem[sub.id] || [];
+      const subDocsHtml = subDocs.length ? subDocs.map(d => {
+        const expiry = d.expiry_date;
+        let statusColor = '#6ee7b7', statusText = 'VALID';
+        if (expiry) {
+          const exp = new Date(expiry);
+          if (exp < _today)      { statusColor = '#fda4af'; statusText = 'EXPIRED'; }
+          else if (exp <= _in30) { statusColor = '#fbbf24'; statusText = 'EXPIRING'; }
+        }
+        const fileBtn = d.file_url ? `<button onclick="openDoc('${d.file_url}')" style="background:none;border:none;color:#38bdf8;font-size:11px;cursor:pointer;padding:0;text-decoration:underline;">📎 View</button>` : '';
+        return `<div class="doc-row" style="padding:6px 0;">
+          <div style="flex:1"><div class="doc-name">${d.doc_type_name || '—'}</div><div class="doc-date">Issue: ${d.issue_date || '—'} · Expiry: ${expiry || '—'}</div></div>
+          <div style="display:flex;align-items:center;gap:8px;">${fileBtn}<span style="color:${statusColor};font-size:11px;font-weight:bold;">${statusText}</span><button class="btn-danger" onclick="deleteDoc(${d.id})">✕</button></div>
+        </div>`;
+      }).join('') : `<div class="doc-date" style="padding:4px 0;">No documents yet</div>`;
+      return `<div class="sub-card">
+        <div class="sub-card-header">
+          <div>
+            <div class="sub-card-title">${sub.name || 'Sub-component'}</div>
+            <div class="doc-name" style="font-size:11px;margin-top:2px;">S/N: ${sub.serial_number || '—'}</div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <button class="upload-btn" onclick="openAddDoc(${sub.id})">+ Doc</button>
+            <button class="btn-danger" onclick="deleteEquipItem(${sub.id})" title="Delete">🗑</button>
+          </div>
+        </div>
+        ${subDocsHtml}
+      </div>`;
+    }).join('');
+
     return `<div class="app-card">
       <div class="card-header">
         <div>
@@ -940,6 +1003,11 @@
       <div class="card-body">
         ${docsHtml}
         <button class="upload-btn" style="margin-top:10px;" onclick="openAddDoc(${item.id})">+ Add Document</button>
+        <div class="sub-section">
+          <div class="sub-label">Sub-components${subs.length ? ` (${subs.length})` : ''}</div>
+          ${subsHtml}
+          <button class="add-sub-btn" onclick="openAddSubComponent(${item.id}, '${name.replace(/'/g, "\\'")}')">+ Add Sub-component</button>
+        </div>
       </div>
     </div>`;
   }
@@ -979,6 +1047,66 @@
       body: JSON.stringify({ contractor_id: getUser().id, equipment_template_id: finalTemplateId, serial_number: serial, name: finalName })
     });
     closeModal('ctEquipModal');
+    loadEquipment();
+  }
+
+  let currentSubParentId = null;
+
+  async function openAddSubComponent(parentId, parentName) {
+    currentSubParentId = parentId;
+    document.getElementById('ctSubModalTitle').textContent = `Add Sub-component to ${parentName}`;
+    document.getElementById('subEquipSerial').value = '';
+    document.getElementById('subEquipName').value = '';
+    document.getElementById('newSubNameWrap').style.display = 'none';
+    // Reuse same template list as equipment
+    const h = getHeaders();
+    const u = getUser();
+    const templates = await apiFetch(`${SUPABASE_URL}/rest/v1/equipment_templates?service_line=eq.${encodeURIComponent(u.service_line)}&order=name`, { headers: h }) || [];
+    const sel = document.getElementById('subEquipSelect');
+    sel.innerHTML = '<option value="">Select component type...</option>'
+      + templates.map(t => `<option value="${t.id}">${t.name}</option>`).join('')
+      + '<option value="__new__">+ Add new type...</option>';
+    document.getElementById('ctSubModal').classList.add('open');
+  }
+
+  function onSubEquipSelectChange(sel) {
+    document.getElementById('newSubNameWrap').style.display = sel.value === '__new__' ? 'block' : 'none';
+  }
+
+  async function addSubComponent() {
+    const selEl  = document.getElementById('subEquipSelect');
+    const tmplId = selEl.value;
+    const serial = document.getElementById('subEquipSerial').value.trim();
+    if (!tmplId)  { alert('Please select a component type'); return; }
+    if (!serial)  { alert('Please enter a serial number'); return; }
+
+    let finalTemplateId = null;
+    let finalName = '';
+
+    if (tmplId === '__new__') {
+      const customName = document.getElementById('subEquipName').value.trim();
+      if (!customName) { alert('Please enter the component name'); return; }
+      const u = getUser();
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/equipment_templates`, {
+        method: 'POST',
+        headers: { ...getHeaders(), Prefer: 'return=representation' },
+        body: JSON.stringify({ name: customName, service_line: u.service_line })
+      });
+      if (res.ok) {
+        const [newTmpl] = await res.json();
+        finalTemplateId = newTmpl?.id || null;
+      }
+      finalName = customName;
+    } else {
+      finalTemplateId = parseInt(tmplId);
+      finalName = selEl.options[selEl.selectedIndex].text;
+    }
+
+    await fetch(`${SUPABASE_URL}/rest/v1/equipment_items`, {
+      method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal' },
+      body: JSON.stringify({ contractor_id: getUser().id, equipment_template_id: finalTemplateId, serial_number: serial, name: finalName, parent_id: currentSubParentId })
+    });
+    closeModal('ctSubModal');
     loadEquipment();
   }
 
