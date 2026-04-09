@@ -126,13 +126,19 @@
     .sub-section { margin-top: 16px; border-top: 1px solid #334155; padding-top: 12px; }
     .sub-label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
     .sub-card { background: #0f172a; border-radius: 8px; padding: 12px; margin-bottom: 8px; }
-    .sub-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 6px; }
+    .sub-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0; flex-wrap: wrap; gap: 6px; }
     .sub-card-title { font-size: 13px; font-weight: bold; color: #cbd5e1; }
+    .sub-card-body { display: none; border-top: 1px solid #1e293b; margin-top: 8px; padding-top: 8px; }
+    .sub-card.expanded .sub-card-body { display: block; }
+    .sub-card.expanded .btn-toggle { transform: rotate(180deg); }
     .add-sub-btn { background: transparent; color: #38bdf8; border: 1px dashed #334155; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; margin-top: 4px; transition: border-color 0.2s, background 0.2s; }
     .add-sub-btn:hover { border-color: #38bdf8; background: rgba(56,189,248,0.05); }
     .sub-child-card { background: #060d1a; border-radius: 6px; padding: 10px; margin-top: 6px; margin-left: 10px; border-left: 2px solid #1e3a5f; }
-    .sub-child-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 6px; }
+    .sub-child-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0; flex-wrap: wrap; gap: 6px; }
     .sub-child-title { font-size: 12px; font-weight: bold; color: #93c5fd; }
+    .sub-child-body { display: none; border-top: 1px solid #0f172a; margin-top: 8px; padding-top: 6px; }
+    .sub-child-card.expanded .sub-child-body { display: block; }
+    .sub-child-card.expanded .btn-toggle { transform: rotate(180deg); }
     .btn-reassign { background: none; border: 1px solid #334155; color: #94a3b8; padding: 4px 8px; border-radius: 5px; cursor: pointer; font-size: 11px; transition: border-color 0.2s, color 0.2s; }
     .btn-reassign:hover { border-color: #94a3b8; color: #e2e8f0; }
     .reassign-option { display: flex; align-items: center; gap: 10px; padding: 10px; background: #0f172a; border-radius: 8px; margin-bottom: 8px; cursor: pointer; border: 1px solid transparent; transition: border-color 0.2s; }
@@ -1016,37 +1022,43 @@
         }).join('') : `<div class="doc-date" style="padding:3px 0;font-size:11px;">No documents yet</div>`;
         return `<div class="sub-child-card">
           <div class="sub-child-header">
-            <div>
+            <div style="cursor:pointer;flex:1;" onclick="toggleSubCard(this.closest('.sub-child-card'))">
               <div class="sub-child-title">${sc.name || 'Sub-child'}</div>
               <div class="doc-name" style="font-size:10px;margin-top:1px;">S/N: ${sc.serial_number || '—'}</div>
             </div>
             <div style="display:flex;gap:5px;align-items:center;">
               <button class="upload-btn" style="font-size:11px;padding:4px 8px;" onclick="openAddDoc(${sc.id})">+ Add Document</button>
               <button class="btn-reassign" onclick="openReassignModal(${sc.id},'${(sc.name||'Sub-child').replace(/'/g,"\\'")}',${sub.id})" title="Change parent">⇄</button>
+              <button class="btn-toggle" onclick="toggleSubCard(this.closest('.sub-child-card'))" title="Expand">▾</button>
               <button class="btn-danger" onclick="deleteEquipItem(${sc.id})" title="Delete">🗑</button>
             </div>
           </div>
-          ${scDocsHtml}
+          <div class="sub-child-body">
+            ${scDocsHtml}
+          </div>
         </div>`;
       }).join('');
 
       return `<div class="sub-card">
         <div class="sub-card-header">
-          <div>
+          <div style="cursor:pointer;flex:1;" onclick="toggleSubCard(this.closest('.sub-card'))">
             <div class="sub-card-title">${sub.name || 'Sub-component'}</div>
             <div class="doc-name" style="font-size:11px;margin-top:2px;">S/N: ${sub.serial_number || '—'}</div>
           </div>
           <div style="display:flex;gap:6px;align-items:center;">
             <button class="upload-btn" onclick="openAddDoc(${sub.id})">+ Add Document</button>
             <button class="btn-reassign" onclick="openReassignModal(${sub.id},'${(sub.name||'Sub-component').replace(/'/g,"\\'")}',${item.id})" title="Change parent">⇄</button>
+            <button class="btn-toggle" onclick="toggleSubCard(this.closest('.sub-card'))" title="Expand">▾</button>
             <button class="btn-danger" onclick="deleteEquipItem(${sub.id})" title="Delete">🗑</button>
           </div>
         </div>
-        ${subDocsHtml}
-        ${subChildren.length || true ? `<div style="margin-top:8px;">
-          ${subChildrenHtml}
-          <button class="add-sub-btn" style="font-size:11px;padding:4px 10px;margin-top:6px;" onclick="openAddSubComponent(${sub.id},'${(sub.name||'Sub-component').replace(/'/g,"\\'")}')">+ Add Sub-child</button>
-        </div>` : ''}
+        <div class="sub-card-body">
+          ${subDocsHtml}
+          <div style="margin-top:8px;">
+            ${subChildrenHtml}
+            <button class="add-sub-btn" style="font-size:11px;padding:4px 10px;margin-top:6px;" onclick="openAddSubComponent(${sub.id},'${(sub.name||'Sub-component').replace(/'/g,"\\'")}')">+ Add Sub-child</button>
+          </div>
+        </div>
       </div>`;
     }).join('');
 
@@ -1703,6 +1715,10 @@
 
   function toggleCard(btn) {
     btn.closest('.app-card').classList.toggle('expanded');
+  }
+
+  function toggleSubCard(card) {
+    card.classList.toggle('expanded');
   }
 
   async function deletePersRecord(id) {
