@@ -130,6 +130,11 @@
     .sub-card-title { font-size: 13px; font-weight: bold; color: #cbd5e1; }
     .add-sub-btn { background: transparent; color: #38bdf8; border: 1px dashed #334155; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; margin-top: 4px; transition: border-color 0.2s, background 0.2s; }
     .add-sub-btn:hover { border-color: #38bdf8; background: rgba(56,189,248,0.05); }
+    .btn-reassign { background: none; border: 1px solid #334155; color: #94a3b8; padding: 4px 8px; border-radius: 5px; cursor: pointer; font-size: 11px; transition: border-color 0.2s, color 0.2s; }
+    .btn-reassign:hover { border-color: #94a3b8; color: #e2e8f0; }
+    .reassign-option { display: flex; align-items: center; gap: 10px; padding: 10px; background: #0f172a; border-radius: 8px; margin-bottom: 8px; cursor: pointer; border: 1px solid transparent; transition: border-color 0.2s; }
+    .reassign-option:has(input:checked) { border-color: #0284c7; }
+    .reassign-option label { cursor: pointer; font-size: 13px; color: #e2e8f0; margin: 0; }
 
     /* Modals */
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); backdrop-filter: blur(2px); z-index: 100; justify-content: center; align-items: center; animation: fadeIn 0.18s ease; }
@@ -490,6 +495,26 @@
     <div class="modal-btns">
       <button class="btn-cancel" onclick="closeModal('ctEquipModal')">Cancel</button>
       <button class="btn-save" onclick="addEquipment()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Reassign Equipment Modal -->
+<div class="modal" id="reassignModal">
+  <div class="modal-box">
+    <h3 id="reassignTitle">Change Assignment</h3>
+    <div class="reassign-option">
+      <input type="radio" name="reassignType" id="reassignStandalone" value="standalone" onchange="onReassignTypeChange(this)" checked>
+      <label for="reassignStandalone">Make standalone (top-level equipment)</label>
+    </div>
+    <div class="reassign-option">
+      <input type="radio" name="reassignType" id="reassignChild" value="child" onchange="onReassignTypeChange(this)">
+      <label for="reassignChild">Make sub-component of:</label>
+    </div>
+    <select id="reassignParentSelect" style="display:none;margin-top:4px;margin-bottom:0;"></select>
+    <div class="modal-btns" style="margin-top:16px;">
+      <button class="btn-cancel" onclick="closeModal('reassignModal')">Cancel</button>
+      <button class="btn-save" onclick="saveReassign()">Save</button>
     </div>
   </div>
 </div>
@@ -981,6 +1006,7 @@
           </div>
           <div style="display:flex;gap:6px;align-items:center;">
             <button class="upload-btn" onclick="openAddDoc(${sub.id})">+ Add Document</button>
+            <button class="btn-reassign" onclick="openReassignModal(${sub.id},'${(sub.name||'Sub-component').replace(/'/g,"\\'")}',${item.id})" title="Change parent">⇄</button>
             <button class="btn-danger" onclick="deleteEquipItem(${sub.id})" title="Delete">🗑</button>
           </div>
         </div>
@@ -996,6 +1022,7 @@
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           ${alertBadge}
+          <button class="btn-reassign" onclick="openReassignModal(${item.id},'${name.replace(/'/g,"\\'")}',null)" title="Change assignment">⇄</button>
           <button class="btn-toggle" onclick="toggleCard(this)" title="Expand">▾</button>
           <button class="btn-danger" onclick="deleteEquipItem(${item.id})" title="Delete equipment">🗑</button>
         </div>
@@ -1047,6 +1074,57 @@
       body: JSON.stringify({ contractor_id: getUser().id, equipment_template_id: finalTemplateId, serial_number: serial, name: finalName })
     });
     closeModal('ctEquipModal');
+    loadEquipment();
+  }
+
+  // ═══ REASSIGN EQUIPMENT ═══
+  let currentReassignItemId = null;
+
+  async function openReassignModal(itemId, itemName, currentParentId) {
+    currentReassignItemId = itemId;
+    document.getElementById('reassignTitle').textContent = `Change: ${itemName}`;
+
+    // Load all top-level items excluding self
+    const h = getHeaders();
+    const allItems = await apiFetch(`${SUPABASE_URL}/rest/v1/equipment_items?select=*&order=created_at`, { headers: h });
+    const choices = (allItems || []).filter(i => !i.dismissed && !i.parent_id && i.id !== itemId);
+
+    const sel = document.getElementById('reassignParentSelect');
+    sel.innerHTML = choices.length
+      ? choices.map(i => `<option value="${i.id}">${i.name || 'Equipment'} · S/N: ${i.serial_number || '—'}</option>`).join('')
+      : '<option value="">No other equipment available</option>';
+
+    // Pre-select radio based on current state
+    const isChild = currentParentId !== null;
+    document.getElementById(isChild ? 'reassignChild' : 'reassignStandalone').checked = true;
+    sel.style.display = isChild ? 'block' : 'none';
+    if (isChild) sel.value = String(currentParentId);
+
+    document.getElementById('reassignModal').classList.add('open');
+  }
+
+  function onReassignTypeChange(radio) {
+    document.getElementById('reassignParentSelect').style.display = radio.value === 'child' ? 'block' : 'none';
+  }
+
+  async function saveReassign() {
+    const type = document.querySelector('input[name="reassignType"]:checked').value;
+    let newParentId = null;
+
+    if (type === 'child') {
+      const selVal = document.getElementById('reassignParentSelect').value;
+      if (!selVal) { alert('No parent equipment available'); return; }
+      newParentId = parseInt(selVal);
+    }
+
+    // If promoting to top-level, warn if it would become a parent with existing sub-components
+    // (not an issue currently since we only support one level, but good practice)
+    await fetch(`${SUPABASE_URL}/rest/v1/equipment_items?id=eq.${currentReassignItemId}`, {
+      method: 'PATCH',
+      headers: { ...getHeaders(), Prefer: 'return=minimal' },
+      body: JSON.stringify({ parent_id: newParentId })
+    });
+    closeModal('reassignModal');
     loadEquipment();
   }
 
