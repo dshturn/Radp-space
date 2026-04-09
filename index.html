@@ -118,9 +118,9 @@
     .sn-row input { flex: 1; min-width: 120px; padding: 8px 12px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0; font-size: 13px; margin-bottom: 0; }
     .sn-row button { background: #0284c7; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; }
     .sn-info { font-size: 13px; color: #94a3b8; margin-bottom: 10px; }
-    .card-body { display: none; border-top: 1px solid #334155; margin-top: 8px; }
-    .app-card.expanded .card-body { display: block; }
-    .btn-toggle { background: none; border: none; color: #64748b; font-size: 16px; cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: color 0.2s, transform 0.2s; line-height: 1; }
+    .card-body { overflow: hidden; max-height: 0; opacity: 0; border-top: 1px solid transparent; margin-top: 0; padding-top: 0; transition: max-height 0.38s cubic-bezier(0.22,1,0.36,1), opacity 0.25s ease, margin-top 0.3s ease, padding-top 0.3s ease, border-color 0.3s ease; }
+    .app-card.expanded .card-body { max-height: 2000px; opacity: 1; border-top-color: #334155; margin-top: 8px; padding-top: 8px; }
+    .btn-toggle { background: none; border: none; color: #64748b; font-size: 16px; cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: color 0.2s, transform 0.35s cubic-bezier(0.22,1,0.36,1); line-height: 1; }
     .btn-toggle:hover { color: #94a3b8; }
     .app-card.expanded .btn-toggle { transform: rotate(180deg); }
     .sub-section { margin-top: 16px; border-top: 1px solid #334155; padding-top: 12px; }
@@ -128,16 +128,17 @@
     .sub-card { background: #0f172a; border-radius: 8px; padding: 12px; margin-bottom: 8px; }
     .sub-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0; flex-wrap: wrap; gap: 6px; }
     .sub-card-title { font-size: 13px; font-weight: bold; color: #cbd5e1; }
-    .sub-card-body { display: none; border-top: 1px solid #1e293b; margin-top: 8px; padding-top: 8px; }
-    .sub-card.expanded .sub-card-body { display: block; }
+    .sub-card-body { overflow: hidden; max-height: 0; opacity: 0; border-top: 1px solid transparent; margin-top: 0; padding-top: 0; transition: max-height 0.33s cubic-bezier(0.22,1,0.36,1), opacity 0.22s ease, margin-top 0.28s ease, padding-top 0.28s ease, border-color 0.28s ease; }
+    .sub-card.expanded .sub-card-body { max-height: 1500px; opacity: 1; border-top-color: #1e293b; margin-top: 8px; padding-top: 8px; }
     .sub-card.expanded .btn-toggle { transform: rotate(180deg); }
     .add-sub-btn { background: transparent; color: #38bdf8; border: 1px dashed #334155; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; margin-top: 4px; transition: border-color 0.2s, background 0.2s; }
     .add-sub-btn:hover { border-color: #38bdf8; background: rgba(56,189,248,0.05); }
     .sub-child-card { background: #060d1a; border-radius: 6px; padding: 10px; margin-top: 6px; margin-left: 10px; border-left: 2px solid #1e3a5f; }
     .sub-child-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0; flex-wrap: wrap; gap: 6px; }
     .sub-child-title { font-size: 12px; font-weight: bold; color: #93c5fd; }
-    .sub-child-body { display: none; border-top: 1px solid #0f172a; margin-top: 8px; padding-top: 6px; }
-    .sub-child-card.expanded .sub-child-body { display: block; }
+    .sub-child-body { overflow: hidden; max-height: 0; opacity: 0; border-top: 1px solid transparent; margin-top: 0; padding-top: 0; transition: max-height 0.28s cubic-bezier(0.22,1,0.36,1), opacity 0.2s ease, margin-top 0.25s ease, padding-top 0.25s ease, border-color 0.25s ease; }
+    .sub-child-card.expanded .sub-child-body { max-height: 1000px; opacity: 1; border-top-color: #0f172a; margin-top: 8px; padding-top: 6px; }
+    .sub-child-card.expanded .btn-toggle { transform: rotate(180deg); }
     .sub-child-card.expanded .btn-toggle { transform: rotate(180deg); }
     .btn-reassign { background: none; border: 1px solid #334155; color: #94a3b8; padding: 4px 8px; border-radius: 5px; cursor: pointer; font-size: 11px; transition: border-color 0.2s, color 0.2s; }
     .btn-reassign:hover { border-color: #94a3b8; color: #e2e8f0; }
