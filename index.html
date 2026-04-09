@@ -893,7 +893,12 @@
   function closeModal(id)     { document.getElementById(id).classList.remove('open'); }
 
   // ═══ EQUIPMENT ═══
-  async function loadEquipment() {
+  async function loadEquipment(preserveState = false) {
+    let expandedIds = new Set(), scrollY = 0;
+    if (preserveState) {
+      scrollY = window.scrollY;
+      document.querySelectorAll('.app-card.expanded, .sub-card.expanded, .sub-child-card.expanded').forEach(c => { if (c.dataset.id) expandedIds.add(c.dataset.id); });
+    }
     const h = getHeaders();
 
     const items = await apiFetch(`${SUPABASE_URL}/rest/v1/equipment_items?select=*&order=created_at`, { headers: h });
@@ -917,6 +922,11 @@
     document.getElementById('equipmentList').innerHTML = topLevel.length
       ? topLevel.map(i => equipItemCard(i, i.name || 'Equipment', docsByItem[i.id] || [], subsByParent[i.id] || [], docsByItem, subsByParent)).join('')
       : '<div class="empty">No equipment yet. Click "+ Add Equipment" to start.</div>';
+
+    if (preserveState) {
+      expandedIds.forEach(id => { const el = document.querySelector(`[data-id="${id}"]`); if (el) el.classList.add('expanded'); });
+      window.scrollTo({ top: scrollY, behavior: 'instant' });
+    }
 
     // ── Mini dashboard: equipment + docs stats ──
     const today = new Date(); today.setHours(0,0,0,0);
@@ -1020,7 +1030,7 @@
             <div style="display:flex;align-items:center;gap:6px;">${fileBtn}<span style="color:${statusColor};font-size:10px;font-weight:bold;">${statusText}</span><button class="btn-danger" onclick="deleteDoc(${d.id})">✕</button></div>
           </div>`;
         }).join('') : `<div class="doc-date" style="padding:3px 0;font-size:11px;">No documents yet</div>`;
-        return `<div class="sub-child-card">
+        return `<div class="sub-child-card" data-id="${sc.id}">
           <div class="sub-child-header">
             <div style="cursor:pointer;flex:1;" onclick="toggleSubCard(this.closest('.sub-child-card'))">
               <div class="sub-child-title">${sc.name || 'Sub-child'}</div>
@@ -1039,7 +1049,7 @@
         </div>`;
       }).join('');
 
-      return `<div class="sub-card">
+      return `<div class="sub-card" data-id="${sub.id}">
         <div class="sub-card-header">
           <div style="cursor:pointer;flex:1;" onclick="toggleSubCard(this.closest('.sub-card'))">
             <div class="sub-card-title">${sub.name || 'Sub-component'}</div>
@@ -1062,7 +1072,7 @@
       </div>`;
     }).join('');
 
-    return `<div class="app-card">
+    return `<div class="app-card" data-id="${item.id}">
       <div class="card-header">
         <div style="cursor:pointer;flex:1;" onclick="toggleCard(this.closest('.app-card').querySelector('.btn-toggle'))">
           <div class="card-title">${name}</div>
@@ -1122,7 +1132,7 @@
       body: JSON.stringify({ contractor_id: getUser().id, equipment_template_id: finalTemplateId, serial_number: serial, name: finalName })
     });
     closeModal('ctEquipModal');
-    loadEquipment();
+    loadEquipment(true);
   }
 
   // ═══ REASSIGN EQUIPMENT ═══
@@ -1179,7 +1189,7 @@
       body: JSON.stringify({ parent_id: newParentId })
     });
     closeModal('reassignModal');
-    loadEquipment();
+    loadEquipment(true);
   }
 
   let currentSubParentId = null;
@@ -1239,7 +1249,7 @@
       body: JSON.stringify({ contractor_id: getUser().id, equipment_template_id: finalTemplateId, serial_number: serial, name: finalName, parent_id: currentSubParentId })
     });
     closeModal('ctSubModal');
-    loadEquipment();
+    loadEquipment(true);
   }
 
   async function deleteEquipItem(id) {
@@ -1248,14 +1258,14 @@
     const r1 = await fetch(`${SUPABASE_URL}/rest/v1/documents?equipment_item_id=eq.${id}`, { method: 'DELETE', headers: h });
     const r2 = await fetch(`${SUPABASE_URL}/rest/v1/equipment_items?id=eq.${id}`, { method: 'DELETE', headers: h });
     if (!r2.ok) { alert('Delete failed: ' + r2.status); }
-    loadEquipment();
+    loadEquipment(true);
   }
 
   async function deleteDoc(id) {
     if (!confirm('Delete this document?')) return;
     const r = await fetch(`${SUPABASE_URL}/rest/v1/documents?id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
     if (!r.ok) { alert('Delete failed: ' + r.status); }
-    loadEquipment();
+    loadEquipment(true);
   }
 
   // ─── Add Document Modal ───
@@ -1322,7 +1332,7 @@
     });
 
     closeModal('addDocModal');
-    loadEquipment();
+    loadEquipment(true);
   }
 
   // ═══ PERSONNEL ═══
