@@ -120,7 +120,8 @@
     .sn-info { font-size: 13px; color: #94a3b8; margin-bottom: 10px; }
     .card-body { display: grid; grid-template-rows: 0fr; overflow: hidden; transition: grid-template-rows 0.5s cubic-bezier(0.22,1,0.36,1), opacity 0.5s ease; opacity: 0; }
     .app-card.expanded .card-body { grid-template-rows: 1fr; opacity: 1; }
-    .card-body > .body-inner { overflow: hidden; min-height: 0; border-top: 1px solid #334155; padding-top: 10px; }
+    .card-body > .body-inner { overflow: hidden; min-height: 0; }
+    .card-body .body-content { border-top: 1px solid #334155; padding-top: 10px; }
     .btn-toggle { background: none; border: none; color: #64748b; font-size: 16px; cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: color 0.2s, transform 0.5s cubic-bezier(0.22,1,0.36,1); line-height: 1; }
     .btn-toggle:hover { color: #94a3b8; }
     .app-card.expanded .btn-toggle, .sub-card.expanded .btn-toggle, .sub-child-card.expanded .btn-toggle { transform: rotate(180deg); }
@@ -131,7 +132,8 @@
     .sub-card-title { font-size: 13px; font-weight: bold; color: #cbd5e1; }
     .sub-card-body { display: grid; grid-template-rows: 0fr; overflow: hidden; opacity: 0; transition: grid-template-rows 0.5s cubic-bezier(0.22,1,0.36,1), opacity 0.5s ease; }
     .sub-card.expanded .sub-card-body { grid-template-rows: 1fr; opacity: 1; }
-    .sub-card-body > .body-inner { overflow: hidden; min-height: 0; border-top: 1px solid #1e293b; padding-top: 8px; }
+    .sub-card-body > .body-inner { overflow: hidden; min-height: 0; }
+    .sub-card-body .body-content { border-top: 1px solid #1e293b; padding-top: 8px; }
     .add-sub-btn { background: transparent; color: #38bdf8; border: 1px dashed #334155; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; margin-top: 4px; transition: border-color 0.2s, background 0.2s; }
     .add-sub-btn:hover { border-color: #38bdf8; background: rgba(56,189,248,0.05); }
     .sub-child-card { background: #060d1a; border-radius: 6px; padding: 10px; margin-top: 6px; margin-left: 10px; border-left: 2px solid #1e3a5f; }
@@ -139,7 +141,8 @@
     .sub-child-title { font-size: 12px; font-weight: bold; color: #93c5fd; }
     .sub-child-body { display: grid; grid-template-rows: 0fr; overflow: hidden; opacity: 0; transition: grid-template-rows 0.5s cubic-bezier(0.22,1,0.36,1), opacity 0.5s ease; }
     .sub-child-card.expanded .sub-child-body { grid-template-rows: 1fr; opacity: 1; }
-    .sub-child-body > .body-inner { overflow: hidden; min-height: 0; border-top: 1px solid #0f172a; padding-top: 6px; }
+    .sub-child-body > .body-inner { overflow: hidden; min-height: 0; }
+    .sub-child-body .body-content { border-top: 1px solid #0f172a; padding-top: 6px; }
     .sub-child-card.expanded .btn-toggle { transform: rotate(180deg); }
     .btn-reassign { background: none; border: 1px solid #334155; color: #94a3b8; padding: 4px 8px; border-radius: 5px; cursor: pointer; font-size: 11px; transition: border-color 0.2s, color 0.2s; }
     .btn-reassign:hover { border-color: #94a3b8; color: #e2e8f0; }
@@ -1046,7 +1049,7 @@
             </div>
           </div>
           <div class="sub-child-body">
-            <div class="body-inner">${scDocsHtml}</div>
+            <div class="body-inner"><div class="body-content">${scDocsHtml}</div></div>
           </div>
         </div>`;
       }).join('');
@@ -1065,13 +1068,13 @@
           </div>
         </div>
         <div class="sub-card-body">
-          <div class="body-inner">
+          <div class="body-inner"><div class="body-content">
             ${subDocsHtml}
             <div style="margin-top:8px;">
               ${subChildrenHtml}
               <button class="add-sub-btn" style="font-size:11px;padding:4px 10px;margin-top:6px;" onclick="openAddSubComponent(${sub.id},'${(sub.name||'Sub-component').replace(/'/g,"\\'")}')">+ Add Sub-child</button>
             </div>
-          </div>
+          </div></div>
         </div>
       </div>`;
     }).join('');
@@ -1090,7 +1093,7 @@
         </div>
       </div>
       <div class="card-body">
-        <div class="body-inner">
+        <div class="body-inner"><div class="body-content">
           ${docsHtml}
           <button class="upload-btn" style="margin-top:10px;" onclick="openAddDoc(${item.id})">+ Add Document</button>
           <div class="sub-section">
@@ -1098,7 +1101,7 @@
             ${subsHtml}
             <button class="add-sub-btn" onclick="openAddSubComponent(${item.id}, '${name.replace(/'/g, "\\'")}')">+ Add Sub-component</button>
           </div>
-        </div>
+        </div></div>
       </div>
     </div>`;
   }
@@ -1479,7 +1482,7 @@
           <button class="btn-danger" onclick="deletePersRecord(${p.id})" title="Delete">🗑</button>
         </div>
       </div>
-      <div class="card-body"><div class="body-inner">${docRows}</div></div>
+      <div class="card-body"><div class="body-inner"><div class="body-content">${docRows}</div></div></div>
     </div>`;
   }
 
