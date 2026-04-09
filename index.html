@@ -1441,7 +1441,7 @@
 
     return `<div class="app-card">
       <div class="card-header">
-        <div>
+        <div style="cursor:pointer;flex:1;" onclick="toggleCard(this.closest('.app-card').querySelector('.btn-toggle'))">
           <div class="card-title">${p.full_name}</div>
           <div class="doc-name" style="margin-top:4px;">${p.position || ''} · ID: ${p.national_id || '—'}</div>
         </div>
