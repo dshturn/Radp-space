@@ -1021,7 +1021,7 @@
               <div class="doc-name" style="font-size:10px;margin-top:1px;">S/N: ${sc.serial_number || '—'}</div>
             </div>
             <div style="display:flex;gap:5px;align-items:center;">
-              <button class="upload-btn" style="font-size:11px;padding:4px 8px;" onclick="openAddDoc(${sc.id})">+ Doc</button>
+              <button class="upload-btn" style="font-size:11px;padding:4px 8px;" onclick="openAddDoc(${sc.id})">+ Add Document</button>
               <button class="btn-reassign" onclick="openReassignModal(${sc.id},'${(sc.name||'Sub-child').replace(/'/g,"\\'")}',${sub.id})" title="Change parent">⇄</button>
               <button class="btn-danger" onclick="deleteEquipItem(${sc.id})" title="Delete">🗑</button>
             </div>
