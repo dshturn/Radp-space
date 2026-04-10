@@ -1026,6 +1026,13 @@
 
     const _today = new Date(); _today.setHours(0,0,0,0);
     const _in30  = new Date(_today); _in30.setDate(_in30.getDate() + 30);
+    const isExp     = d => d.expiry_date && new Date(d.expiry_date) < _today;
+    const isExpiring = d => { if (!d.expiry_date) return false; const e = new Date(d.expiry_date); return e >= _today && e <= _in30; };
+    const mkBadge   = (exp, expir) => exp > 0
+      ? `<span style="background:#4c0519;color:#fda4af;font-size:11px;font-weight:bold;padding:3px 8px;border-radius:20px;">⚠ ${exp} EXPIRED</span>`
+      : expir > 0
+      ? `<span style="background:#422006;color:#fbbf24;font-size:11px;font-weight:bold;padding:3px 8px;border-radius:20px;">⚠ ${expir} EXPIRING</span>`
+      : '';
 
     const docsHtml = docs.length ? docs.map(d => {
       const typeName = d.doc_type_name || '—';
@@ -1053,12 +1060,15 @@
       </div>`;
     }).join('') : `<div class="doc-date" style="padding:8px 0;">No documents yet</div>`;
 
-    // Alert badge on card if any docs are expired/expiring
-    const expiredCount  = docs.filter(d => { if (!d.expiry_date) return false; return new Date(d.expiry_date) < _today; }).length;
-    const expiringCount = docs.filter(d => { if (!d.expiry_date) return false; const e = new Date(d.expiry_date); return e >= _today && e <= _in30; }).length;
-    const alertBadge = expiredCount  > 0 ? `<span style="background:#4c0519;color:#fda4af;font-size:11px;font-weight:bold;padding:3px 8px;border-radius:20px;">⚠ ${expiredCount} EXPIRED</span>`
-                     : expiringCount > 0 ? `<span style="background:#422006;color:#fbbf24;font-size:11px;font-weight:bold;padding:3px 8px;border-radius:20px;">⚠ ${expiringCount} EXPIRING</span>`
-                     : '';
+    // Alert badge — rolled up from all nested docs
+    const allNestedDocs = [
+      ...docs,
+      ...subs.flatMap(sub => [
+        ...(docsByItem[sub.id] || []),
+        ...(subsByParent[sub.id] || []).flatMap(sc => docsByItem[sc.id] || [])
+      ])
+    ];
+    const alertBadge = mkBadge(allNestedDocs.filter(isExp).length, allNestedDocs.filter(isExpiring).length);
 
     const subsHtml = subs.map(sub => {
       const subDocs = docsByItem[sub.id] || [];
@@ -1077,6 +1087,8 @@
         </div>`;
       }).join('') : `<div class="doc-date" style="padding:4px 0;">No documents yet</div>`;
       const subChildren = subsByParent[sub.id] || [];
+      const allSubDocs = [...subDocs, ...subChildren.flatMap(sc => docsByItem[sc.id] || [])];
+      const subAlertBadge = mkBadge(allSubDocs.filter(isExp).length, allSubDocs.filter(isExpiring).length);
       const subChildrenHtml = subChildren.map(sc => {
         const scDocs = docsByItem[sc.id] || [];
         const scDocsHtml = scDocs.length ? scDocs.map(d => {
@@ -1090,6 +1102,7 @@
           </div>`;
         }).join('') : `<div class="doc-date" style="padding:3px 0;font-size:11px;">No documents yet</div>`;
         const scHasDeeper = (subsByParent[sc.id] || []).length > 0;
+        const scAlertBadge = mkBadge(scDocs.filter(isExp).length, scDocs.filter(isExpiring).length);
         return `<div class="sub-child-card" data-id="${sc.id}">
           <div class="sub-child-header">
             <div style="cursor:pointer;flex:1;" onclick="toggleSubCard(this.closest('.sub-child-card'))">
@@ -1108,6 +1121,7 @@
               <div class="doc-group collapsed">
                 <div class="doc-group-header" onclick="toggleDocGroup(this)">
                   <span class="doc-group-title">Documents</span>
+                  ${scAlertBadge}
                   <span class="doc-group-count">${scDocs.length}</span>
                   <span class="doc-group-toggle">▾</span>
                 </div>
@@ -1138,6 +1152,7 @@
             <div class="doc-group collapsed">
               <div class="doc-group-header" onclick="toggleDocGroup(this)">
                 <span class="doc-group-title">Documents</span>
+                ${subAlertBadge}
                 <span class="doc-group-count">${subDocs.length}</span>
                 <span class="doc-group-toggle">▾</span>
               </div>
