@@ -535,7 +535,10 @@
       <input type="radio" name="reassignType" id="reassignChild" value="child" onchange="onReassignTypeChange(this)">
       <label for="reassignChild">Make sub-component of:</label>
     </div>
-    <select id="reassignParentSelect" style="display:none;margin-top:4px;margin-bottom:0;"></select>
+    <div id="reassignParentWrap" style="display:none;margin-top:8px;">
+      <input type="text" id="reassignSearch" placeholder="Search equipment…" oninput="filterReassignList(this.value)" autocomplete="off" style="margin-bottom:6px;">
+      <div id="reassignList" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;"></div>
+    </div>
     <div class="modal-btns" style="margin-top:16px;">
       <button class="btn-cancel" onclick="closeModal('reassignModal')">Cancel</button>
       <button class="btn-save" onclick="saveReassign()">Save</button>
@@ -1194,25 +1197,52 @@
     const directChildIds = new Set(active.filter(i => i.parent_id === itemId).map(i => i.id));
     const choices = active.filter(i => !directChildIds.has(i.id));
 
-    const sel = document.getElementById('reassignParentSelect');
-    sel.innerHTML = choices.length
-      ? choices.map(i => {
-          const level = !i.parent_id ? 'Equipment' : 'Sub-component';
-          return `<option value="${i.id}">[${level}] ${i.name || 'Equipment'} · S/N: ${i.serial_number || '—'}</option>`;
-        }).join('')
-      : '<option value="">No other equipment available</option>';
+    // Sort A-Z by label
+    choices.sort((a, b) => {
+      const la = `${a.name || 'Equipment'} ${a.serial_number || ''}`.toLowerCase();
+      const lb = `${b.name || 'Equipment'} ${b.serial_number || ''}`.toLowerCase();
+      return la.localeCompare(lb);
+    });
+    window._reassignChoices = choices;
+    window._reassignCurrentParentId = currentParentId;
+    document.getElementById('reassignSearch').value = '';
+    renderReassignList('', currentParentId);
 
     // Pre-select radio based on current state
     const isChild = currentParentId !== null;
     document.getElementById(isChild ? 'reassignChild' : 'reassignStandalone').checked = true;
-    sel.style.display = isChild ? 'block' : 'none';
-    if (isChild) sel.value = String(currentParentId);
+    document.getElementById('reassignParentWrap').style.display = isChild ? 'block' : 'none';
 
     document.getElementById('reassignModal').classList.add('open');
   }
 
   function onReassignTypeChange(radio) {
-    document.getElementById('reassignParentSelect').style.display = radio.value === 'child' ? 'block' : 'none';
+    document.getElementById('reassignParentWrap').style.display = radio.value === 'child' ? 'block' : 'none';
+  }
+
+  function renderReassignList(query, preselect) {
+    const q = (query || '').toLowerCase();
+    const filtered = (window._reassignChoices || []).filter(i => {
+      const label = `${i.name || ''} ${i.serial_number || ''}`.toLowerCase();
+      return !q || label.includes(q);
+    });
+    const container = document.getElementById('reassignList');
+    if (!filtered.length) { container.innerHTML = '<div style="color:#64748b;font-size:13px;padding:8px 0;">No matches</div>'; return; }
+    container.innerHTML = filtered.map(i => {
+      const level = !i.parent_id ? 'Equipment' : 'Sub-component';
+      const label = `[${level}] ${i.name || 'Equipment'} · S/N: ${i.serial_number || '—'}`;
+      const checked = (preselect != null && String(i.id) === String(preselect)) ? 'checked' : '';
+      return `<div class="reassign-option">
+        <input type="radio" name="reassignParent" id="rp_${i.id}" value="${i.id}" ${checked}>
+        <label for="rp_${i.id}">${label}</label>
+      </div>`;
+    }).join('');
+  }
+
+  function filterReassignList(query) {
+    const checked = document.querySelector('input[name="reassignParent"]:checked');
+    const currentVal = checked ? checked.value : null;
+    renderReassignList(query, currentVal);
   }
 
   async function saveReassign() {
@@ -1220,9 +1250,9 @@
     let newParentId = null;
 
     if (type === 'child') {
-      const selVal = document.getElementById('reassignParentSelect').value;
-      if (!selVal) { alert('No parent equipment available'); return; }
-      newParentId = parseInt(selVal);
+      const checked = document.querySelector('input[name="reassignParent"]:checked');
+      if (!checked) { alert('Please select a parent equipment'); return; }
+      newParentId = parseInt(checked.value);
     }
 
     // If promoting to top-level, warn if it would become a parent with existing sub-components
