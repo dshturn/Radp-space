@@ -1060,7 +1060,9 @@
       </div>`;
     }).join('') : `<div class="doc-date" style="padding:8px 0;">No documents yet</div>`;
 
-    // Alert badge — rolled up from all nested docs
+    // Badge for own docs only (used on DOCUMENTS header)
+    const ownDocsBadge = mkBadge(docs.filter(isExp).length, docs.filter(isExpiring).length);
+    // Badge rolled up from all nested docs (used on title/SN line)
     const allNestedDocs = [
       ...docs,
       ...subs.flatMap(sub => [
@@ -1087,6 +1089,7 @@
         </div>`;
       }).join('') : `<div class="doc-date" style="padding:4px 0;">No documents yet</div>`;
       const subChildren = subsByParent[sub.id] || [];
+      const subOwnDocsBadge = mkBadge(subDocs.filter(isExp).length, subDocs.filter(isExpiring).length);
       const allSubDocs = [...subDocs, ...subChildren.flatMap(sc => docsByItem[sc.id] || [])];
       const subAlertBadge = mkBadge(allSubDocs.filter(isExp).length, allSubDocs.filter(isExpiring).length);
       const subChildrenHtml = subChildren.map(sc => {
@@ -1158,7 +1161,7 @@
             <div class="doc-group collapsed">
               <div class="doc-group-header" onclick="toggleDocGroup(this)">
                 <span class="doc-group-title">Documents</span>
-                ${subAlertBadge}
+                ${subOwnDocsBadge}
                 <span class="doc-group-count">${subDocs.length}</span>
                 <span class="doc-group-toggle">▾</span>
               </div>
@@ -1196,7 +1199,7 @@
           <div class="doc-group collapsed">
             <div class="doc-group-header" onclick="toggleDocGroup(this)">
               <span class="doc-group-title">Documents</span>
-              ${alertBadge}
+              ${ownDocsBadge}
               <span class="doc-group-count">${docs.length}</span>
               <span class="doc-group-toggle">▾</span>
             </div>
