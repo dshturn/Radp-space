@@ -2002,9 +2002,9 @@
   function grpBadges(expired, expiring, ok) {
     const s = 'font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;';
     return [
-      expired  > 0 ? `<span style="${s}background:#4c0519;color:#fda4af;">${expired}</span>`  : '',
-      expiring > 0 ? `<span style="${s}background:#422006;color:#fbbf24;">${expiring}</span>` : '',
-      ok       > 0 ? `<span style="${s}background:#14532d;color:#86efac;">${ok}</span>`       : '',
+      expired  > 0 ? `<span style="${s}background:#4c0519;color:#fda4af;">${expired} EXPIRED</span>`   : '',
+      expiring > 0 ? `<span style="${s}background:#422006;color:#fbbf24;">${expiring} EXPIRING</span>` : '',
+      ok       > 0 ? `<span style="${s}background:#14532d;color:#86efac;">${ok} READY</span>`          : '',
     ].join('');
   }
 
