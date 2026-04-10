@@ -944,7 +944,6 @@
   async function loadEquipment(preserveState = false) {
     let expandedIds = new Set(), expandedGroups = new Set(), scrollY = 0;
     if (preserveState) {
-      scrollY = window.scrollY;
       document.querySelectorAll('.app-card.expanded, .sub-card.expanded, .sub-child-card.expanded').forEach(c => { if (c.dataset.id) expandedIds.add(c.dataset.id); });
       document.querySelectorAll('#equipmentList .eq-group:not(.collapsed)').forEach(g => {
         const title = g.querySelector('.group-title');
@@ -978,6 +977,7 @@
       if (!eqGroups[key]) eqGroups[key] = [];
       eqGroups[key].push(i);
     });
+    if (preserveState) scrollY = window.scrollY;
     document.getElementById('equipmentList').innerHTML = topLevel.length
       ? Object.entries(eqGroups).sort(([a],[b]) => a.localeCompare(b)).map(([type, items]) => {
           const cardsHtml = items.map(i => equipItemCard(i, i.name || 'Equipment', docsByItem[i.id] || [], subsByParent[i.id] || [], docsByItem, subsByParent)).join('');
@@ -1554,7 +1554,16 @@
     { name: 'HUET',             mandatory: false },
   ];
 
-  async function loadPersonnel() {
+  async function loadPersonnel(preserveState = false) {
+    let expandedIds = new Set(), expandedGroups = new Set(), scrollY = 0;
+    if (preserveState) {
+      document.querySelectorAll('#personnelList .app-card.expanded').forEach(c => { if (c.dataset.id) expandedIds.add(c.dataset.id); });
+      document.querySelectorAll('#personnelList .eq-group:not(.collapsed)').forEach(g => {
+        const title = g.querySelector('.group-title');
+        if (title) expandedGroups.add(title.textContent.trim());
+      });
+    }
+
     const h = getHeaders();
     const people = await apiFetch(`${SUPABASE_URL}/rest/v1/personnel?select=*&order=created_at`, { headers: h });
     if (!people) return;
@@ -1567,6 +1576,7 @@
     persDocs.forEach(d => { if (!docsByPerson[d.personnel_id]) docsByPerson[d.personnel_id] = []; docsByPerson[d.personnel_id].push(d); });
 
     const list = document.getElementById('personnelList');
+    if (preserveState) scrollY = window.scrollY;
     if (!people.length) {
       list.innerHTML = '<div class="empty">No personnel added yet</div>';
     } else {
@@ -1588,6 +1598,15 @@
           <div class="group-body"><div class="group-body-inner">${cardsHtml}</div></div>
         </div>`;
       }).join('');
+    }
+
+    if (preserveState) {
+      expandedIds.forEach(id => { const el = document.querySelector(`[data-id="${id}"]`); if (el) el.classList.add('expanded'); });
+      document.querySelectorAll('#personnelList .eq-group').forEach(g => {
+        const title = g.querySelector('.group-title');
+        if (title && expandedGroups.has(title.textContent.trim())) g.classList.remove('collapsed');
+      });
+      window.scrollTo({ top: scrollY, behavior: 'instant' });
     }
 
     // Animate newly added personnel card or doc
@@ -1801,8 +1820,9 @@
     if (!confirm('Delete this document?')) return;
     const el = document.querySelector(`[data-doc-id="${id}"]`);
     animateRemoveEl(el, async () => {
-      await fetch(`${SUPABASE_URL}/rest/v1/personnel_documents?id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
-      loadPersonnel();
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/personnel_documents?id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
+      if (!r.ok) { alert('Delete failed: ' + r.status); }
+      loadPersonnel(true);
     });
   }
 
@@ -2002,9 +2022,10 @@
     if (!confirm('Delete this personnel record and all their documents?')) return;
     const el = document.querySelector(`[data-id="p${id}"]`);
     animateRemoveEl(el, async () => {
-      await fetch(`${SUPABASE_URL}/rest/v1/personnel_documents?personnel_id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
-      await fetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
-      loadPersonnel();
+      const r1 = await fetch(`${SUPABASE_URL}/rest/v1/personnel_documents?personnel_id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
+      const r2 = await fetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
+      if (!r2.ok) { alert('Delete failed: ' + r2.status); }
+      loadPersonnel(true);
     });
   }
 
