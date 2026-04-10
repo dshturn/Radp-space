@@ -22,6 +22,7 @@
     @keyframes slideInRight { from { opacity: 0; transform: translateX(36px); } to { opacity: 1; transform: translateX(0); } }
     @keyframes slideInLeft  { from { opacity: 0; transform: translateX(-36px); } to { opacity: 1; transform: translateX(0); } }
     @keyframes modalIn      { from { opacity: 0; transform: scale(0.94) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    @keyframes modalOut     { from { opacity: 1; transform: scale(1) translateY(0); } to { opacity: 0; transform: scale(0.94) translateY(10px); } }
     @keyframes shimmer      { 0% { background-position: -500px 0; } 100% { background-position: 500px 0; } }
     @keyframes pulseBadge   { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
     @keyframes fadeIn       { from { opacity: 0; } to { opacity: 1; } }
@@ -924,7 +925,16 @@
   function onPersPositionChange(sel) {
     document.getElementById('newPersPositionWrap').style.display = sel.value === '__new__' ? 'block' : 'none';
   }
-  function closeModal(id)     { document.getElementById(id).classList.remove('open'); }
+  function closeModal(id) {
+    const el = document.getElementById(id);
+    const box = el.querySelector('.modal-box, .modal-scroll');
+    if (box) {
+      box.style.animation = 'modalOut 0.2s cubic-bezier(0.22,1,0.36,1) both';
+      setTimeout(() => { el.classList.remove('open'); box.style.animation = ''; }, 200);
+    } else {
+      el.classList.remove('open');
+    }
+  }
 
   // ═══ EQUIPMENT ═══
   async function loadEquipment(preserveState = false) {
