@@ -19,6 +19,8 @@
 
     /* === Keyframes === */
     @keyframes fadeSlideUp  { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes cardNew      { from { opacity: 0; transform: translateY(-14px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    .card-new { animation: cardNew 0.45s cubic-bezier(0.22,1,0.36,1) both; }
     @keyframes slideInRight { from { opacity: 0; transform: translateX(36px); } to { opacity: 1; transform: translateX(0); } }
     @keyframes slideInLeft  { from { opacity: 0; transform: translateX(-36px); } to { opacity: 1; transform: translateX(0); } }
     @keyframes modalIn      { from { opacity: 0; transform: scale(0.94) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
@@ -997,6 +999,18 @@
       window.scrollTo({ top: scrollY, behavior: 'instant' });
     }
 
+    // Animate newly added card
+    if (window._justAddedId) {
+      const newEl = document.querySelector(`[data-id="${window._justAddedId}"]`);
+      if (newEl) {
+        const group = newEl.closest('.eq-group');
+        if (group) group.classList.remove('collapsed');
+        newEl.classList.add('card-new');
+        setTimeout(() => newEl.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
+      }
+      window._justAddedId = null;
+    }
+
     // ── Mini dashboard: equipment + docs stats ──
     const today = new Date(); today.setHours(0,0,0,0);
     const in30  = new Date(today); in30.setDate(in30.getDate() + 30);
@@ -1258,10 +1272,11 @@
       finalName = selEl.options[selEl.selectedIndex].text;
     }
 
-    await fetch(`${SUPABASE_URL}/rest/v1/equipment_items`, {
-      method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal' },
+    const _eqRes = await fetch(`${SUPABASE_URL}/rest/v1/equipment_items`, {
+      method: 'POST', headers: { ...getHeaders(), Prefer: 'return=representation' },
       body: JSON.stringify({ contractor_id: getUser().id, equipment_template_id: finalTemplateId, serial_number: serial, name: finalName })
     });
+    if (_eqRes.ok) { const [_newItem] = await _eqRes.json(); window._justAddedId = _newItem?.id; }
     closeModal('ctEquipModal');
     loadEquipment(true);
   }
@@ -1402,10 +1417,11 @@
       finalName = selEl.options[selEl.selectedIndex].text;
     }
 
-    await fetch(`${SUPABASE_URL}/rest/v1/equipment_items`, {
-      method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal' },
+    const _scRes = await fetch(`${SUPABASE_URL}/rest/v1/equipment_items`, {
+      method: 'POST', headers: { ...getHeaders(), Prefer: 'return=representation' },
       body: JSON.stringify({ contractor_id: getUser().id, equipment_template_id: finalTemplateId, serial_number: serial, name: finalName, parent_id: currentSubParentId })
     });
+    if (_scRes.ok) { const [_newItem] = await _scRes.json(); window._justAddedId = _newItem?.id; }
     closeModal('ctSubModal');
     loadEquipment(true);
   }
@@ -1513,10 +1529,11 @@
       position = newPos;
     }
 
-    await fetch(`${SUPABASE_URL}/rest/v1/personnel`, {
-      method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal' },
+    const _pRes = await fetch(`${SUPABASE_URL}/rest/v1/personnel`, {
+      method: 'POST', headers: { ...getHeaders(), Prefer: 'return=representation' },
       body: JSON.stringify({ contractor_id: getUser().id, full_name: name, position, national_id: nationalId })
     });
+    if (_pRes.ok) { const [_newP] = await _pRes.json(); window._justAddedPersId = _newP?.id; }
     closeModal('ctPersModal'); loadPersonnel();
   }
 
@@ -1564,6 +1581,18 @@
           <div class="group-body"><div class="group-body-inner">${cardsHtml}</div></div>
         </div>`;
       }).join('');
+    }
+
+    // Animate newly added personnel card
+    if (window._justAddedPersId) {
+      const newEl = document.querySelector(`[data-id="p${window._justAddedPersId}"]`);
+      if (newEl) {
+        const group = newEl.closest('.eq-group');
+        if (group) group.classList.remove('collapsed');
+        newEl.classList.add('card-new');
+        setTimeout(() => newEl.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
+      }
+      window._justAddedPersId = null;
     }
 
     // ── Mini dashboard: personnel tile ──
@@ -1639,7 +1668,7 @@
                      : expiringCount > 0 ? `<span style="background:#422006;color:#fbbf24;font-size:11px;font-weight:bold;padding:3px 8px;border-radius:20px;">⚠ ${expiringCount} EXPIRING</span>`
                      : '';
 
-    return `<div class="app-card">
+    return `<div class="app-card" data-id="p${p.id}">
       <div class="card-header">
         <div style="cursor:pointer;flex:1;" onclick="toggleCard(this.closest('.app-card').querySelector('.btn-toggle'))">
           <div class="card-title">${p.full_name}</div>
