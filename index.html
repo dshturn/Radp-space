@@ -39,7 +39,7 @@
     .slide-in-left  { animation: slideInLeft  0.28s cubic-bezier(0.22,1,0.36,1) both; }
 
     /* === Nav === */
-    #mainNav { background: #1e293b; border-bottom: 1px solid #334155; padding: 10px 24px; min-height: 44px; display: none; justify-content: flex-end; align-items: center; gap: 12px; position: relative; }
+    #mainNav { background: #1e293b; border-bottom: 1px solid #334155; padding: 10px 24px; min-height: 44px; display: none; justify-content: flex-end; align-items: center; gap: 12px; position: fixed; top: 0; left: 0; right: 0; z-index: 1000; }
     .nav-links { display: flex; gap: 16px; flex-wrap: wrap; position: absolute; left: 50%; transform: translateX(-50%); }
     #mainNav a { color: #94a3b8; font-size: 13px; text-decoration: none; cursor: pointer; transition: color 0.2s ease; position: relative; user-select: none; -webkit-user-select: none; }
     #mainNav a::after { content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 2px; background: #38bdf8; border-radius: 2px; transition: width 0.22s ease; }
@@ -75,7 +75,7 @@
     .btn-install:hover { background: rgba(56,189,248,0.08); border-color: #38bdf8; transform: translateY(-1px); }
 
     /* === Shared app === */
-    .container { padding: 24px; max-width: 900px; margin: 0 auto; }
+    .container { padding: 24px; max-width: 900px; margin: 0 auto; padding-top: calc(44px + 24px); }
     .app-card { background: #1e293b; border-radius: 10px; padding: 10px; margin-bottom: 12px; transition: transform 0.2s ease, box-shadow 0.2s ease; }
     .group-body-inner .app-card:last-child { margin-bottom: 0; }
     .app-card:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
