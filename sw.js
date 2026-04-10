@@ -1,5 +1,5 @@
 const CACHE = 'radp-v1';
-const PRECACHE = ['/', '/index.html', '/login.html', '/shell.html', '/icon.svg', '/manifest.json'];
+const PRECACHE = ['/', '/index.html', '/icon.svg', '/manifest.json'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(PRECACHE)));
