@@ -1699,6 +1699,7 @@
           <div class="doc-name" style="margin-top:4px;">${p.position || ''} · ID: ${p.national_id || '—'}</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          ${alertBadge}
           <button class="btn-toggle" onclick="toggleCard(this)" title="Expand">▾</button>
           <button class="btn-danger" onclick="deletePersRecord(${p.id})" title="Delete">🗑</button>
         </div>
