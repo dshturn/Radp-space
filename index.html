@@ -127,6 +127,16 @@
     .app-card.expanded .btn-toggle, .sub-card.expanded .btn-toggle, .sub-child-card.expanded .btn-toggle { transform: rotate(180deg); }
     .sub-section { margin-top: 16px; border-top: 1px solid #334155; padding-top: 12px; }
     .sub-label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+    .eq-group { margin-bottom: 12px; }
+    .group-header { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #1e293b; border-radius: 8px; cursor: pointer; margin-bottom: 8px; user-select: none; transition: background 0.2s; }
+    .group-header:hover { background: #243449; }
+    .group-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; flex: 1; }
+    .group-count { font-size: 11px; color: #64748b; background: #0f172a; padding: 2px 8px; border-radius: 10px; }
+    .group-toggle { color: #64748b; font-size: 13px; transition: transform 0.4s cubic-bezier(0.22,1,0.36,1); line-height: 1; }
+    .eq-group.collapsed .group-toggle { transform: rotate(-90deg); }
+    .group-body { display: grid; grid-template-rows: 1fr; overflow: hidden; transition: grid-template-rows 0.4s cubic-bezier(0.22,1,0.36,1), opacity 0.4s ease; opacity: 1; }
+    .eq-group.collapsed .group-body { grid-template-rows: 0fr; opacity: 0; }
+    .group-body > .group-body-inner { overflow: hidden; min-height: 0; }
     .sub-card { background: #0f172a; border-radius: 8px; padding: 12px; margin-bottom: 8px; }
     .sub-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0; flex-wrap: wrap; gap: 6px; }
     .sub-card-title { font-size: 13px; font-weight: bold; color: #cbd5e1; }
@@ -924,8 +934,25 @@
     const docsByItem = {};
     docs.forEach(d => { if (!docsByItem[d.equipment_item_id]) docsByItem[d.equipment_item_id] = []; docsByItem[d.equipment_item_id].push(d); });
 
+    // Group top-level items by type name
+    const eqGroups = {};
+    topLevel.forEach(i => {
+      const key = i.name || 'Other';
+      if (!eqGroups[key]) eqGroups[key] = [];
+      eqGroups[key].push(i);
+    });
     document.getElementById('equipmentList').innerHTML = topLevel.length
-      ? topLevel.map(i => equipItemCard(i, i.name || 'Equipment', docsByItem[i.id] || [], subsByParent[i.id] || [], docsByItem, subsByParent)).join('')
+      ? Object.entries(eqGroups).sort(([a],[b]) => a.localeCompare(b)).map(([type, items]) => {
+          const cardsHtml = items.map(i => equipItemCard(i, i.name || 'Equipment', docsByItem[i.id] || [], subsByParent[i.id] || [], docsByItem, subsByParent)).join('');
+          return `<div class="eq-group">
+            <div class="group-header" onclick="toggleGroup(this)">
+              <span class="group-title">${type}</span>
+              <span class="group-count">${items.length}</span>
+              <span class="group-toggle">▾</span>
+            </div>
+            <div class="group-body"><div class="group-body-inner">${cardsHtml}</div></div>
+          </div>`;
+        }).join('')
       : '<div class="empty">No equipment yet. Click "+ Add Equipment" to start.</div>';
 
     if (preserveState) {
@@ -1394,8 +1421,28 @@
     persDocs.forEach(d => { if (!docsByPerson[d.personnel_id]) docsByPerson[d.personnel_id] = []; docsByPerson[d.personnel_id].push(d); });
 
     const list = document.getElementById('personnelList');
-    if (!people.length) { list.innerHTML = '<div class="empty">No personnel added yet</div>'; }
-    else { list.innerHTML = people.map(p => personnelCard(p, docsByPerson[p.id] || [])).join(''); }
+    if (!people.length) {
+      list.innerHTML = '<div class="empty">No personnel added yet</div>';
+    } else {
+      // Group by position
+      const persGroups = {};
+      people.forEach(p => {
+        const key = p.position || 'Other';
+        if (!persGroups[key]) persGroups[key] = [];
+        persGroups[key].push(p);
+      });
+      list.innerHTML = Object.entries(persGroups).sort(([a],[b]) => a.localeCompare(b)).map(([pos, persons]) => {
+        const cardsHtml = persons.map(p => personnelCard(p, docsByPerson[p.id] || [])).join('');
+        return `<div class="eq-group">
+          <div class="group-header" onclick="toggleGroup(this)">
+            <span class="group-title">${pos}</span>
+            <span class="group-count">${persons.length}</span>
+            <span class="group-toggle">▾</span>
+          </div>
+          <div class="group-body"><div class="group-body-inner">${cardsHtml}</div></div>
+        </div>`;
+      }).join('');
+    }
 
     // ── Mini dashboard: personnel tile ──
     // Count people with any missing mandatory doc
@@ -1738,6 +1785,10 @@
 
   function toggleSubCard(card) {
     card.classList.toggle('expanded');
+  }
+
+  function toggleGroup(header) {
+    header.closest('.eq-group').classList.toggle('collapsed');
   }
 
   async function deletePersRecord(id) {
