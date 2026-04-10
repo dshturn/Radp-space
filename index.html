@@ -139,7 +139,7 @@
     .eq-group.collapsed .group-body { grid-template-rows: 0fr; opacity: 0; }
     .group-body > .group-body-inner { overflow: hidden; min-height: 0; padding: 10px; }
     .doc-group { margin-bottom: 0; }
-    .doc-group-header { display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: #162032; border-radius: 6px; cursor: pointer; user-select: none; transition: background 0.2s; }
+    .doc-group-header { display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: #162032; border-radius: 6px; cursor: pointer; user-select: none; transition: background 0.2s; margin-top: 4px; }
     .doc-group-header:hover { background: #1c2b42; }
     .doc-group-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; flex: 1; }
     .doc-group-count { font-size: 10px; color: #475569; background: #0f172a; padding: 1px 6px; border-radius: 8px; }
@@ -1160,7 +1160,6 @@
           <div class="doc-name" style="margin-top:4px;">S/N: ${item.serial_number || '—'}</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          ${alertBadge}
           <button class="btn-reassign" onclick="openReassignModal(${item.id},'${name.replace(/'/g,"\\'")}',null)" title="Change assignment">⇄</button>
           <button class="btn-toggle" onclick="toggleCard(this)" title="Expand">▾</button>
           <button class="btn-danger" onclick="deleteEquipItem(${item.id})" title="Delete equipment">🗑</button>
@@ -1172,6 +1171,7 @@
             <div class="doc-group-header" onclick="toggleDocGroup(this)">
               <span class="doc-group-title">Documents</span>
               <span class="doc-group-count">${docs.length}</span>
+              ${alertBadge}
               <span class="doc-group-toggle">▾</span>
             </div>
             <div class="doc-group-body"><div class="doc-group-inner">
@@ -1607,7 +1607,6 @@
           <div class="doc-name" style="margin-top:4px;">${p.position || ''} · ID: ${p.national_id || '—'}</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          ${alertBadge}
           <button class="btn-toggle" onclick="toggleCard(this)" title="Expand">▾</button>
           <button class="btn-danger" onclick="deletePersRecord(${p.id})" title="Delete">🗑</button>
         </div>
@@ -1617,6 +1616,7 @@
           <div class="doc-group-header" onclick="toggleDocGroup(this)">
             <span class="doc-group-title">Documents</span>
             <span class="doc-group-count">${docs.length}</span>
+            ${alertBadge}
             <span class="doc-group-toggle">▾</span>
           </div>
           <div class="doc-group-body"><div class="doc-group-inner">${docRows}</div></div>
