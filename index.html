@@ -1089,6 +1089,7 @@
             <div style="display:flex;align-items:center;gap:6px;">${fileBtn}<span style="color:${statusColor};font-size:10px;font-weight:bold;">${statusText}</span><button class="btn-danger" onclick="deleteDoc(${d.id})">✕</button></div>
           </div>`;
         }).join('') : `<div class="doc-date" style="padding:3px 0;font-size:11px;">No documents yet</div>`;
+        const scHasDeeper = (subsByParent[sc.id] || []).length > 0;
         return `<div class="sub-child-card" data-id="${sc.id}">
           <div class="sub-child-header">
             <div style="cursor:pointer;flex:1;" onclick="toggleSubCard(this.closest('.sub-child-card'))">
@@ -1096,6 +1097,7 @@
               <div class="doc-name" style="font-size:10px;margin-top:1px;">S/N: ${sc.serial_number || '—'}</div>
             </div>
             <div style="display:flex;gap:5px;align-items:center;">
+              ${scHasDeeper ? `<span title="Has nested sub-components not shown" style="font-size:10px;color:#94a3b8;background:#1e293b;border:1px solid #334155;padding:2px 7px;border-radius:8px;cursor:default;">↳ ${(subsByParent[sc.id]).length}</span>` : ''}
               <button class="btn-reassign" onclick="openReassignModal(${sc.id},'${(sc.name||'Sub-child').replace(/'/g,"\\'")}',${sub.id})" title="Change parent">⇄</button>
               <button class="btn-toggle" onclick="toggleSubCard(this.closest('.sub-child-card'))" title="Expand">▾</button>
               <button class="btn-danger" onclick="deleteEquipItem(${sc.id})" title="Delete">🗑</button>
