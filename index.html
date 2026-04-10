@@ -20,7 +20,9 @@
     /* === Keyframes === */
     @keyframes fadeSlideUp  { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes cardNew      { from { opacity: 0; transform: translateY(-14px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
-    .card-new { animation: cardNew 0.45s cubic-bezier(0.22,1,0.36,1) both; }
+    @keyframes cardRemove   { to   { opacity: 0; transform: scale(0.96) translateY(-6px); } }
+    .card-new      { animation: cardNew    0.45s cubic-bezier(0.22,1,0.36,1) both; }
+    .card-removing { animation: cardRemove 0.25s ease both; pointer-events: none; }
     @keyframes slideInRight { from { opacity: 0; transform: translateX(36px); } to { opacity: 1; transform: translateX(0); } }
     @keyframes slideInLeft  { from { opacity: 0; transform: translateX(-36px); } to { opacity: 1; transform: translateX(0); } }
     @keyframes modalIn      { from { opacity: 0; transform: scale(0.94) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
@@ -999,16 +1001,14 @@
       window.scrollTo({ top: scrollY, behavior: 'instant' });
     }
 
-    // Animate newly added card
+    // Animate newly added card or doc
     if (window._justAddedId) {
-      const newEl = document.querySelector(`[data-id="${window._justAddedId}"]`);
-      if (newEl) {
-        const group = newEl.closest('.eq-group');
-        if (group) group.classList.remove('collapsed');
-        newEl.classList.add('card-new');
-        setTimeout(() => newEl.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
-      }
+      animateNewEl(document.querySelector(`[data-id="${window._justAddedId}"]`));
       window._justAddedId = null;
+    }
+    if (window._justAddedDocId) {
+      animateNewEl(document.querySelector(`[data-doc-id="${window._justAddedDocId}"]`));
+      window._justAddedDocId = null;
     }
 
     // ── Mini dashboard: equipment + docs stats ──
@@ -1071,7 +1071,7 @@
       const fileBtn = d.file_url ? `<button onclick="openDoc('${d.file_url}')" style="background:none;border:none;color:#38bdf8;font-size:11px;cursor:pointer;padding:0;text-decoration:underline;">📎 View</button>` : '';
       const rowBorder = statusText === 'EXPIRED'  ? 'border-left:3px solid #fda4af;padding-left:8px;'
                       : statusText === 'EXPIRING' ? 'border-left:3px solid #fbbf24;padding-left:8px;' : '';
-      return `<div class="doc-row" style="${rowBorder}">
+      return `<div class="doc-row" data-doc-id="${d.id}" style="${rowBorder}">
         <div style="flex:1">
           <div class="doc-name">${typeName}</div>
           <div class="doc-date">Issue: ${d.issue_date || '—'} · Expiry: ${expiry || '—'}</div>
@@ -1107,7 +1107,7 @@
           else if (exp <= _in30) { statusColor = '#fbbf24'; statusText = 'EXPIRING'; }
         }
         const fileBtn = d.file_url ? `<button onclick="openDoc('${d.file_url}')" style="background:none;border:none;color:#38bdf8;font-size:11px;cursor:pointer;padding:0;text-decoration:underline;">📎 View</button>` : '';
-        return `<div class="doc-row" style="padding:6px 0;">
+        return `<div class="doc-row" data-doc-id="${d.id}" style="padding:6px 0;">
           <div style="flex:1"><div class="doc-name">${d.doc_type_name || '—'}</div><div class="doc-date">Issue: ${d.issue_date || '—'} · Expiry: ${expiry || '—'}</div></div>
           <div style="display:flex;align-items:center;gap:8px;">${fileBtn}<span style="color:${statusColor};font-size:11px;font-weight:bold;">${statusText}</span><button class="btn-danger" onclick="deleteDoc(${d.id})">✕</button></div>
         </div>`;
@@ -1123,7 +1123,7 @@
           let statusColor = '#6ee7b7', statusText = 'VALID';
           if (expiry) { const exp = new Date(expiry); if (exp < _today) { statusColor = '#fda4af'; statusText = 'EXPIRED'; } else if (exp <= _in30) { statusColor = '#fbbf24'; statusText = 'EXPIRING'; } }
           const fileBtn = d.file_url ? `<button onclick="openDoc('${d.file_url}')" style="background:none;border:none;color:#38bdf8;font-size:11px;cursor:pointer;padding:0;text-decoration:underline;">📎 View</button>` : '';
-          return `<div class="doc-row" style="padding:4px 0;font-size:12px;">
+          return `<div class="doc-row" data-doc-id="${d.id}" style="padding:4px 0;font-size:12px;">
             <div style="flex:1"><div class="doc-name">${d.doc_type_name||'—'}</div><div class="doc-date">Issue: ${d.issue_date||'—'} · Expiry: ${expiry||'—'}</div></div>
             <div style="display:flex;align-items:center;gap:6px;">${fileBtn}<span style="color:${statusColor};font-size:10px;font-weight:bold;">${statusText}</span><button class="btn-danger" onclick="deleteDoc(${d.id})">✕</button></div>
           </div>`;
@@ -1428,18 +1428,24 @@
 
   async function deleteEquipItem(id) {
     if (!confirm('Delete this equipment and all its documents?')) return;
-    const h = { ...getHeaders(), Prefer: 'return=minimal' };
-    const r1 = await fetch(`${SUPABASE_URL}/rest/v1/documents?equipment_item_id=eq.${id}`, { method: 'DELETE', headers: h });
-    const r2 = await fetch(`${SUPABASE_URL}/rest/v1/equipment_items?id=eq.${id}`, { method: 'DELETE', headers: h });
-    if (!r2.ok) { alert('Delete failed: ' + r2.status); }
-    loadEquipment(true);
+    const el = document.querySelector(`[data-id="${id}"]`);
+    animateRemoveEl(el, async () => {
+      const h = { ...getHeaders(), Prefer: 'return=minimal' };
+      const r1 = await fetch(`${SUPABASE_URL}/rest/v1/documents?equipment_item_id=eq.${id}`, { method: 'DELETE', headers: h });
+      const r2 = await fetch(`${SUPABASE_URL}/rest/v1/equipment_items?id=eq.${id}`, { method: 'DELETE', headers: h });
+      if (!r2.ok) { alert('Delete failed: ' + r2.status); }
+      loadEquipment(true);
+    });
   }
 
   async function deleteDoc(id) {
     if (!confirm('Delete this document?')) return;
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/documents?id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
-    if (!r.ok) { alert('Delete failed: ' + r.status); }
-    loadEquipment(true);
+    const el = document.querySelector(`[data-doc-id="${id}"]`);
+    animateRemoveEl(el, async () => {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/documents?id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
+      if (!r.ok) { alert('Delete failed: ' + r.status); }
+      loadEquipment(true);
+    });
   }
 
   // ─── Add Document Modal ───
@@ -1493,8 +1499,8 @@
       if (uploadRes.ok) fileUrl = `${SUPABASE_URL}/storage/v1/object/public/equipment-docs/${path}`;
     }
 
-    await fetch(`${SUPABASE_URL}/rest/v1/documents`, {
-      method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal' },
+    const _docRes = await fetch(`${SUPABASE_URL}/rest/v1/documents`, {
+      method: 'POST', headers: { ...getHeaders(), Prefer: 'return=representation' },
       body: JSON.stringify({
         equipment_item_id: currentDocItemId,
         doc_type_name: typeName,
@@ -1504,6 +1510,7 @@
         ai_status:   'pending'
       })
     });
+    if (_docRes.ok) { const [_newDoc] = await _docRes.json(); window._justAddedDocId = _newDoc?.id; }
 
     closeModal('addDocModal');
     loadEquipment(true);
@@ -1583,16 +1590,14 @@
       }).join('');
     }
 
-    // Animate newly added personnel card
+    // Animate newly added personnel card or doc
     if (window._justAddedPersId) {
-      const newEl = document.querySelector(`[data-id="p${window._justAddedPersId}"]`);
-      if (newEl) {
-        const group = newEl.closest('.eq-group');
-        if (group) group.classList.remove('collapsed');
-        newEl.classList.add('card-new');
-        setTimeout(() => newEl.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
-      }
+      animateNewEl(document.querySelector(`[data-id="p${window._justAddedPersId}"]`));
       window._justAddedPersId = null;
+    }
+    if (window._justAddedPersDocId) {
+      animateNewEl(document.querySelector(`[data-doc-id="${window._justAddedPersDocId}"]`));
+      window._justAddedPersDocId = null;
     }
 
     // ── Mini dashboard: personnel tile ──
@@ -1638,7 +1643,7 @@
                       : cfg.noExpiry ? `Issue: ${d.issue_date || '—'}`
                       : `Issue: ${d.issue_date || '—'} · Expiry: ${d.expiry_date || '—'}`;
         const yrsStr  = t.name === 'CV' && p.years_experience != null ? `<div class="doc-date">${p.years_experience} yrs exp in O&G</div>` : '';
-        return `<div class="doc-row" style="${rowBorder}">
+        return `<div class="doc-row" data-doc-id="${d.id}" style="${rowBorder}">
           <div style="flex:1">
             <div class="doc-name" style="display:flex;align-items:center;gap:6px;">${t.name} ${mandBadge}</div>
             ${dateStr ? `<div class="doc-date">${dateStr}</div>` : ''}
@@ -1771,10 +1776,11 @@
         body: JSON.stringify(payload)
       });
     } else {
-      await fetch(`${SUPABASE_URL}/rest/v1/personnel_documents`, {
-        method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal' },
+      const _pdRes = await fetch(`${SUPABASE_URL}/rest/v1/personnel_documents`, {
+        method: 'POST', headers: { ...getHeaders(), Prefer: 'return=representation' },
         body: JSON.stringify({ personnel_id: parseInt(personId), doc_type_name: typeName, is_mandatory: mandatory, ...payload })
       });
+      if (_pdRes.ok) { const [_newPd] = await _pdRes.json(); window._justAddedPersDocId = _newPd?.id; }
     }
 
     // If CV, also save years of experience onto the personnel record
@@ -1793,8 +1799,11 @@
 
   async function deletePersDoc(id) {
     if (!confirm('Delete this document?')) return;
-    await fetch(`${SUPABASE_URL}/rest/v1/personnel_documents?id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
-    loadPersonnel();
+    const el = document.querySelector(`[data-doc-id="${id}"]`);
+    animateRemoveEl(el, async () => {
+      await fetch(`${SUPABASE_URL}/rest/v1/personnel_documents?id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
+      loadPersonnel();
+    });
   }
 
   async function openDoc(url) {
@@ -1951,15 +1960,33 @@
     header.closest('.eq-group').classList.toggle('collapsed');
   }
 
+  function animateNewEl(el) {
+    if (!el) return;
+    el.closest('.eq-group')?.classList.remove('collapsed');
+    el.closest('.app-card, .sub-card, .sub-child-card')?.classList.add('expanded');
+    el.closest('.doc-group')?.classList.remove('collapsed');
+    el.classList.add('card-new');
+    setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
+  }
+
+  function animateRemoveEl(el, fn) {
+    if (!el) { fn(); return; }
+    el.classList.add('card-removing');
+    setTimeout(fn, 260);
+  }
+
   function toggleDocGroup(header) {
     header.closest('.doc-group').classList.toggle('collapsed');
   }
 
   async function deletePersRecord(id) {
     if (!confirm('Delete this personnel record and all their documents?')) return;
-    await fetch(`${SUPABASE_URL}/rest/v1/personnel_documents?personnel_id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
-    await fetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
-    loadPersonnel();
+    const el = document.querySelector(`[data-id="p${id}"]`);
+    animateRemoveEl(el, async () => {
+      await fetch(`${SUPABASE_URL}/rest/v1/personnel_documents?personnel_id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
+      await fetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
+      loadPersonnel();
+    });
   }
 
   // ── Mini dashboard: assessments tile ──
