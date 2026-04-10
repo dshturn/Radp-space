@@ -138,6 +138,16 @@
     .group-body { display: grid; grid-template-rows: 1fr; overflow: hidden; transition: grid-template-rows 0.4s cubic-bezier(0.22,1,0.36,1), opacity 0.4s ease; opacity: 1; background: #162032; }
     .eq-group.collapsed .group-body { grid-template-rows: 0fr; opacity: 0; }
     .group-body > .group-body-inner { overflow: hidden; min-height: 0; padding: 10px; }
+    .doc-group { margin-bottom: 0; }
+    .doc-group-header { display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: #162032; border-radius: 6px; cursor: pointer; user-select: none; transition: background 0.2s; }
+    .doc-group-header:hover { background: #1c2b42; }
+    .doc-group-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; flex: 1; }
+    .doc-group-count { font-size: 10px; color: #475569; background: #0f172a; padding: 1px 6px; border-radius: 8px; }
+    .doc-group-toggle { color: #475569; font-size: 12px; transition: transform 0.35s cubic-bezier(0.22,1,0.36,1); line-height: 1; }
+    .doc-group.collapsed .doc-group-toggle { transform: rotate(-90deg); }
+    .doc-group-body { display: grid; grid-template-rows: 1fr; overflow: hidden; transition: grid-template-rows 0.35s cubic-bezier(0.22,1,0.36,1), opacity 0.35s ease; opacity: 1; }
+    .doc-group.collapsed .doc-group-body { grid-template-rows: 0fr; opacity: 0; }
+    .doc-group-body > .doc-group-inner { overflow: hidden; min-height: 0; padding-top: 6px; }
     .sub-card { background: #0f172a; border-radius: 8px; padding: 12px; margin-bottom: 8px; }
     .sub-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0; flex-wrap: wrap; gap: 6px; }
     .sub-card-title { font-size: 13px; font-weight: bold; color: #cbd5e1; }
@@ -1086,14 +1096,25 @@
               <div class="doc-name" style="font-size:10px;margin-top:1px;">S/N: ${sc.serial_number || '—'}</div>
             </div>
             <div style="display:flex;gap:5px;align-items:center;">
-              <button class="upload-btn" style="font-size:11px;padding:4px 8px;" onclick="openAddDoc(${sc.id})">+ Add Document</button>
               <button class="btn-reassign" onclick="openReassignModal(${sc.id},'${(sc.name||'Sub-child').replace(/'/g,"\\'")}',${sub.id})" title="Change parent">⇄</button>
               <button class="btn-toggle" onclick="toggleSubCard(this.closest('.sub-child-card'))" title="Expand">▾</button>
               <button class="btn-danger" onclick="deleteEquipItem(${sc.id})" title="Delete">🗑</button>
             </div>
           </div>
           <div class="sub-child-body">
-            <div class="body-inner"><div class="body-content">${scDocsHtml}</div></div>
+            <div class="body-inner"><div class="body-content">
+              <div class="doc-group collapsed">
+                <div class="doc-group-header" onclick="toggleDocGroup(this)">
+                  <span class="doc-group-title">Documents</span>
+                  <span class="doc-group-count">${scDocs.length}</span>
+                  <span class="doc-group-toggle">▾</span>
+                </div>
+                <div class="doc-group-body"><div class="doc-group-inner">
+                  ${scDocsHtml}
+                  <button class="upload-btn" style="font-size:11px;padding:4px 8px;margin-top:8px;margin-bottom:4px;" onclick="openAddDoc(${sc.id})">+ Add Document</button>
+                </div></div>
+              </div>
+            </div></div>
           </div>
         </div>`;
       }).join('');
@@ -1105,7 +1126,6 @@
             <div class="doc-name" style="font-size:11px;margin-top:2px;">S/N: ${sub.serial_number || '—'}</div>
           </div>
           <div style="display:flex;gap:6px;align-items:center;">
-            <button class="upload-btn" onclick="openAddDoc(${sub.id})">+ Add Document</button>
             <button class="btn-reassign" onclick="openReassignModal(${sub.id},'${(sub.name||'Sub-component').replace(/'/g,"\\'")}',${item.id})" title="Change parent">⇄</button>
             <button class="btn-toggle" onclick="toggleSubCard(this.closest('.sub-card'))" title="Expand">▾</button>
             <button class="btn-danger" onclick="deleteEquipItem(${sub.id})" title="Delete">🗑</button>
@@ -1113,7 +1133,17 @@
         </div>
         <div class="sub-card-body">
           <div class="body-inner"><div class="body-content">
-            ${subDocsHtml}
+            <div class="doc-group collapsed">
+              <div class="doc-group-header" onclick="toggleDocGroup(this)">
+                <span class="doc-group-title">Documents</span>
+                <span class="doc-group-count">${subDocs.length}</span>
+                <span class="doc-group-toggle">▾</span>
+              </div>
+              <div class="doc-group-body"><div class="doc-group-inner">
+                ${subDocsHtml}
+                <button class="upload-btn" style="font-size:11px;margin-top:8px;margin-bottom:4px;" onclick="openAddDoc(${sub.id})">+ Add Document</button>
+              </div></div>
+            </div>
             <div style="margin-top:8px;">
               ${subChildrenHtml}
               <button class="add-sub-btn" style="font-size:11px;padding:4px 10px;margin-top:6px;" onclick="openAddSubComponent(${sub.id},'${(sub.name||'Sub-component').replace(/'/g,"\\'")}')">+ Add Sub-child</button>
@@ -1138,8 +1168,17 @@
       </div>
       <div class="card-body">
         <div class="body-inner"><div class="body-content">
-          ${docsHtml}
-          <button class="upload-btn" style="margin-top:10px;margin-bottom:10px;" onclick="openAddDoc(${item.id})">+ Add Document</button>
+          <div class="doc-group collapsed">
+            <div class="doc-group-header" onclick="toggleDocGroup(this)">
+              <span class="doc-group-title">Documents</span>
+              <span class="doc-group-count">${docs.length}</span>
+              <span class="doc-group-toggle">▾</span>
+            </div>
+            <div class="doc-group-body"><div class="doc-group-inner">
+              ${docsHtml}
+              <button class="upload-btn" style="margin-top:8px;margin-bottom:4px;" onclick="openAddDoc(${item.id})">+ Add Document</button>
+            </div></div>
+          </div>
           <div class="sub-section">
             <div class="sub-label">Sub-components${subs.length ? ` (${subs.length})` : ''}</div>
             ${subsHtml}
@@ -1573,7 +1612,16 @@
           <button class="btn-danger" onclick="deletePersRecord(${p.id})" title="Delete">🗑</button>
         </div>
       </div>
-      <div class="card-body"><div class="body-inner"><div class="body-content">${docRows}</div></div></div>
+      <div class="card-body"><div class="body-inner"><div class="body-content">
+        <div class="doc-group collapsed">
+          <div class="doc-group-header" onclick="toggleDocGroup(this)">
+            <span class="doc-group-title">Documents</span>
+            <span class="doc-group-count">${docs.length}</span>
+            <span class="doc-group-toggle">▾</span>
+          </div>
+          <div class="doc-group-body"><div class="doc-group-inner">${docRows}</div></div>
+        </div>
+      </div></div></div>
     </div>`;
   }
 
@@ -1833,6 +1881,10 @@
 
   function toggleGroup(header) {
     header.closest('.eq-group').classList.toggle('collapsed');
+  }
+
+  function toggleDocGroup(header) {
+    header.closest('.doc-group').classList.toggle('collapsed');
   }
 
   async function deletePersRecord(id) {
