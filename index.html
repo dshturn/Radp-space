@@ -1107,7 +1107,10 @@
           <div class="sub-child-header">
             <div style="cursor:pointer;flex:1;" onclick="toggleSubCard(this.closest('.sub-child-card'))">
               <div class="sub-child-title">${sc.name || 'Sub-child'}</div>
-              <div class="doc-name" style="font-size:10px;margin-top:1px;">S/N: ${sc.serial_number || '—'}</div>
+              <div style="display:flex;align-items:center;gap:6px;margin-top:1px;">
+                <div class="doc-name" style="font-size:10px;">S/N: ${sc.serial_number || '—'}</div>
+                ${scAlertBadge}
+              </div>
             </div>
             <div style="display:flex;gap:5px;align-items:center;">
               ${scHasDeeper ? `<span title="Has nested sub-components not shown" style="font-size:10px;color:#94a3b8;background:#1e293b;border:1px solid #334155;padding:2px 7px;border-radius:8px;cursor:default;">↳ ${(subsByParent[sc.id]).length}</span>` : ''}
@@ -1139,7 +1142,10 @@
         <div class="sub-card-header">
           <div style="cursor:pointer;flex:1;" onclick="toggleSubCard(this.closest('.sub-card'))">
             <div class="sub-card-title">${sub.name || 'Sub-component'}</div>
-            <div class="doc-name" style="font-size:11px;margin-top:2px;">S/N: ${sub.serial_number || '—'}</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
+              <div class="doc-name" style="font-size:11px;">S/N: ${sub.serial_number || '—'}</div>
+              ${subAlertBadge}
+            </div>
           </div>
           <div style="display:flex;gap:6px;align-items:center;">
             <button class="btn-reassign" onclick="openReassignModal(${sub.id},'${(sub.name||'Sub-component').replace(/'/g,"\\'")}',${item.id})" title="Change parent">⇄</button>
@@ -1174,7 +1180,10 @@
       <div class="card-header">
         <div style="cursor:pointer;flex:1;" onclick="toggleCard(this.closest('.app-card').querySelector('.btn-toggle'))">
           <div class="card-title">${name}</div>
-          <div class="doc-name" style="margin-top:4px;">S/N: ${item.serial_number || '—'}</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
+            <div class="doc-name">S/N: ${item.serial_number || '—'}</div>
+            ${alertBadge}
+          </div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           <button class="btn-reassign" onclick="openReassignModal(${item.id},'${name.replace(/'/g,"\\'")}',null)" title="Change assignment">⇄</button>
