@@ -981,10 +981,19 @@
     document.getElementById('equipmentList').innerHTML = topLevel.length
       ? Object.entries(eqGroups).sort(([a],[b]) => a.localeCompare(b)).map(([type, items]) => {
           const cardsHtml = items.map(i => equipItemCard(i, i.name || 'Equipment', docsByItem[i.id] || [], subsByParent[i.id] || [], docsByItem, subsByParent)).join('');
+          const _t = new Date(); _t.setHours(0,0,0,0);
+          const _i30 = new Date(_t); _i30.setDate(_t.getDate() + 30);
+          let [_exp, _expir, _ok] = [0, 0, 0];
+          items.forEach(i => {
+            const allD = [...(docsByItem[i.id]||[]), ...(subsByParent[i.id]||[]).flatMap(s => [...(docsByItem[s.id]||[]), ...(subsByParent[s.id]||[]).flatMap(sc => docsByItem[sc.id]||[])])];
+            if      (allD.some(d => d.expiry_date && new Date(d.expiry_date) < _t))                                              _exp++;
+            else if (allD.some(d => d.expiry_date && new Date(d.expiry_date) >= _t && new Date(d.expiry_date) <= _i30)) _expir++;
+            else _ok++;
+          });
           return `<div class="eq-group collapsed">
             <div class="group-header" onclick="toggleGroup(this)">
               <span class="group-title">${type}</span>
-              <span class="group-count">${items.length}</span>
+              ${grpBadges(_exp, _expir, _ok)}
               <span class="group-toggle">▾</span>
             </div>
             <div class="group-body"><div class="group-body-inner">${cardsHtml}</div></div>
@@ -1589,10 +1598,19 @@
       });
       list.innerHTML = Object.entries(persGroups).sort(([a],[b]) => a.localeCompare(b)).map(([pos, persons]) => {
         const cardsHtml = persons.map(p => personnelCard(p, docsByPerson[p.id] || [])).join('');
+        const _t = new Date(); _t.setHours(0,0,0,0);
+        const _i30 = new Date(_t); _i30.setDate(_t.getDate() + 30);
+        let [_exp, _expir, _ok] = [0, 0, 0];
+        persons.forEach(p => {
+          const docs = docsByPerson[p.id] || [];
+          if      (docs.some(d => d.expiry_date && new Date(d.expiry_date) < _t))                                              _exp++;
+          else if (docs.some(d => d.expiry_date && new Date(d.expiry_date) >= _t && new Date(d.expiry_date) <= _i30)) _expir++;
+          else _ok++;
+        });
         return `<div class="eq-group collapsed">
           <div class="group-header" onclick="toggleGroup(this)">
             <span class="group-title">${pos}</span>
-            <span class="group-count">${persons.length}</span>
+            ${grpBadges(_exp, _expir, _ok)}
             <span class="group-toggle">▾</span>
           </div>
           <div class="group-body"><div class="group-body-inner">${cardsHtml}</div></div>
@@ -1979,6 +1997,15 @@
 
   function toggleGroup(header) {
     header.closest('.eq-group').classList.toggle('collapsed');
+  }
+
+  function grpBadges(expired, expiring, ok) {
+    const s = 'font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;';
+    return [
+      expired  > 0 ? `<span style="${s}background:#4c0519;color:#fda4af;">${expired}</span>`  : '',
+      expiring > 0 ? `<span style="${s}background:#422006;color:#fbbf24;">${expiring}</span>` : '',
+      ok       > 0 ? `<span style="${s}background:#14532d;color:#86efac;">${ok}</span>`       : '',
+    ].join('');
   }
 
   function animateNewEl(el) {
