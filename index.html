@@ -127,16 +127,16 @@
     .app-card.expanded .btn-toggle, .sub-card.expanded .btn-toggle, .sub-child-card.expanded .btn-toggle { transform: rotate(180deg); }
     .sub-section { margin-top: 16px; border-top: 1px solid #334155; padding-top: 12px; }
     .sub-label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
-    .eq-group { margin-bottom: 12px; }
-    .group-header { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #1e293b; border-radius: 8px; cursor: pointer; margin-bottom: 8px; user-select: none; transition: background 0.2s; }
+    .eq-group { margin-bottom: 12px; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 18px rgba(0,0,0,0.35); }
+    .group-header { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: #1e293b; cursor: pointer; user-select: none; transition: background 0.2s; }
     .group-header:hover { background: #243449; }
     .group-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; flex: 1; }
     .group-count { font-size: 11px; color: #64748b; background: #0f172a; padding: 2px 8px; border-radius: 10px; }
     .group-toggle { color: #64748b; font-size: 13px; transition: transform 0.4s cubic-bezier(0.22,1,0.36,1); line-height: 1; }
     .eq-group.collapsed .group-toggle { transform: rotate(-90deg); }
-    .group-body { display: grid; grid-template-rows: 1fr; overflow: hidden; transition: grid-template-rows 0.4s cubic-bezier(0.22,1,0.36,1), opacity 0.4s ease; opacity: 1; }
+    .group-body { display: grid; grid-template-rows: 1fr; overflow: hidden; transition: grid-template-rows 0.4s cubic-bezier(0.22,1,0.36,1), opacity 0.4s ease; opacity: 1; background: #162032; }
     .eq-group.collapsed .group-body { grid-template-rows: 0fr; opacity: 0; }
-    .group-body > .group-body-inner { overflow: hidden; min-height: 0; }
+    .group-body > .group-body-inner { overflow: hidden; min-height: 0; padding: 10px; }
     .sub-card { background: #0f172a; border-radius: 8px; padding: 12px; margin-bottom: 8px; }
     .sub-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0; flex-wrap: wrap; gap: 6px; }
     .sub-card-title { font-size: 13px; font-weight: bold; color: #cbd5e1; }
