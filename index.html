@@ -944,7 +944,7 @@
     document.getElementById('equipmentList').innerHTML = topLevel.length
       ? Object.entries(eqGroups).sort(([a],[b]) => a.localeCompare(b)).map(([type, items]) => {
           const cardsHtml = items.map(i => equipItemCard(i, i.name || 'Equipment', docsByItem[i.id] || [], subsByParent[i.id] || [], docsByItem, subsByParent)).join('');
-          return `<div class="eq-group">
+          return `<div class="eq-group collapsed">
             <div class="group-header" onclick="toggleGroup(this)">
               <span class="group-title">${type}</span>
               <span class="group-count">${items.length}</span>
@@ -1433,7 +1433,7 @@
       });
       list.innerHTML = Object.entries(persGroups).sort(([a],[b]) => a.localeCompare(b)).map(([pos, persons]) => {
         const cardsHtml = persons.map(p => personnelCard(p, docsByPerson[p.id] || [])).join('');
-        return `<div class="eq-group">
+        return `<div class="eq-group collapsed">
           <div class="group-header" onclick="toggleGroup(this)">
             <span class="group-title">${pos}</span>
             <span class="group-count">${persons.length}</span>
