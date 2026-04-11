@@ -110,12 +110,22 @@ async function loadPersonnel(preserveState = false) {
   }
 
   if (preserveState) {
+    // Suppress transitions so state restoration is instant (no animate-open flash)
+    const noTrans = document.createElement('style');
+    noTrans.id = '_persNoTrans';
+    noTrans.textContent = '#personnelList .group-body,#personnelList .card-body,#personnelList .sub-card-body,#personnelList .sub-child-body{transition:none!important;opacity:1!important;grid-template-rows:unset!important}';
+    document.head.appendChild(noTrans);
+
     expandedIds.forEach(id => { const el = document.querySelector(`[data-id="${id}"]`); if (el) el.classList.add('expanded'); });
     document.querySelectorAll('#personnelList .eq-group').forEach(g => {
       const title = g.querySelector('.group-title');
       if (title && expandedGroups.has(title.textContent.trim())) g.classList.remove('collapsed');
     });
     window.scrollTo({ top: scrollY, behavior: 'instant' });
+
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      document.getElementById('_persNoTrans')?.remove();
+    }));
   }
 
   // Animate newly added personnel card or doc

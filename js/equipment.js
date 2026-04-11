@@ -78,12 +78,22 @@ async function loadEquipment(preserveState = false) {
     : '<div class="empty">No equipment yet. Click "+ Add Equipment" to start.</div>';
 
   if (preserveState) {
+    // Suppress transitions so state restoration is instant (no animate-open flash)
+    const noTrans = document.createElement('style');
+    noTrans.id = '_equipNoTrans';
+    noTrans.textContent = '#equipmentList .group-body,#equipmentList .card-body,#equipmentList .sub-card-body,#equipmentList .sub-child-body{transition:none!important;opacity:1!important;grid-template-rows:unset!important}';
+    document.head.appendChild(noTrans);
+
     expandedIds.forEach(id => { const el = document.querySelector(`[data-id="${id}"]`); if (el) el.classList.add('expanded'); });
     document.querySelectorAll('#equipmentList .eq-group').forEach(g => {
       const title = g.querySelector('.group-title');
       if (title && expandedGroups.has(title.textContent.trim())) g.classList.remove('collapsed');
     });
     window.scrollTo({ top: scrollY, behavior: 'instant' });
+
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      document.getElementById('_equipNoTrans')?.remove();
+    }));
   }
 
   // Animate newly added card or doc
