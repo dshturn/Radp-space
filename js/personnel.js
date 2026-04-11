@@ -270,14 +270,14 @@ function editPersDoc(docId, personId, typeName, mandatory, issueDate, expiryDate
   document.getElementById('persDocIssueDate').value      = issueDate  || '';
   document.getElementById('persDocExpiryDate').value     = expiryDate || '';
   document.getElementById('persDocFileInput').value      = '';
-  document.getElementById('persDocFileName').textContent = 'Keep existing file (or choose a new one to replace)';
+  document.getElementById('persDocFileName').textContent = '';
   document.getElementById('persDocFileBtn').style.borderColor = '';
   document.getElementById('persDocIssueDateWrap').style.display  = cfg.noIssue    ? 'none' : 'block';
   document.getElementById('persDocExpiryDateWrap').style.display = cfg.noExpiry   ? 'none' : 'block';
   document.getElementById('persDocAutoExpiryNote').style.display = cfg.autoExpiry ? 'block' : 'none';
   document.getElementById('persDocYearsExpWrap').style.display   = typeName === 'CV' ? 'block' : 'none';
   document.getElementById('persDocYearsExp').value  = yearsExp != null ? yearsExp : '';
-  document.getElementById('persDocFileRequired').style.display = 'none';
+  document.getElementById('persDocFileRequired').style.display = 'inline';
   document.getElementById('addPersDocModal').classList.add('open');
 }
 
@@ -295,7 +295,7 @@ async function savePersDocument() {
     expDate = d.toISOString().split('T')[0];
   }
   const file = document.getElementById('persDocFileInput').files[0];
-  if (!file && !editId) { showToast('Please attach a file — attachment is required', 'warn'); document.getElementById('persDocFileBtn').style.borderColor = '#fda4af'; return; }
+  if (!file) { showToast('Please attach a new file — a file is required to save changes', 'warn'); document.getElementById('persDocFileBtn').style.borderColor = '#fda4af'; return; }
 
   let fileUrl = null;
   if (file) {
