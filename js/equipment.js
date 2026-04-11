@@ -505,11 +505,13 @@ async function addSubComponent() {
 async function deleteEquipItem(id) {
   if (!confirm('Delete this equipment and all its documents?')) return;
   const el = document.querySelector(`[data-id="${id}"]`);
+  // Start API calls immediately so they run in parallel with the animation
+  const h = { ...getHeaders(), Prefer: 'return=minimal' };
+  const deletePromise = fetch(`${SUPABASE_URL}/rest/v1/documents?equipment_item_id=eq.${id}`, { method: 'DELETE', headers: h })
+    .then(() => fetch(`${SUPABASE_URL}/rest/v1/equipment_items?id=eq.${id}`, { method: 'DELETE', headers: h }));
   animateRemoveEl(el, async () => {
-    const h = { ...getHeaders(), Prefer: 'return=minimal' };
-    const r1 = await fetch(`${SUPABASE_URL}/rest/v1/documents?equipment_item_id=eq.${id}`, { method: 'DELETE', headers: h });
-    const r2 = await fetch(`${SUPABASE_URL}/rest/v1/equipment_items?id=eq.${id}`, { method: 'DELETE', headers: h });
-    if (!r2.ok) { alert('Delete failed: ' + r2.status); }
+    const r = await deletePromise;
+    if (!r.ok) { alert('Delete failed: ' + r.status); }
     loadEquipment(true);
   });
 }
@@ -517,8 +519,10 @@ async function deleteEquipItem(id) {
 async function deleteDoc(id) {
   if (!confirm('Delete this document?')) return;
   const el = document.querySelector(`[data-doc-id="${id}"]`);
+  // Start API call immediately so it runs in parallel with the animation
+  const deletePromise = fetch(`${SUPABASE_URL}/rest/v1/documents?id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
   animateRemoveEl(el, async () => {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/documents?id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
+    const r = await deletePromise;
     if (!r.ok) { alert('Delete failed: ' + r.status); }
     loadEquipment(true);
   });
