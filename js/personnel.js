@@ -91,17 +91,20 @@ async function loadPersonnel(preserveState = false) {
       const cardsHtml = persons.map(p => personnelCard(p, docsByPerson[p.id] || [])).join('');
       const _t = new Date(); _t.setHours(0,0,0,0);
       const _i30 = new Date(_t); _i30.setDate(_t.getDate() + 30);
-      let [_exp, _expir, _ok] = [0, 0, 0];
+      let [_exp, _expir, _ok, _missing, _review] = [0, 0, 0, 0, 0];
       persons.forEach(p => {
         const docs = docsByPerson[p.id] || [];
-        if      (docs.some(d => d.expiry_date && new Date(d.expiry_date) < _t))                                              _exp++;
-        else if (docs.some(d => d.expiry_date && new Date(d.expiry_date) >= _t && new Date(d.expiry_date) <= _i30)) _expir++;
-        else _ok++;
+        const allMandatory = PERS_DOC_TYPES.filter(t => t.mandatory).every(t => docs.some(d => d.doc_type_name === t.name));
+        if (!allMandatory)                                                                                                    _missing++;
+        else if (!p.assessed)                                                                                                _review++;
+        else if (docs.some(d => d.expiry_date && new Date(d.expiry_date) < _t))                                             _exp++;
+        else if (docs.some(d => d.expiry_date && new Date(d.expiry_date) >= _t && new Date(d.expiry_date) <= _i30))         _expir++;
+        else                                                                                                                 _ok++;
       });
       return `<div class="eq-group collapsed">
         <div class="group-header" onclick="toggleGroup(this)">
           <span class="group-title">${pos}</span>
-          ${grpBadges(_exp, _expir, _ok)}
+          ${grpBadges(_exp, _expir, _ok, _missing, _review)}
           <span class="group-toggle">▾</span>
         </div>
         <div class="group-body"><div class="group-body-inner">${cardsHtml}</div></div>
@@ -207,9 +210,19 @@ function personnelCard(p, docs) {
 
   const expiredCount  = docs.filter(d => d.expiry_date && new Date(d.expiry_date) < today).length;
   const expiringCount = docs.filter(d => { if (!d.expiry_date) return false; const e = new Date(d.expiry_date); return e >= today && e <= in30; }).length;
-  const alertBadge = expiredCount  > 0 ? `<span style="background:#4c0519;color:#fda4af;font-size:11px;font-weight:bold;padding:3px 8px;border-radius:20px;">⚠ ${expiredCount} EXPIRED</span>`
-                   : expiringCount > 0 ? `<span style="background:#422006;color:#fbbf24;font-size:11px;font-weight:bold;padding:3px 8px;border-radius:20px;">⚠ ${expiringCount} EXPIRING</span>`
-                   : '';
+  const allMandatoryUploaded = PERS_DOC_TYPES.filter(t => t.mandatory).every(t => docMap[t.name]);
+  const bStyle = 'font-size:11px;font-weight:bold;padding:3px 8px;border-radius:20px;';
+  let alertBadge = '', assessBtn = '';
+  if (!allMandatoryUploaded) {
+    alertBadge = `<span style="${bStyle}background:#4c0519;color:#fda4af;">MISSING DOCS</span>`;
+  } else if (!p.assessed) {
+    alertBadge = `<span style="${bStyle}background:#1e3a5f;color:#93c5fd;">AWAITING REVIEW</span>`;
+    assessBtn  = `<button class="btn-edit" onclick="markPersAssessed(${p.id})" style="font-size:11px;padding:3px 10px;">✓ Assessed</button>`;
+  } else if (expiredCount > 0) {
+    alertBadge = `<span style="${bStyle}background:#4c0519;color:#fda4af;">⚠ ${expiredCount} EXPIRED</span>`;
+  } else if (expiringCount > 0) {
+    alertBadge = `<span style="${bStyle}background:#422006;color:#fbbf24;">⚠ ${expiringCount} EXPIRING</span>`;
+  }
 
   return `<div class="app-card" data-id="p${p.id}">
     <div class="card-header">
@@ -219,6 +232,7 @@ function personnelCard(p, docs) {
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         ${alertBadge}
+        ${assessBtn}
         <button class="btn-toggle" onclick="toggleCard(this)" title="Expand">▾</button>
         <button class="btn-danger" onclick="deletePersRecord(${p.id})" title="Delete">🗑</button>
       </div>
@@ -314,6 +328,12 @@ async function savePersDocument() {
     if (_pdRes.ok) { const [_newPd] = await _pdRes.json(); window._justAddedPersDocId = _newPd?.id; }
   }
 
+  // Reset assessed flag whenever a document is added or updated
+  await fetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${personId}`, {
+    method: 'PATCH', headers: { ...getHeaders(), Prefer: 'return=minimal' },
+    body: JSON.stringify({ assessed: false })
+  });
+
   // If CV, also save years of experience onto the personnel record
   if (typeName === 'CV') {
     const yrs = parseInt(document.getElementById('persDocYearsExp').value);
@@ -338,6 +358,14 @@ async function deletePersDoc(id) {
     if (!r.ok) { showToast('Delete failed: ' + r.status, 'error'); }
     loadPersonnel(true);
   });
+}
+
+async function markPersAssessed(personId) {
+  await fetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${personId}`, {
+    method: 'PATCH', headers: { ...getHeaders(), Prefer: 'return=minimal' },
+    body: JSON.stringify({ assessed: true })
+  });
+  loadPersonnel(true);
 }
 
 async function deletePersRecord(id) {

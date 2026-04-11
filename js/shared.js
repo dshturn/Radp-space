@@ -80,12 +80,14 @@ function toggleDocGroup(header) {
 }
 
 // ─── Group status badges ───
-function grpBadges(expired, expiring, ok) {
+function grpBadges(expired, expiring, ok, missing = 0, review = 0) {
   const s = 'font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;';
   return [
-    expired  > 0 ? `<span style="${s}background:#4c0519;color:#fda4af;">${expired} EXPIRED</span>`   : '',
-    expiring > 0 ? `<span style="${s}background:#422006;color:#fbbf24;">${expiring} EXPIRING</span>` : '',
-    ok       > 0 ? `<span style="${s}background:#14532d;color:#86efac;">${ok} READY</span>`          : '',
+    missing  > 0 ? `<span style="${s}background:#4c0519;color:#fda4af;">${missing} MISSING</span>`     : '',
+    review   > 0 ? `<span style="${s}background:#1e3a5f;color:#93c5fd;">${review} AWAITING</span>`     : '',
+    expired  > 0 ? `<span style="${s}background:#4c0519;color:#fda4af;">${expired} EXPIRED</span>`     : '',
+    expiring > 0 ? `<span style="${s}background:#422006;color:#fbbf24;">${expiring} EXPIRING</span>`   : '',
+    ok       > 0 ? `<span style="${s}background:#14532d;color:#86efac;">${ok} READY</span>`            : '',
   ].join('');
 }
 

@@ -59,17 +59,19 @@ async function loadEquipment(preserveState = false) {
         const cardsHtml = items.map(i => equipItemCard(i, i.name || 'Equipment', docsByItem[i.id] || [], subsByParent[i.id] || [], docsByItem, subsByParent)).join('');
         const _t = new Date(); _t.setHours(0,0,0,0);
         const _i30 = new Date(_t); _i30.setDate(_t.getDate() + 30);
-        let [_exp, _expir, _ok] = [0, 0, 0];
+        let [_exp, _expir, _ok, _missing, _review] = [0, 0, 0, 0, 0];
         items.forEach(i => {
           const allD = [...(docsByItem[i.id]||[]), ...(subsByParent[i.id]||[]).flatMap(s => [...(docsByItem[s.id]||[]), ...(subsByParent[s.id]||[]).flatMap(sc => docsByItem[sc.id]||[])])];
-          if      (allD.some(d => d.expiry_date && new Date(d.expiry_date) < _t))                                              _exp++;
-          else if (allD.some(d => d.expiry_date && new Date(d.expiry_date) >= _t && new Date(d.expiry_date) <= _i30)) _expir++;
-          else _ok++;
+          if      (allD.length === 0)                                                                                         _missing++;
+          else if (!i.assessed)                                                                                               _review++;
+          else if (allD.some(d => d.expiry_date && new Date(d.expiry_date) < _t))                                            _exp++;
+          else if (allD.some(d => d.expiry_date && new Date(d.expiry_date) >= _t && new Date(d.expiry_date) <= _i30))        _expir++;
+          else                                                                                                                _ok++;
         });
         return `<div class="eq-group collapsed">
           <div class="group-header" onclick="toggleGroup(this)">
             <span class="group-title">${type}</span>
-            ${grpBadges(_exp, _expir, _ok)}
+            ${grpBadges(_exp, _expir, _ok, _missing, _review)}
             <span class="group-toggle">▾</span>
           </div>
           <div class="group-body"><div class="group-body-inner">${cardsHtml}</div></div>
@@ -151,6 +153,7 @@ function equipItemCard(item, name, docs, subs = [], docsByItem = {}, subsByParen
     : expir > 0
     ? `<span style="background:#422006;color:#fbbf24;font-size:11px;font-weight:bold;padding:3px 8px;border-radius:20px;">⚠ ${expir} EXPIRING</span>`
     : '';
+  const bStyle = 'font-size:11px;font-weight:bold;padding:3px 8px;border-radius:20px;';
 
   const docsHtml = docs.length ? docs.map(d => {
     const typeName = d.doc_type_name || '—';
@@ -187,7 +190,15 @@ function equipItemCard(item, name, docs, subs = [], docsByItem = {}, subsByParen
       ...(subsByParent[sub.id] || []).flatMap(sc => docsByItem[sc.id] || [])
     ])
   ];
-  const alertBadge = mkBadge(allNestedDocs.filter(isExp).length, allNestedDocs.filter(isExpiring).length);
+  let alertBadge = '', assessBtn = '';
+  if (allNestedDocs.length === 0) {
+    alertBadge = `<span style="${bStyle}background:#4c0519;color:#fda4af;">MISSING DOCS</span>`;
+  } else if (!item.assessed) {
+    alertBadge = `<span style="${bStyle}background:#1e3a5f;color:#93c5fd;">AWAITING REVIEW</span>`;
+    assessBtn  = `<button class="btn-edit" onclick="markEquipAssessed(${item.id})" style="font-size:11px;padding:3px 10px;">✓ Assessed</button>`;
+  } else {
+    alertBadge = mkBadge(allNestedDocs.filter(isExp).length, allNestedDocs.filter(isExpiring).length);
+  }
 
   const subsHtml = subs.map(sub => {
     const subDocs = docsByItem[sub.id] || [];
@@ -306,6 +317,7 @@ function equipItemCard(item, name, docs, subs = [], docsByItem = {}, subsByParen
         </div>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        ${assessBtn}
         <button class="btn-reassign" onclick="openReassignModal(${item.id},'${name.replace(/'/g,"\\'")}',null)" title="Change assignment">⇄</button>
         <button class="btn-toggle" onclick="toggleCard(this)" title="Expand">▾</button>
         <button class="btn-danger" onclick="deleteEquipItem(${item.id})" title="Delete equipment">🗑</button>
@@ -602,6 +614,20 @@ async function saveDocument() {
   });
   if (_docRes.ok) { const [_newDoc] = await _docRes.json(); window._justAddedDocId = _newDoc?.id; }
 
+  // Reset assessed flag whenever a document is added
+  await fetch(`${SUPABASE_URL}/rest/v1/equipment_items?id=eq.${currentDocItemId}`, {
+    method: 'PATCH', headers: { ...getHeaders(), Prefer: 'return=minimal' },
+    body: JSON.stringify({ assessed: false })
+  });
+
   closeModal('addDocModal');
+  loadEquipment(true);
+}
+
+async function markEquipAssessed(itemId) {
+  await fetch(`${SUPABASE_URL}/rest/v1/equipment_items?id=eq.${itemId}`, {
+    method: 'PATCH', headers: { ...getHeaders(), Prefer: 'return=minimal' },
+    body: JSON.stringify({ assessed: true })
+  });
   loadEquipment(true);
 }
