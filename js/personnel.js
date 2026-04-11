@@ -221,6 +221,8 @@ function personnelCard(p, docs) {
     alertBadge = `<span style="${bStyle}background:#4c0519;color:#fda4af;">⚠ ${expiredCount} EXPIRED</span>`;
   } else if (expiringCount > 0) {
     alertBadge = `<span style="${bStyle}background:#422006;color:#fbbf24;">⚠ ${expiringCount} EXPIRING</span>`;
+  } else {
+    alertBadge = `<span style="${bStyle}background:#14532d;color:#86efac;">READY</span>`;
   }
 
   return `<div class="app-card" data-id="p${p.id}">

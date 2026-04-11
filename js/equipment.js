@@ -196,7 +196,12 @@ function equipItemCard(item, name, docs, subs = [], docsByItem = {}, subsByParen
   } else if (!item.assessed) {
     alertBadge = `<span style="${bStyle}background:#1e3a5f;color:#93c5fd;">AWAITING REVIEW</span>`;
   } else {
-    alertBadge = mkBadge(allNestedDocs.filter(isExp).length, allNestedDocs.filter(isExpiring).length);
+    const _expC = allNestedDocs.filter(isExp).length, _expirC = allNestedDocs.filter(isExpiring).length;
+    alertBadge = _expC > 0
+      ? `<span style="${bStyle}background:#4c0519;color:#fda4af;">⚠ ${_expC} EXPIRED</span>`
+      : _expirC > 0
+      ? `<span style="${bStyle}background:#422006;color:#fbbf24;">⚠ ${_expirC} EXPIRING</span>`
+      : `<span style="${bStyle}background:#14532d;color:#86efac;">READY</span>`;
   }
 
   const subsHtml = subs.map(sub => {
