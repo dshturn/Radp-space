@@ -328,8 +328,10 @@ async function savePersDocument() {
 async function deletePersDoc(id) {
   if (!confirm('Delete this document?')) return;
   const el = document.querySelector(`[data-doc-id="${id}"]`);
+  // Start API call immediately so it runs in parallel with the animation
+  const deletePromise = fetch(`${SUPABASE_URL}/rest/v1/personnel_documents?id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
   animateRemoveEl(el, async () => {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/personnel_documents?id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
+    const r = await deletePromise;
     if (!r.ok) { alert('Delete failed: ' + r.status); }
     loadPersonnel(true);
   });
@@ -338,11 +340,14 @@ async function deletePersDoc(id) {
 async function deletePersRecord(id) {
   if (!confirm('Delete this personnel record and all their documents?')) return;
   const el = document.querySelector(`[data-id="p${id}"]`);
+  // Delete dependents in parallel, then the personnel record — all concurrent with animation
+  const h = { ...getHeaders(), Prefer: 'return=minimal' };
+  const deletePromise = Promise.all([
+    fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?personnel_id=eq.${id}`, { method: 'DELETE', headers: h }),
+    fetch(`${SUPABASE_URL}/rest/v1/personnel_documents?personnel_id=eq.${id}`, { method: 'DELETE', headers: h })
+  ]).then(() => fetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${id}`, { method: 'DELETE', headers: h }));
   animateRemoveEl(el, async () => {
-    const h = { ...getHeaders(), Prefer: 'return=minimal' };
-    await fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?personnel_id=eq.${id}`, { method: 'DELETE', headers: h });
-    await fetch(`${SUPABASE_URL}/rest/v1/personnel_documents?personnel_id=eq.${id}`, { method: 'DELETE', headers: h });
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${id}`, { method: 'DELETE', headers: h });
+    const r = await deletePromise;
     if (!r.ok) { const t = await r.text(); alert('Delete failed: ' + r.status + '\n' + t); }
     loadPersonnel(true);
   });
