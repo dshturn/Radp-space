@@ -35,8 +35,23 @@ function closeModal(id) {
 // ─── List filtering ───
 function filterCards(listId, query) {
   const q = query.toLowerCase();
-  document.querySelectorAll(`#${listId} .app-card`).forEach(card => {
+  const list = document.getElementById(listId);
+  if (!list) return;
+
+  if (!q) {
+    list.querySelectorAll('.eq-group').forEach(g => { g.classList.add('collapsed'); g.style.display = ''; });
+    list.querySelectorAll('.app-card').forEach(c => c.style.display = '');
+    return;
+  }
+
+  list.querySelectorAll('.app-card').forEach(card => {
     card.style.display = card.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+
+  list.querySelectorAll('.eq-group').forEach(group => {
+    const hasMatch = [...group.querySelectorAll('.app-card')].some(c => c.style.display !== 'none');
+    group.classList.toggle('collapsed', !hasMatch);
+    group.style.display = hasMatch ? '' : 'none';
   });
 }
 
