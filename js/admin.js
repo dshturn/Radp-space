@@ -85,14 +85,14 @@ async function saveEditUser() {
   const email       = document.getElementById('editEmail').value.trim();
   const company     = document.getElementById('editCompany').value;
   const service_line = document.getElementById('editServiceLine').value;
-  if (!full_name || !email) { alert('Name and email are required'); return; }
+  if (!full_name || !email) { showToast('Name and email are required', 'warn'); return; }
 
   const res = await fetch(`${SUPABASE_URL}/rest/v1/user_profiles?id=eq.${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}`, Prefer: 'return=minimal' },
     body: JSON.stringify({ full_name, email, company, service_line })
   });
-  if (!res.ok) { alert('Save failed: ' + res.status); return; }
+  if (!res.ok) { showToast('Save failed: ' + res.status, 'error'); return; }
   closeModal('adminEditModal');
   loadUsers();
 }
@@ -107,7 +107,7 @@ async function updateStatus(id, status) {
 }
 
 async function deleteUser(id) {
-  if (!confirm('Delete this user?')) return;
+  if (!await showConfirm('Delete this user?')) return;
   await fetch(`${SUPABASE_URL}/rest/v1/user_profiles?id=eq.${id}`, {
     method: 'DELETE',
     headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}`, Prefer: 'return=minimal' }

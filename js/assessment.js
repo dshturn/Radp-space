@@ -118,8 +118,8 @@ async function createAssessment() {
     ? document.getElementById('typeOfJobCustom').value.trim()
     : typeOfJobSel.value;
   const objective  = document.getElementById('objective').value;
-  if (!fieldWell) { alert('Please select or enter a Field / Well'); return; }
-  if (!typeOfJob || typeOfJob === '—') { alert('Please select a Type of Job'); return; }
+  if (!fieldWell) { showToast('Please select or enter a Field / Well', 'warn'); return; }
+  if (!typeOfJob || typeOfJob === '—') { showToast('Please select a Type of Job', 'warn'); return; }
   if (typeOfJobSel.value === '__custom__' && typeOfJob) {
     await fetch(`${SUPABASE_URL}/rest/v1/service_lines`, {
       method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal' },
@@ -198,7 +198,7 @@ async function openEquipmentSelector() {
 
 async function addSelectedEquipment() {
   const checked = [...document.querySelectorAll('#equipSelectorList input:checked')].map(c => c.value);
-  if (!checked.length) { alert('Select at least one item'); return; }
+  if (!checked.length) { showToast('Select at least one item', 'warn'); return; }
   for (const itemId of checked) {
     await fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment`, {
       method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal' },
@@ -214,7 +214,7 @@ async function addEquipmentItem(itemId) {
     method: 'POST', headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
     body: JSON.stringify({ assessment_id: currentAssessmentId, equipment_item_id: itemId })
   });
-  if (!r.ok) { alert('Add failed: ' + r.status); return; }
+  if (!r.ok) { showToast('Add failed: ' + r.status, 'error'); return; }
   loadSelectedEquipment(currentAssessmentId);
   openEquipmentSelector();
 }
@@ -224,14 +224,14 @@ async function addPersonnelItem(persId) {
     method: 'POST', headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
     body: JSON.stringify({ assessment_id: currentAssessmentId, personnel_id: persId })
   });
-  if (!r.ok) { alert('Add failed: ' + r.status); return; }
+  if (!r.ok) { showToast('Add failed: ' + r.status, 'error'); return; }
   loadSelectedPersonnel(currentAssessmentId);
   openPersonnelSelector();
 }
 
 async function removeEquipment(id, fromSelector) {
   const r = await fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment?id=eq.${id}`, { method: 'DELETE', headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Prefer: 'return=minimal' } });
-  if (!r.ok) { alert('Remove failed: ' + r.status); return; }
+  if (!r.ok) { showToast('Remove failed: ' + r.status, 'error'); return; }
   loadSelectedEquipment(currentAssessmentId);
   if (fromSelector) openEquipmentSelector();
 }
@@ -260,7 +260,7 @@ async function openPersonnelSelector() {
 
 async function addSelectedPersonnel() {
   const checked = [...document.querySelectorAll('#persSelectorList input:checked')].map(c => c.value);
-  if (!checked.length) { alert('Select at least one person'); return; }
+  if (!checked.length) { showToast('Select at least one person', 'warn'); return; }
   for (const persId of checked) {
     await fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel`, {
       method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal' },
@@ -273,7 +273,7 @@ async function addSelectedPersonnel() {
 
 async function removePersonnel(id, fromSelector) {
   const r = await fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?id=eq.${id}`, { method: 'DELETE', headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Prefer: 'return=minimal' } });
-  if (!r.ok) { alert('Remove failed: ' + r.status); return; }
+  if (!r.ok) { showToast('Remove failed: ' + r.status, 'error'); return; }
   loadSelectedPersonnel(currentAssessmentId);
   if (fromSelector) openPersonnelSelector();
 }

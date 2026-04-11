@@ -163,9 +163,8 @@ function equipItemCard(item, name, docs, subs = [], docsByItem = {}, subsByParen
       else if (exp <= in30) { statusColor = '#fbbf24'; statusText = 'EXPIRING'; }
     }
     const fileBtn = d.file_url ? `<button onclick="openDoc('${d.file_url}')" style="background:none;border:none;color:#38bdf8;font-size:11px;cursor:pointer;padding:0;text-decoration:underline;">📎 View</button>` : '';
-    const rowBorder = statusText === 'EXPIRED'  ? 'border-left:3px solid #fda4af;padding-left:8px;'
-                    : statusText === 'EXPIRING' ? 'border-left:3px solid #fbbf24;padding-left:8px;' : '';
-    return `<div class="doc-row" data-doc-id="${d.id}" style="${rowBorder}">
+    const rowClass = statusText === 'EXPIRED' ? ' status-expired' : statusText === 'EXPIRING' ? ' status-expiring' : '';
+    return `<div class="doc-row${rowClass}" data-doc-id="${d.id}">
       <div style="flex:1">
         <div class="doc-name">${typeName}</div>
         <div class="doc-date">Issue: ${d.issue_date || '—'} · Expiry: ${expiry || '—'}</div>
@@ -340,15 +339,15 @@ async function addEquipment() {
   const selEl  = document.getElementById('equipSelect');
   const tmplId = selEl.value;
   const serial = document.getElementById('equipSerial').value.trim();
-  if (!tmplId)  { alert('Please select an equipment type'); return; }
-  if (!serial)  { alert('Please enter a serial number'); return; }
+  if (!tmplId)  { showToast('Please select an equipment type', 'warn'); return; }
+  if (!serial)  { showToast('Please enter a serial number', 'warn'); return; }
 
   let finalTemplateId = null;
   let finalName       = '';
 
   if (tmplId === '__new__') {
     const customName = document.getElementById('equipName').value.trim();
-    if (!customName) { alert('Please enter the equipment name'); return; }
+    if (!customName) { showToast('Please enter the equipment name', 'warn'); return; }
     const u = getUser();
     const res = await fetch(`${SUPABASE_URL}/rest/v1/equipment_templates`, {
       method: 'POST',
@@ -438,7 +437,7 @@ async function saveReassign() {
 
   if (type === 'child') {
     const checked = document.querySelector('input[name="reassignParent"]:checked');
-    if (!checked) { alert('Please select a parent equipment'); return; }
+    if (!checked) { showToast('Please select a parent equipment', 'warn'); return; }
     newParentId = parseInt(checked.value);
   }
 
@@ -478,15 +477,15 @@ async function addSubComponent() {
   const selEl  = document.getElementById('subEquipSelect');
   const tmplId = selEl.value;
   const serial = document.getElementById('subEquipSerial').value.trim();
-  if (!tmplId)  { alert('Please select a component type'); return; }
-  if (!serial)  { alert('Please enter a serial number'); return; }
+  if (!tmplId)  { showToast('Please select a component type', 'warn'); return; }
+  if (!serial)  { showToast('Please enter a serial number', 'warn'); return; }
 
   let finalTemplateId = null;
   let finalName = '';
 
   if (tmplId === '__new__') {
     const customName = document.getElementById('subEquipName').value.trim();
-    if (!customName) { alert('Please enter the component name'); return; }
+    if (!customName) { showToast('Please enter the component name', 'warn'); return; }
     const u = getUser();
     const res = await fetch(`${SUPABASE_URL}/rest/v1/equipment_templates`, {
       method: 'POST',
@@ -513,7 +512,7 @@ async function addSubComponent() {
 }
 
 async function deleteEquipItem(id) {
-  if (!confirm('Delete this equipment and all its documents?')) return;
+  if (!await showConfirm('Delete this equipment and all its documents?')) return;
   const el = document.querySelector(`[data-id="${id}"]`);
   // Start API calls immediately so they run in parallel with the animation
   const h = { ...getHeaders(), Prefer: 'return=minimal' };
@@ -521,19 +520,19 @@ async function deleteEquipItem(id) {
     .then(() => fetch(`${SUPABASE_URL}/rest/v1/equipment_items?id=eq.${id}`, { method: 'DELETE', headers: h }));
   animateRemoveEl(el, async () => {
     const r = await deletePromise;
-    if (!r.ok) { alert('Delete failed: ' + r.status); }
+    if (!r.ok) { showToast('Delete failed: ' + r.status, 'error'); }
     loadEquipment(true);
   });
 }
 
 async function deleteDoc(id) {
-  if (!confirm('Delete this document?')) return;
+  if (!await showConfirm('Delete this document?')) return;
   const el = document.querySelector(`[data-doc-id="${id}"]`);
   // Start API call immediately so it runs in parallel with the animation
   const deletePromise = fetch(`${SUPABASE_URL}/rest/v1/documents?id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
   animateRemoveEl(el, async () => {
     const r = await deletePromise;
-    if (!r.ok) { alert('Delete failed: ' + r.status); }
+    if (!r.ok) { showToast('Delete failed: ' + r.status, 'error'); }
     loadEquipment(true);
   });
 }
@@ -574,8 +573,8 @@ async function saveDocument() {
   const expiryDate = noExpiry ? null : document.getElementById('docExpiryDate').value;
   const file       = document.getElementById('docFileInput').files[0];
 
-  if (!typeName) { alert('Please select or enter a document type'); return; }
-  if (!file) { alert('Please attach a file — attachment is required'); document.getElementById('docFileBtn').style.borderColor = '#fda4af'; return; }
+  if (!typeName) { showToast('Please select or enter a document type', 'warn'); return; }
+  if (!file) { showToast('Please attach a file — attachment is required', 'warn'); document.getElementById('docFileBtn').style.borderColor = '#fda4af'; return; }
   document.getElementById('docFileBtn').style.borderColor = '#334155';
 
   let fileUrl = null;

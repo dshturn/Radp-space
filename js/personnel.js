@@ -31,14 +31,14 @@ async function addPersonnel() {
   const name       = document.getElementById('persName').value.trim();
   const selEl      = document.getElementById('persPositionSelect');
   const nationalId = document.getElementById('persNationalId').value.trim();
-  if (!name)           { alert('Please enter full name'); return; }
-  if (!selEl.value)    { alert('Please select a position'); return; }
-  if (!/^\d{10}$/.test(nationalId)) { alert('ID must be exactly 10 digits'); return; }
+  if (!name)           { showToast('Please enter full name', 'warn'); return; }
+  if (!selEl.value)    { showToast('Please select a position', 'warn'); return; }
+  if (!/^\d{10}$/.test(nationalId)) { showToast('ID must be exactly 10 digits', 'warn'); return; }
 
   let position = selEl.value;
   if (position === '__new__') {
     const newPos = document.getElementById('persPositionNew').value.trim();
-    if (!newPos) { alert('Please enter a position name'); return; }
+    if (!newPos) { showToast('Please enter a position name', 'warn'); return; }
     await fetch(`${SUPABASE_URL}/rest/v1/personnel_positions`, {
       method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal' },
       body: JSON.stringify({ name: newPos })
@@ -167,11 +167,11 @@ function personnelCard(p, docs) {
       : `<span style="font-size:10px;color:#a78bfa;background:#2d1b69;padding:2px 6px;border-radius:10px;">Optional</span>`;
 
     if (d) {
-      let statusColor = '#6ee7b7', statusText = 'VALID', rowBorder = '';
+      let statusColor = '#6ee7b7', statusText = 'VALID';
       if (d.expiry_date) {
         const exp = new Date(d.expiry_date);
-        if (exp < today)      { statusColor = '#fda4af'; statusText = 'EXPIRED';  rowBorder = 'border-left:3px solid #fda4af;padding-left:8px;'; }
-        else if (exp <= in30) { statusColor = '#fbbf24'; statusText = 'EXPIRING'; rowBorder = 'border-left:3px solid #fbbf24;padding-left:8px;'; }
+        if (exp < today)      { statusColor = '#fda4af'; statusText = 'EXPIRED';  }
+        else if (exp <= in30) { statusColor = '#fbbf24'; statusText = 'EXPIRING'; }
       }
       const fileBtn = d.file_url ? `<button onclick="openDoc('${d.file_url}')" style="background:none;border:none;color:#38bdf8;font-size:11px;cursor:pointer;padding:0;text-decoration:underline;">📎 View</button>` : '';
       const cfg     = PERS_DOC_TYPES.find(x => x.name === t.name) || {};
@@ -180,7 +180,8 @@ function personnelCard(p, docs) {
                     : cfg.noExpiry ? `Issue: ${d.issue_date || '—'}`
                     : `Issue: ${d.issue_date || '—'} · Expiry: ${d.expiry_date || '—'}`;
       const yrsStr  = t.name === 'CV' && p.years_experience != null ? `<div class="doc-date">${p.years_experience} yrs exp in O&G</div>` : '';
-      return `<div class="doc-row" data-doc-id="${d.id}" style="${rowBorder}">
+      const rowClass = statusText === 'EXPIRED' ? ' status-expired' : statusText === 'EXPIRING' ? ' status-expiring' : '';
+      return `<div class="doc-row${rowClass}" data-doc-id="${d.id}">
         <div style="flex:1">
           <div class="doc-name" style="display:flex;align-items:center;gap:6px;">${t.name} ${mandBadge}</div>
           ${dateStr ? `<div class="doc-date">${dateStr}</div>` : ''}
@@ -290,7 +291,7 @@ async function savePersDocument() {
     expDate = d.toISOString().split('T')[0];
   }
   const file = document.getElementById('persDocFileInput').files[0];
-  if (!file && !editId) { alert('Please attach a file — attachment is required'); document.getElementById('persDocFileBtn').style.borderColor = '#fda4af'; return; }
+  if (!file && !editId) { showToast('Please attach a file — attachment is required', 'warn'); document.getElementById('persDocFileBtn').style.borderColor = '#fda4af'; return; }
 
   let fileUrl = null;
   if (file) {
@@ -301,7 +302,7 @@ async function savePersDocument() {
       headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${getToken()}`, 'Content-Type': file.type },
       body: file
     });
-    if (!uploadRes.ok) { alert('File upload failed. Please try again.'); return; }
+    if (!uploadRes.ok) { showToast('File upload failed. Please try again.', 'error'); return; }
     fileUrl = `${SUPABASE_URL}/storage/v1/object/public/personnel-docs/${path}`;
   }
 
@@ -336,19 +337,19 @@ async function savePersDocument() {
 }
 
 async function deletePersDoc(id) {
-  if (!confirm('Delete this document?')) return;
+  if (!await showConfirm('Delete this document?')) return;
   const el = document.querySelector(`[data-doc-id="${id}"]`);
   // Start API call immediately so it runs in parallel with the animation
   const deletePromise = fetch(`${SUPABASE_URL}/rest/v1/personnel_documents?id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
   animateRemoveEl(el, async () => {
     const r = await deletePromise;
-    if (!r.ok) { alert('Delete failed: ' + r.status); }
+    if (!r.ok) { showToast('Delete failed: ' + r.status, 'error'); }
     loadPersonnel(true);
   });
 }
 
 async function deletePersRecord(id) {
-  if (!confirm('Delete this personnel record and all their documents?')) return;
+  if (!await showConfirm('Delete this personnel record and all their documents?')) return;
   const el = document.querySelector(`[data-id="p${id}"]`);
   // Delete dependents in parallel, then the personnel record — all concurrent with animation
   const h = { ...getHeaders(), Prefer: 'return=minimal' };
@@ -358,7 +359,7 @@ async function deletePersRecord(id) {
   ]).then(() => fetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${id}`, { method: 'DELETE', headers: h }));
   animateRemoveEl(el, async () => {
     const r = await deletePromise;
-    if (!r.ok) { const t = await r.text(); alert('Delete failed: ' + r.status + '\n' + t); }
+    if (!r.ok) { const t = await r.text(); showToast('Delete failed: ' + r.status, 'error'); }
     loadPersonnel(true);
   });
 }

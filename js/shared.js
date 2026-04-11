@@ -86,27 +86,46 @@ function animateNewEl(el) {
 
 function animateRemoveEl(el, fn) {
   if (!el) { fn(); return; }
-  el.classList.add('card-removing');
-  const h = el.getBoundingClientRect().height;
-  el.style.height   = h + 'px';
-  el.style.overflow = 'hidden';
-  el.style.transition = [
-    'height 0.32s cubic-bezier(0.22,1,0.36,1) 0.15s',
-    'margin-top 0.32s cubic-bezier(0.22,1,0.36,1) 0.15s',
-    'margin-bottom 0.32s cubic-bezier(0.22,1,0.36,1) 0.15s',
-    'padding-top 0.32s cubic-bezier(0.22,1,0.36,1) 0.15s',
-    'padding-bottom 0.32s cubic-bezier(0.22,1,0.36,1) 0.15s'
-  ].join(', ');
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    el.style.height        = '0';
-    el.style.marginTop     = '0';
-    el.style.marginBottom  = '0';
-    el.style.paddingTop    = '0';
-    el.style.paddingBottom = '0';
-  }));
-  // After height collapses (~470ms), remove from layout flow to eliminate
-  // any parent flex/grid gap that lingers at height:0, then invoke callback.
-  setTimeout(() => { el.style.display = 'none'; fn(); }, 480);
+  el.style.transition = 'opacity 0.22s ease, transform 0.22s ease';
+  el.style.opacity = '0';
+  el.style.transform = 'scale(0.95)';
+  setTimeout(fn, 240);
+}
+
+// ─── Toast notifications ───
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.className = 'toast toast-' + type;
+  toast.textContent = message;
+  container.appendChild(toast);
+  requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('toast-show')));
+  setTimeout(() => {
+    toast.classList.remove('toast-show');
+    toast.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+    toast.style.opacity = '0';
+    setTimeout(() => toast.remove(), 300);
+  }, 3500);
+}
+
+// ─── Confirm dialog ───
+function showConfirm(message) {
+  return new Promise(resolve => {
+    document.getElementById('confirmMsgText').textContent = message;
+    const modal = document.getElementById('confirmModal');
+    modal.classList.add('open');
+    const ok  = document.getElementById('confirmOk');
+    const can = document.getElementById('confirmCancel');
+    function finish(result) {
+      modal.classList.remove('open');
+      ok.onclick = null;
+      can.onclick = null;
+      resolve(result);
+    }
+    ok.onclick  = () => finish(true);
+    can.onclick = () => finish(false);
+  });
 }
 
 // ─── Document viewer ───
@@ -124,7 +143,7 @@ async function openDoc(url) {
   box.style.top = '2.5vh'; box.style.left = '2.5vw';
   box.style.width = '95vw'; box.style.height = '95vh';
   document.getElementById('docViewerModal').style.display = 'block';
-  body.innerHTML = `<div style="padding:32px;text-align:center;color:#94a3b8;">Loading…</div>`;
+  body.innerHTML = `<div style="padding:32px;text-align:center;color:var(--text-2);">Loading…</div>`;
   try {
     const res     = await fetch(url, { headers: { apikey: SUPABASE_KEY } });
     const blob    = await res.blob();
@@ -138,6 +157,13 @@ async function openDoc(url) {
     } else if (isPdf) {
       body.innerHTML = `<div id="pdfCanvas" style="padding:0;"></div>`;
       const arrayBuf = await blob.arrayBuffer();
+      if (!window.pdfjsLib) {
+        await new Promise((res, rej) => {
+          const s = document.createElement('script');
+          s.src = '/pdf.min.js'; s.onload = res; s.onerror = rej;
+          document.head.appendChild(s);
+        });
+      }
       pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
       _currentPdf = await pdfjsLib.getDocument({ data: arrayBuf }).promise;
       _pdfScale   = body.clientWidth / (await _currentPdf.getPage(1)).getViewport({ scale: 1 }).width;
@@ -146,10 +172,10 @@ async function openDoc(url) {
       document.getElementById('docZoomOut').style.display   = 'block';
       document.getElementById('docZoomLevel').style.display = 'block';
     } else {
-      body.innerHTML = `<div style="padding:32px;text-align:center;color:#94a3b8;">Preview not available.<br><br><a href="${blobUrl}" target="_blank" style="color:#38bdf8;">Open in new tab</a></div>`;
+      body.innerHTML = `<div style="padding:32px;text-align:center;color:var(--text-2);">Preview not available.<br><br><a href="${blobUrl}" target="_blank" style="color:var(--accent);">Open in new tab</a></div>`;
     }
   } catch(e) {
-    body.innerHTML = `<div style="padding:32px;text-align:center;color:#fda4af;">Failed to load file.</div>`;
+    body.innerHTML = `<div style="padding:32px;text-align:center;color:var(--bad);">Failed to load file.</div>`;
   }
 }
 
