@@ -224,15 +224,7 @@ function personnelCard(p, docs) {
       </div>
     </div>
     <div class="card-body"><div class="body-inner"><div class="body-content">
-      <div class="doc-group collapsed">
-        <div class="doc-group-header" onclick="toggleDocGroup(this)">
-          <span class="doc-group-title">Documents</span>
-          ${alertBadge}
-          <span class="doc-group-count">${docs.length}</span>
-          <span class="doc-group-toggle">▾</span>
-        </div>
-        <div class="doc-group-body"><div class="doc-group-inner">${docRows}</div></div>
-      </div>
+      ${docRows}
     </div></div></div>
   </div>`;
 }
