@@ -104,7 +104,9 @@ function animateRemoveEl(el, fn) {
     el.style.paddingTop    = '0';
     el.style.paddingBottom = '0';
   }));
-  setTimeout(fn, 500);
+  // After height collapses (~470ms), remove from layout flow to eliminate
+  // any parent flex/grid gap that lingers at height:0, then invoke callback.
+  setTimeout(() => { el.style.display = 'none'; fn(); }, 480);
 }
 
 // ─── Document viewer ───
