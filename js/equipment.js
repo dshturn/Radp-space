@@ -190,12 +190,11 @@ function equipItemCard(item, name, docs, subs = [], docsByItem = {}, subsByParen
       ...(subsByParent[sub.id] || []).flatMap(sc => docsByItem[sc.id] || [])
     ])
   ];
-  let alertBadge = '', assessBtn = '';
+  let alertBadge = '';
   if (allNestedDocs.length === 0) {
     alertBadge = `<span style="${bStyle}background:#4c0519;color:#fda4af;">MISSING DOCS</span>`;
   } else if (!item.assessed) {
     alertBadge = `<span style="${bStyle}background:#1e3a5f;color:#93c5fd;">AWAITING REVIEW</span>`;
-    assessBtn  = `<button class="btn-edit" onclick="markEquipAssessed(${item.id})" style="font-size:11px;padding:3px 10px;">✓ Assessed</button>`;
   } else {
     alertBadge = mkBadge(allNestedDocs.filter(isExp).length, allNestedDocs.filter(isExpiring).length);
   }
@@ -317,7 +316,6 @@ function equipItemCard(item, name, docs, subs = [], docsByItem = {}, subsByParen
         </div>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        ${assessBtn}
         <button class="btn-reassign" onclick="openReassignModal(${item.id},'${name.replace(/'/g,"\\'")}',null)" title="Change assignment">⇄</button>
         <button class="btn-toggle" onclick="toggleCard(this)" title="Expand">▾</button>
         <button class="btn-danger" onclick="deleteEquipItem(${item.id})" title="Delete equipment">🗑</button>

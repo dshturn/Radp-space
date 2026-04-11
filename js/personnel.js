@@ -212,12 +212,11 @@ function personnelCard(p, docs) {
   const expiringCount = docs.filter(d => { if (!d.expiry_date) return false; const e = new Date(d.expiry_date); return e >= today && e <= in30; }).length;
   const allMandatoryUploaded = PERS_DOC_TYPES.filter(t => t.mandatory).every(t => docMap[t.name]);
   const bStyle = 'font-size:11px;font-weight:bold;padding:3px 8px;border-radius:20px;';
-  let alertBadge = '', assessBtn = '';
+  let alertBadge = '';
   if (!allMandatoryUploaded) {
     alertBadge = `<span style="${bStyle}background:#4c0519;color:#fda4af;">MISSING DOCS</span>`;
   } else if (!p.assessed) {
     alertBadge = `<span style="${bStyle}background:#1e3a5f;color:#93c5fd;">AWAITING REVIEW</span>`;
-    assessBtn  = `<button class="btn-edit" onclick="markPersAssessed(${p.id})" style="font-size:11px;padding:3px 10px;">✓ Assessed</button>`;
   } else if (expiredCount > 0) {
     alertBadge = `<span style="${bStyle}background:#4c0519;color:#fda4af;">⚠ ${expiredCount} EXPIRED</span>`;
   } else if (expiringCount > 0) {
@@ -232,7 +231,6 @@ function personnelCard(p, docs) {
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         ${alertBadge}
-        ${assessBtn}
         <button class="btn-toggle" onclick="toggleCard(this)" title="Expand">▾</button>
         <button class="btn-danger" onclick="deletePersRecord(${p.id})" title="Delete">🗑</button>
       </div>
