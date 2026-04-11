@@ -57,7 +57,7 @@ function filterCards(listId, query) {
 
 function filterCheckboxList(listId, query) {
   const q = query.toLowerCase();
-  document.querySelectorAll(`#${listId} .checkbox-item`).forEach(item => {
+  document.querySelectorAll(`#${listId} .checkbox-item, #${listId} .item-row`).forEach(item => {
     item.style.display = item.textContent.toLowerCase().includes(q) ? '' : 'none';
   });
 }
