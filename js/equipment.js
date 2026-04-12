@@ -10,7 +10,7 @@ async function openAddEquipment() {
   document.getElementById('newEquipNameWrap').style.display = 'none';
   document.getElementById('equipName').value  = '';
   document.getElementById('equipSerial').value = '';
-  document.getElementById('ctEquipModal').classList.add('open');
+  openModal('ctEquipModal');
 }
 
 function onEquipSelectChange(sel) {
@@ -149,23 +149,22 @@ function equipItemCard(item, name, docs, subs = [], docsByItem = {}, subsByParen
   const isExp     = d => d.expiry_date && new Date(d.expiry_date) < _today;
   const isExpiring = d => { if (!d.expiry_date) return false; const e = new Date(d.expiry_date); return e >= _today && e <= _in30; };
   const mkBadge   = (exp, expir) => exp > 0
-    ? `<span style="background:#4c0519;color:#fda4af;font-size:11px;font-weight:bold;padding:3px 8px;border-radius:20px;">⚠ ${exp} EXPIRED</span>`
+    ? `<span class="sbadge sbadge-expired">⚠ ${exp} EXPIRED</span>`
     : expir > 0
-    ? `<span style="background:#422006;color:#fbbf24;font-size:11px;font-weight:bold;padding:3px 8px;border-radius:20px;">⚠ ${expir} EXPIRING</span>`
+    ? `<span class="sbadge sbadge-expiring">⚠ ${expir} EXPIRING</span>`
     : '';
-  const bStyle = 'font-size:11px;font-weight:bold;padding:3px 8px;border-radius:20px;';
 
   const docsHtml = docs.length ? docs.map(d => {
     const typeName = d.doc_type_name || '—';
     const expiry   = d.expiry_date;
     const today = _today, in30 = _in30;
-    let statusColor = '#6ee7b7', statusText = 'VALID';
+    let statusClass = 'doc-status-valid', statusText = 'VALID';
     if (expiry) {
       const exp = new Date(expiry);
-      if (exp < today)      { statusColor = '#fda4af'; statusText = 'EXPIRED'; }
-      else if (exp <= in30) { statusColor = '#fbbf24'; statusText = 'EXPIRING'; }
+      if (exp < today)      { statusClass = 'doc-status-expired';  statusText = 'EXPIRED'; }
+      else if (exp <= in30) { statusClass = 'doc-status-expiring'; statusText = 'EXPIRING'; }
     }
-    const fileBtn = d.file_url ? `<button onclick="openDoc('${d.file_url}')" style="background:none;border:none;color:#38bdf8;font-size:11px;cursor:pointer;padding:0;text-decoration:underline;">📎 View</button>` : '';
+    const fileBtn = d.file_url ? `<button onclick="openDoc('${d.file_url}')" class="doc-view-btn" aria-label="View ${typeName} document">↗ View</button>` : '';
     const rowClass = statusText === 'EXPIRED' ? ' status-expired' : statusText === 'EXPIRING' ? ' status-expiring' : '';
     return `<div class="doc-row${rowClass}" data-doc-id="${d.id}">
       <div style="flex:1">
@@ -174,8 +173,8 @@ function equipItemCard(item, name, docs, subs = [], docsByItem = {}, subsByParen
       </div>
       <div style="display:flex;align-items:center;gap:8px;">
         ${fileBtn}
-        <span style="color:${statusColor};font-size:11px;font-weight:bold;">${statusText}</span>
-        <button class="btn-danger" onclick="deleteDoc(${d.id})">✕</button>
+        <span class="doc-status ${statusClass}">${statusText}</span>
+        <button class="btn-danger" onclick="deleteDoc(${d.id})" aria-label="Delete ${typeName} document">✕</button>
       </div>
     </div>`;
   }).join('') : `<div class="doc-date" style="padding:8px 0;">No documents yet</div>`;
@@ -192,32 +191,33 @@ function equipItemCard(item, name, docs, subs = [], docsByItem = {}, subsByParen
   ];
   let alertBadge = '';
   if (allNestedDocs.length === 0) {
-    alertBadge = `<span style="${bStyle}background:#4c0519;color:#fda4af;">MISSING DOCS</span>`;
+    alertBadge = `<span class="sbadge sbadge-missing">MISSING DOCS</span>`;
   } else if (!item.assessed) {
-    alertBadge = `<span style="${bStyle}background:#1e3a5f;color:#93c5fd;">AWAITING REVIEW</span>`;
+    alertBadge = `<span class="sbadge sbadge-awaiting">AWAITING REVIEW</span>`;
   } else {
     const _expC = allNestedDocs.filter(isExp).length, _expirC = allNestedDocs.filter(isExpiring).length;
     alertBadge = _expC > 0
-      ? `<span style="${bStyle}background:#4c0519;color:#fda4af;">⚠ ${_expC} EXPIRED</span>`
+      ? `<span class="sbadge sbadge-expired">⚠ ${_expC} EXPIRED</span>`
       : _expirC > 0
-      ? `<span style="${bStyle}background:#422006;color:#fbbf24;">⚠ ${_expirC} EXPIRING</span>`
-      : `<span style="${bStyle}background:#14532d;color:#86efac;">READY</span>`;
+      ? `<span class="sbadge sbadge-expiring">⚠ ${_expirC} EXPIRING</span>`
+      : `<span class="sbadge sbadge-ready">READY</span>`;
   }
 
   const subsHtml = subs.map(sub => {
     const subDocs = docsByItem[sub.id] || [];
     const subDocsHtml = subDocs.length ? subDocs.map(d => {
       const expiry = d.expiry_date;
-      let statusColor = '#6ee7b7', statusText = 'VALID';
+      const typeName = d.doc_type_name || '—';
+      let statusClass = 'doc-status-valid', statusText = 'VALID';
       if (expiry) {
         const exp = new Date(expiry);
-        if (exp < _today)      { statusColor = '#fda4af'; statusText = 'EXPIRED'; }
-        else if (exp <= _in30) { statusColor = '#fbbf24'; statusText = 'EXPIRING'; }
+        if (exp < _today)      { statusClass = 'doc-status-expired';  statusText = 'EXPIRED'; }
+        else if (exp <= _in30) { statusClass = 'doc-status-expiring'; statusText = 'EXPIRING'; }
       }
-      const fileBtn = d.file_url ? `<button onclick="openDoc('${d.file_url}')" style="background:none;border:none;color:#38bdf8;font-size:11px;cursor:pointer;padding:0;text-decoration:underline;">📎 View</button>` : '';
+      const fileBtn = d.file_url ? `<button onclick="openDoc('${d.file_url}')" class="doc-view-btn" aria-label="View ${typeName} document">↗ View</button>` : '';
       return `<div class="doc-row" data-doc-id="${d.id}" style="padding:6px 0;">
-        <div style="flex:1"><div class="doc-name">${d.doc_type_name || '—'}</div><div class="doc-date">Issue: ${d.issue_date || '—'} · Expiry: ${expiry || '—'}</div></div>
-        <div style="display:flex;align-items:center;gap:8px;">${fileBtn}<span style="color:${statusColor};font-size:11px;font-weight:bold;">${statusText}</span><button class="btn-danger" onclick="deleteDoc(${d.id})">✕</button></div>
+        <div style="flex:1"><div class="doc-name">${typeName}</div><div class="doc-date">Issue: ${d.issue_date || '—'} · Expiry: ${expiry || '—'}</div></div>
+        <div style="display:flex;align-items:center;gap:8px;">${fileBtn}<span class="doc-status ${statusClass}">${statusText}</span><button class="btn-danger" onclick="deleteDoc(${d.id})" aria-label="Delete ${typeName} document">✕</button></div>
       </div>`;
     }).join('') : `<div class="doc-date" style="padding:4px 0;">No documents yet</div>`;
     const subChildren = subsByParent[sub.id] || [];
@@ -228,12 +228,13 @@ function equipItemCard(item, name, docs, subs = [], docsByItem = {}, subsByParen
       const scDocs = docsByItem[sc.id] || [];
       const scDocsHtml = scDocs.length ? scDocs.map(d => {
         const expiry = d.expiry_date;
-        let statusColor = '#6ee7b7', statusText = 'VALID';
-        if (expiry) { const exp = new Date(expiry); if (exp < _today) { statusColor = '#fda4af'; statusText = 'EXPIRED'; } else if (exp <= _in30) { statusColor = '#fbbf24'; statusText = 'EXPIRING'; } }
-        const fileBtn = d.file_url ? `<button onclick="openDoc('${d.file_url}')" style="background:none;border:none;color:#38bdf8;font-size:11px;cursor:pointer;padding:0;text-decoration:underline;">📎 View</button>` : '';
+        const typeName = d.doc_type_name || '—';
+        let statusClass = 'doc-status-valid', statusText = 'VALID';
+        if (expiry) { const exp = new Date(expiry); if (exp < _today) { statusClass = 'doc-status-expired'; statusText = 'EXPIRED'; } else if (exp <= _in30) { statusClass = 'doc-status-expiring'; statusText = 'EXPIRING'; } }
+        const fileBtn = d.file_url ? `<button onclick="openDoc('${d.file_url}')" class="doc-view-btn" aria-label="View ${typeName} document">↗ View</button>` : '';
         return `<div class="doc-row" data-doc-id="${d.id}" style="padding:4px 0;font-size:12px;">
-          <div style="flex:1"><div class="doc-name">${d.doc_type_name||'—'}</div><div class="doc-date">Issue: ${d.issue_date||'—'} · Expiry: ${expiry||'—'}</div></div>
-          <div style="display:flex;align-items:center;gap:6px;">${fileBtn}<span style="color:${statusColor};font-size:10px;font-weight:bold;">${statusText}</span><button class="btn-danger" onclick="deleteDoc(${d.id})">✕</button></div>
+          <div style="flex:1"><div class="doc-name">${typeName}</div><div class="doc-date">Issue: ${d.issue_date||'—'} · Expiry: ${expiry||'—'}</div></div>
+          <div style="display:flex;align-items:center;gap:6px;">${fileBtn}<span class="doc-status ${statusClass}">${statusText}</span><button class="btn-danger" onclick="deleteDoc(${d.id})" aria-label="Delete ${typeName} document">✕</button></div>
         </div>`;
       }).join('') : `<div class="doc-date" style="padding:3px 0;font-size:11px;">No documents yet</div>`;
       const scHasDeeper = (subsByParent[sc.id] || []).length > 0;
@@ -249,9 +250,9 @@ function equipItemCard(item, name, docs, subs = [], docsByItem = {}, subsByParen
           </div>
           <div style="display:flex;gap:5px;align-items:center;">
             ${scHasDeeper ? `<span title="Has nested sub-components not shown" style="font-size:10px;color:#94a3b8;background:#1e293b;border:1px solid #334155;padding:2px 7px;border-radius:8px;cursor:default;">↳ ${(subsByParent[sc.id]).length}</span>` : ''}
-            <button class="btn-reassign" onclick="openReassignModal(${sc.id},'${(sc.name||'Sub-child').replace(/'/g,"\\'")}',${sub.id})" title="Change parent">⇄</button>
-            <button class="btn-toggle" onclick="toggleSubCard(this.closest('.sub-child-card'))" title="Expand">▾</button>
-            <button class="btn-danger" onclick="deleteEquipItem(${sc.id})" title="Delete">🗑</button>
+            <button class="btn-reassign" onclick="openReassignModal(${sc.id},'${(sc.name||'Sub-child').replace(/'/g,"\\'")}',${sub.id})" aria-label="Change parent of ${sc.name||'sub-child'}">⇄</button>
+            <button class="btn-toggle" onclick="toggleSubCard(this.closest('.sub-child-card'))" aria-label="Expand ${sc.name||'sub-child'}">▾</button>
+            <button class="btn-danger" onclick="deleteEquipItem(${sc.id})" aria-label="Delete ${sc.name||'sub-child'}">✕</button>
           </div>
         </div>
         <div class="sub-child-body">
@@ -283,9 +284,9 @@ function equipItemCard(item, name, docs, subs = [], docsByItem = {}, subsByParen
           </div>
         </div>
         <div style="display:flex;gap:6px;align-items:center;">
-          <button class="btn-reassign" onclick="openReassignModal(${sub.id},'${(sub.name||'Sub-component').replace(/'/g,"\\'")}',${item.id})" title="Change parent">⇄</button>
-          <button class="btn-toggle" onclick="toggleSubCard(this.closest('.sub-card'))" title="Expand">▾</button>
-          <button class="btn-danger" onclick="deleteEquipItem(${sub.id})" title="Delete">🗑</button>
+          <button class="btn-reassign" onclick="openReassignModal(${sub.id},'${(sub.name||'Sub-component').replace(/'/g,"\\'")}',${item.id})" aria-label="Change parent of ${sub.name||'sub-component'}">⇄</button>
+          <button class="btn-toggle" onclick="toggleSubCard(this.closest('.sub-card'))" aria-label="Expand ${sub.name||'sub-component'}">▾</button>
+          <button class="btn-danger" onclick="deleteEquipItem(${sub.id})" aria-label="Delete ${sub.name||'sub-component'}">✕</button>
         </div>
       </div>
       <div class="sub-card-body">
@@ -321,9 +322,9 @@ function equipItemCard(item, name, docs, subs = [], docsByItem = {}, subsByParen
         </div>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <button class="btn-reassign" onclick="openReassignModal(${item.id},'${name.replace(/'/g,"\\'")}',null)" title="Change assignment">⇄</button>
-        <button class="btn-toggle" onclick="toggleCard(this)" title="Expand">▾</button>
-        <button class="btn-danger" onclick="deleteEquipItem(${item.id})" title="Delete equipment">🗑</button>
+        <button class="btn-reassign" onclick="openReassignModal(${item.id},'${name.replace(/'/g,"\\'")}',null)" aria-label="Change assignment of ${name}">⇄</button>
+        <button class="btn-toggle" onclick="toggleCard(this)" aria-label="Expand ${name}">▾</button>
+        <button class="btn-danger" onclick="deleteEquipItem(${item.id})" aria-label="Delete ${name}">✕</button>
       </div>
     </div>
     <div class="card-body">
@@ -414,7 +415,7 @@ async function openReassignModal(itemId, itemName, currentParentId) {
   document.getElementById(isChild ? 'reassignChild' : 'reassignStandalone').checked = true;
   document.getElementById('reassignParentWrap').style.display = isChild ? 'block' : 'none';
 
-  document.getElementById('reassignModal').classList.add('open');
+  openModal('reassignModal');
 }
 
 function onReassignTypeChange(radio) {
@@ -481,7 +482,7 @@ async function openAddSubComponent(parentId, parentName) {
   sel.innerHTML = '<option value="">Select component type...</option>'
     + templates.map(t => `<option value="${t.id}">${t.name}</option>`).join('')
     + '<option value="__new__">+ Add new type...</option>';
-  document.getElementById('ctSubModal').classList.add('open');
+  openModal('ctSubModal');
 }
 
 function onSubEquipSelectChange(sel) {
@@ -566,7 +567,7 @@ function openAddDoc(itemId) {
   document.getElementById('docExpiryDate').disabled = false;
   document.getElementById('docFileInput').value = '';
   document.getElementById('docFileName').textContent = '';
-  document.getElementById('addDocModal').classList.add('open');
+  openModal('addDocModal');
 }
 
 function onDocTypeChange(sel) {

@@ -36,7 +36,7 @@ async function loadUsers() {
 }
 
 function adminUserCard(u) {
-  const editBtn = `<button class="btn-edit" onclick='openEditUser(${JSON.stringify(u)})' title="Edit user">✏️</button>`;
+  const editBtn = `<button class="btn-edit" onclick='openEditUser(${JSON.stringify(u)})' aria-label="Edit ${u.full_name}">✏</button>`;
   const actions = u.status === 'pending' ? `
     <div class="admin-actions">
       ${editBtn}
@@ -76,7 +76,7 @@ async function openEditUser(u) {
   sSel.innerHTML = '<option value="">Select service line...</option>'
     + serviceLines.map(s => `<option value="${s.name}"${s.name === u.service_line ? ' selected' : ''}>${s.name}</option>`).join('');
 
-  document.getElementById('adminEditModal').classList.add('open');
+  openModal('adminEditModal');
 }
 
 async function saveEditUser() {

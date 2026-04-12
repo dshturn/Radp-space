@@ -20,15 +20,42 @@ async function apiFetch(url, options = {}) {
   return Array.isArray(data) ? data : [];
 }
 
-// ─── Modal close with animation ───
+// ─── Modal open with focus management ───
+function openModal(id) {
+  const el = document.getElementById(id);
+  el._triggerEl = document.activeElement;
+  el.classList.add('open');
+  // Move focus to first focusable element
+  const focusable = () => [...el.querySelectorAll(
+    'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
+  )];
+  setTimeout(() => { const items = focusable(); if (items.length) items[0].focus(); }, 60);
+  // Focus trap + Escape to close
+  el._trapFocus = function(e) {
+    if (e.key === 'Escape') { e.preventDefault(); closeModal(id); return; }
+    if (e.key !== 'Tab') return;
+    const items = focusable();
+    if (!items.length) return;
+    const first = items[0], last = items[items.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  };
+  el.addEventListener('keydown', el._trapFocus);
+}
+
+// ─── Modal close with animation + focus return ───
 function closeModal(id) {
   const el  = document.getElementById(id);
+  if (el._trapFocus) { el.removeEventListener('keydown', el._trapFocus); el._trapFocus = null; }
   const box = el.querySelector('.modal-box, .modal-scroll');
+  const trigger = el._triggerEl;
+  el._triggerEl = null;
   if (box) {
     box.style.animation = 'modalOut 0.2s cubic-bezier(0.22,1,0.36,1) both';
-    setTimeout(() => { el.classList.remove('open'); box.style.animation = ''; }, 200);
+    setTimeout(() => { el.classList.remove('open'); box.style.animation = ''; if (trigger) trigger.focus(); }, 200);
   } else {
     el.classList.remove('open');
+    if (trigger) trigger.focus();
   }
 }
 
@@ -81,13 +108,12 @@ function toggleDocGroup(header) {
 
 // ─── Group status badges ───
 function grpBadges(expired, expiring, ok, missing = 0, review = 0) {
-  const s = 'font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;';
   return [
-    missing  > 0 ? `<span style="${s}background:#4c0519;color:#fda4af;">${missing} MISSING</span>`     : '',
-    review   > 0 ? `<span style="${s}background:#1e3a5f;color:#93c5fd;">${review} AWAITING</span>`     : '',
-    expired  > 0 ? `<span style="${s}background:#4c0519;color:#fda4af;">${expired} EXPIRED</span>`     : '',
-    expiring > 0 ? `<span style="${s}background:#422006;color:#fbbf24;">${expiring} EXPIRING</span>`   : '',
-    ok       > 0 ? `<span style="${s}background:#14532d;color:#86efac;">${ok} READY</span>`            : '',
+    missing  > 0 ? `<span class="gbadge gbadge-missing">${missing} MISSING</span>`   : '',
+    review   > 0 ? `<span class="gbadge gbadge-awaiting">${review} AWAITING</span>`  : '',
+    expired  > 0 ? `<span class="gbadge gbadge-expired">${expired} EXPIRED</span>`   : '',
+    expiring > 0 ? `<span class="gbadge gbadge-expiring">${expiring} EXPIRING</span>` : '',
+    ok       > 0 ? `<span class="gbadge gbadge-ready">${ok} READY</span>`            : '',
   ].join('');
 }
 
@@ -131,11 +157,13 @@ function showConfirm(message) {
   return new Promise(resolve => {
     document.getElementById('confirmMsgText').textContent = message;
     const modal = document.getElementById('confirmModal');
-    modal.classList.add('open');
+    openModal('confirmModal');
     const ok  = document.getElementById('confirmOk');
     const can = document.getElementById('confirmCancel');
     function finish(result) {
+      if (modal._trapFocus) { modal.removeEventListener('keydown', modal._trapFocus); modal._trapFocus = null; }
       modal.classList.remove('open');
+      if (modal._triggerEl) { modal._triggerEl.focus(); modal._triggerEl = null; }
       ok.onclick = null;
       can.onclick = null;
       resolve(result);

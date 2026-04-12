@@ -20,7 +20,7 @@ async function openAddPersonnel() {
   document.getElementById('persName').value         = '';
   document.getElementById('persPositionNew').value  = '';
   document.getElementById('persNationalId').value   = '';
-  document.getElementById('ctPersModal').classList.add('open');
+  openModal('ctPersModal');
 }
 
 function onPersPositionChange(sel) {
@@ -166,17 +166,17 @@ function personnelCard(p, docs) {
   const docRows = PERS_DOC_TYPES.map(t => {
     const d = docMap[t.name];
     const mandBadge = t.mandatory
-      ? `<span style="font-size:10px;color:#93c5fd;background:#1e3a5f;padding:2px 6px;border-radius:10px;">Required</span>`
-      : `<span style="font-size:10px;color:#a78bfa;background:#2d1b69;padding:2px 6px;border-radius:10px;">Optional</span>`;
+      ? `<span class="doc-badge-req">Required</span>`
+      : `<span class="doc-badge-opt">Optional</span>`;
 
     if (d) {
-      let statusColor = '#6ee7b7', statusText = 'VALID';
+      let statusClass = 'doc-status-valid', statusText = 'VALID';
       if (d.expiry_date) {
         const exp = new Date(d.expiry_date);
-        if (exp < today)      { statusColor = '#fda4af'; statusText = 'EXPIRED';  }
-        else if (exp <= in30) { statusColor = '#fbbf24'; statusText = 'EXPIRING'; }
+        if (exp < today)      { statusClass = 'doc-status-expired';  statusText = 'EXPIRED';  }
+        else if (exp <= in30) { statusClass = 'doc-status-expiring'; statusText = 'EXPIRING'; }
       }
-      const fileBtn = d.file_url ? `<button onclick="openDoc('${d.file_url}')" style="background:none;border:none;color:#38bdf8;font-size:11px;cursor:pointer;padding:0;text-decoration:underline;">📎 View</button>` : '';
+      const fileBtn = d.file_url ? `<button onclick="openDoc('${d.file_url}')" class="doc-view-btn" aria-label="View ${t.name} document">↗ View</button>` : '';
       const cfg     = PERS_DOC_TYPES.find(x => x.name === t.name) || {};
       const dateStr = cfg.noIssue && cfg.noExpiry ? ''
                     : cfg.noIssue  ? `Expiry: ${d.expiry_date || '—'}`
@@ -192,9 +192,9 @@ function personnelCard(p, docs) {
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
           ${fileBtn}
-          <span style="color:${statusColor};font-size:11px;font-weight:bold;">${statusText}</span>
-          <button class="btn-edit" onclick="editPersDoc(${d.id},${p.id},'${t.name}',${t.mandatory},'${d.issue_date||''}','${d.expiry_date||''}',${p.years_experience??'null'})" title="Edit">✏️</button>
-          <button class="btn-danger" onclick="deletePersDoc(${d.id})">✕</button>
+          <span class="doc-status ${statusClass}">${statusText}</span>
+          <button class="btn-edit" onclick="editPersDoc(${d.id},${p.id},'${t.name}',${t.mandatory},'${d.issue_date||''}','${d.expiry_date||''}',${p.years_experience??'null'})" aria-label="Edit ${t.name}">✏</button>
+          <button class="btn-danger" onclick="deletePersDoc(${d.id})" aria-label="Delete ${t.name} document">✕</button>
         </div>
       </div>`;
     } else {
@@ -211,18 +211,17 @@ function personnelCard(p, docs) {
   const expiredCount  = docs.filter(d => d.expiry_date && new Date(d.expiry_date) < today).length;
   const expiringCount = docs.filter(d => { if (!d.expiry_date) return false; const e = new Date(d.expiry_date); return e >= today && e <= in30; }).length;
   const allMandatoryUploaded = PERS_DOC_TYPES.filter(t => t.mandatory).every(t => docMap[t.name]);
-  const bStyle = 'font-size:11px;font-weight:bold;padding:3px 8px;border-radius:20px;';
   let alertBadge = '';
   if (!allMandatoryUploaded) {
-    alertBadge = `<span style="${bStyle}background:#4c0519;color:#fda4af;">MISSING DOCS</span>`;
+    alertBadge = `<span class="sbadge sbadge-missing">MISSING DOCS</span>`;
   } else if (!p.assessed) {
-    alertBadge = `<span style="${bStyle}background:#1e3a5f;color:#93c5fd;">AWAITING REVIEW</span>`;
+    alertBadge = `<span class="sbadge sbadge-awaiting">AWAITING REVIEW</span>`;
   } else if (expiredCount > 0) {
-    alertBadge = `<span style="${bStyle}background:#4c0519;color:#fda4af;">⚠ ${expiredCount} EXPIRED</span>`;
+    alertBadge = `<span class="sbadge sbadge-expired">⚠ ${expiredCount} EXPIRED</span>`;
   } else if (expiringCount > 0) {
-    alertBadge = `<span style="${bStyle}background:#422006;color:#fbbf24;">⚠ ${expiringCount} EXPIRING</span>`;
+    alertBadge = `<span class="sbadge sbadge-expiring">⚠ ${expiringCount} EXPIRING</span>`;
   } else {
-    alertBadge = `<span style="${bStyle}background:#14532d;color:#86efac;">READY</span>`;
+    alertBadge = `<span class="sbadge sbadge-ready">READY</span>`;
   }
 
   return `<div class="app-card" data-id="p${p.id}">
@@ -233,8 +232,8 @@ function personnelCard(p, docs) {
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         ${alertBadge}
-        <button class="btn-toggle" onclick="toggleCard(this)" title="Expand">▾</button>
-        <button class="btn-danger" onclick="deletePersRecord(${p.id})" title="Delete">🗑</button>
+        <button class="btn-toggle" onclick="toggleCard(this)" aria-label="Expand ${p.full_name}">▾</button>
+        <button class="btn-danger" onclick="deletePersRecord(${p.id})" aria-label="Delete ${p.full_name}">✕</button>
       </div>
     </div>
     <div class="card-body"><div class="body-inner"><div class="body-content">
@@ -260,7 +259,7 @@ function openAddPersDoc(personId, typeName, mandatory) {
   document.getElementById('persDocYearsExp').value  = '';
   document.getElementById('persDocEditId').value     = '';
   document.getElementById('persDocFileRequired').style.display = 'inline';
-  document.getElementById('addPersDocModal').classList.add('open');
+  openModal('addPersDocModal');
 }
 
 function editPersDoc(docId, personId, typeName, mandatory, issueDate, expiryDate, yearsExp) {
@@ -280,7 +279,7 @@ function editPersDoc(docId, personId, typeName, mandatory, issueDate, expiryDate
   document.getElementById('persDocYearsExpWrap').style.display   = typeName === 'CV' ? 'block' : 'none';
   document.getElementById('persDocYearsExp').value  = yearsExp != null ? yearsExp : '';
   document.getElementById('persDocFileRequired').style.display = 'inline';
-  document.getElementById('addPersDocModal').classList.add('open');
+  openModal('addPersDocModal');
 }
 
 async function savePersDocument() {

@@ -18,8 +18,8 @@
 
 <nav id="mainNav" aria-label="Main navigation">
   <div class="nav-links">
-    <a href="/contractor" onclick="showPage('contractor');return false;" id="navContractor">📋 Contractor</a>
-    <a href="/assessment" onclick="showPage('assessment');return false;" id="navAssessment">📄 Assessments</a>
+    <a href="/contractor" onclick="showPage('contractor');return false;" id="navContractor"><span aria-hidden="true">📋</span> Contractor</a>
+    <a href="/assessment" onclick="showPage('assessment');return false;" id="navAssessment"><span aria-hidden="true">📄</span> Assessments</a>
   </div>
   <div class="nav-right">
     <span class="nav-user" id="navUser"></span>
@@ -262,9 +262,9 @@
 </div>
 
 <!-- Admin: Edit User Modal -->
-<div class="modal" id="adminEditModal">
+<div class="modal" id="adminEditModal" role="dialog" aria-modal="true" aria-labelledby="adminEditTitle">
   <div class="modal-box">
-    <h3>Edit User</h3>
+    <h3 id="adminEditTitle">Edit User</h3>
     <label for="editFullName">Full Name</label>
     <input type="text" id="editFullName" placeholder="Full name" autocomplete="off">
     <label for="editEmail">Email</label>
@@ -282,9 +282,9 @@
 </div>
 
 <!-- Contractor: Add Equipment Modal -->
-<div class="modal" id="ctEquipModal">
+<div class="modal" id="ctEquipModal" role="dialog" aria-modal="true" aria-labelledby="ctEquipTitle">
   <div class="modal-box">
-    <h3>Add Equipment</h3>
+    <h3 id="ctEquipTitle">Add Equipment</h3>
     <label for="equipSelect">Equipment Type</label>
     <select id="equipSelect" onchange="onEquipSelectChange(this)"></select>
     <div id="newEquipNameWrap" style="display:none;">
@@ -301,7 +301,7 @@
 </div>
 
 <!-- Reassign Equipment Modal -->
-<div class="modal" id="reassignModal">
+<div class="modal" id="reassignModal" role="dialog" aria-modal="true" aria-labelledby="reassignTitle">
   <div class="modal-box">
     <h3 id="reassignTitle">Change Assignment</h3>
     <div style="display:flex;flex-direction:column;gap:6px;">
@@ -326,7 +326,7 @@
 </div>
 
 <!-- Add Sub-component Modal -->
-<div class="modal" id="ctSubModal">
+<div class="modal" id="ctSubModal" role="dialog" aria-modal="true" aria-labelledby="ctSubModalTitle">
   <div class="modal-box">
     <h3 id="ctSubModalTitle">Add Sub-component</h3>
     <label for="subEquipSelect">Component Type</label>
@@ -345,9 +345,9 @@
 </div>
 
 <!-- Add Document Modal -->
-<div class="modal" id="addDocModal">
+<div class="modal" id="addDocModal" role="dialog" aria-modal="true" aria-labelledby="addDocTitle">
   <div class="modal-box">
-    <h3>Add Document</h3>
+    <h3 id="addDocTitle">Add Document</h3>
     <label for="docTypeSelect" style="color:#94a3b8;font-size:13px;margin-bottom:6px;display:block;">Document Type</label>
     <select id="docTypeSelect" onchange="onDocTypeChange(this)" style="margin-bottom:12px;">
       <option value="">Select type...</option>
@@ -380,9 +380,9 @@
 </div>
 
 <!-- Contractor: Add Personnel Modal -->
-<div class="modal" id="ctPersModal">
+<div class="modal" id="ctPersModal" role="dialog" aria-modal="true" aria-labelledby="ctPersTitle">
   <div class="modal-box">
-    <h3>Add Personnel</h3>
+    <h3 id="ctPersTitle">Add Personnel</h3>
     <label for="persName">Full Name</label>
     <input type="text" id="persName" placeholder="Full name" autocomplete="off">
     <label for="persPositionSelect">Position / Role</label>
@@ -401,9 +401,9 @@
 </div>
 
 <!-- Personnel: Add Document Modal -->
-<div class="modal" id="addPersDocModal">
+<div class="modal" id="addPersDocModal" role="dialog" aria-modal="true" aria-labelledby="addPersDocTitle">
   <div class="modal-box">
-    <h3>Add Document</h3>
+    <h3 id="addPersDocTitle">Add Document</h3>
     <div id="persDocTypeName" style="font-size:14px;font-weight:bold;color:var(--accent);margin-bottom:14px;"></div>
     <div id="persDocIssueDateWrap">
       <label for="persDocIssueDate">Issue Date</label>
@@ -433,9 +433,9 @@
 </div>
 
 <!-- Assessment: Equipment Selector Modal -->
-<div id="asEquipModal" class="modal">
+<div id="asEquipModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="asEquipTitle">
   <div class="modal-scroll">
-    <h3 style="color:var(--accent);margin-bottom:12px;">Select Equipment</h3>
+    <h3 id="asEquipTitle" style="color:var(--accent);margin-bottom:12px;">Select Equipment</h3>
     <input type="text" id="equipSelectorSearch" name="equipSelectorSearch" placeholder="Search…" oninput="filterCheckboxList('equipSelectorList',this.value)" style="margin-bottom:12px;padding:8px 12px;font-size:13px;">
     <div id="equipSelectorList"></div>
     <div style="display:flex;gap:8px;margin-top:16px;">
@@ -446,9 +446,9 @@
 </div>
 
 <!-- Assessment: Personnel Selector Modal -->
-<div id="asPersModal" class="modal">
+<div id="asPersModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="asPersTitle">
   <div class="modal-scroll">
-    <h3 style="color:var(--accent);margin-bottom:12px;">Select Personnel</h3>
+    <h3 id="asPersTitle" style="color:var(--accent);margin-bottom:12px;">Select Personnel</h3>
     <input type="text" id="persSelectorSearch" name="persSelectorSearch" placeholder="Search…" oninput="filterCheckboxList('persSelectorList',this.value)" style="margin-bottom:12px;padding:8px 12px;font-size:13px;">
     <div id="persSelectorList"></div>
     <div style="display:flex;gap:8px;margin-top:16px;">
@@ -470,12 +470,12 @@
 </div>
 <div id="toastContainer" aria-live="polite" aria-atomic="false"></div>
 
-<script src="/js/shared.js"></script>
-<script src="/js/auth.js"></script>
-<script src="/js/equipment.js"></script>
-<script src="/js/personnel.js"></script>
-<script src="/js/assessment.js"></script>
-<script src="/js/admin.js"></script>
-<script src="/js/app.js"></script>
+<script src="/js/shared.js" defer></script>
+<script src="/js/auth.js" defer></script>
+<script src="/js/equipment.js" defer></script>
+<script src="/js/personnel.js" defer></script>
+<script src="/js/assessment.js" defer></script>
+<script src="/js/admin.js" defer></script>
+<script src="/js/app.js" defer></script>
 </body>
 </html>

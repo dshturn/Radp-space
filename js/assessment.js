@@ -193,7 +193,7 @@ async function openEquipmentSelector() {
           <button class="btn-success" style="padding:5px 12px;font-size:12px;flex-shrink:0;" onclick="addEquipmentItem(${i.id})">Add</button>
         </div>`;
   }).join('') || '<div class="empty">No equipment in your database</div>';
-  document.getElementById('asEquipModal').classList.add('open');
+  openModal('asEquipModal');
   const eq = document.getElementById('equipSelectorSearch').value;
   if (eq) filterCheckboxList('equipSelectorList', eq);
 }
@@ -257,7 +257,7 @@ async function openPersonnelSelector() {
         </div>`
       : `<div class="checkbox-item" style="justify-content:space-between;"><div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;"><input type="checkbox" id="per_${p.id}" value="${p.id}"><label for="per_${p.id}" style="margin:0;"><strong>${p.full_name}</strong><span style="color:#64748b;font-size:12px;"> · ${p.position || ''}</span></label></div><button class="btn-success" style="padding:5px 12px;font-size:12px;flex-shrink:0;" onclick="addPersonnelItem(${p.id})">Add</button></div>`;
   }).join('') || '<div class="empty">No personnel in your database</div>';
-  document.getElementById('asPersModal').classList.add('open');
+  openModal('asPersModal');
   const ps = document.getElementById('persSelectorSearch').value;
   if (ps) filterCheckboxList('persSelectorList', ps);
 }
