@@ -204,19 +204,30 @@ async function openEquipmentSelector() {
     const label    = i.equipment_templates?.name || i.model || '—';
     const detail   = `S/N: ${i.serial_number || '—'}`;
 
+    const statusBadge = !hasDocs
+      ? `<span class="sbadge sbadge-missing">MISSING DOCS</span>`
+      : i.assessed
+      ? `<span class="sbadge sbadge-ready">READY</span>`
+      : `<span class="sbadge sbadge-awaiting">AWAITING REVIEW</span>`;
+
     if (isAdded) {
       return `<div class="item-row" style="margin-bottom:8px;">
-          <div class="item-info"><div class="item-name" style="color:var(--text-3);">${label}</div><div class="item-detail">${detail} · <em style="color:var(--text-4);">Already added</em></div></div>
+          <div class="item-info">
+            <div class="item-name" style="display:flex;align-items:center;gap:6px;">${label} ${statusBadge}</div>
+            <div class="item-detail">${detail} · <em style="color:var(--text-4);">Already added</em></div>
+          </div>
           <button class="btn-danger" onclick="removeEquipment(${rowId},true)">Remove</button>
         </div>`;
     } else if (!eligible) {
-      const reason = !hasDocs ? 'Missing docs' : 'Already assessed';
       return `<div class="item-row" style="margin-bottom:8px;opacity:0.4;pointer-events:none;">
-          <div class="item-info"><div class="item-name">${label}</div><div class="item-detail">${detail} · <em>${reason}</em></div></div>
+          <div class="item-info">
+            <div class="item-name" style="display:flex;align-items:center;gap:6px;">${label} ${statusBadge}</div>
+            <div class="item-detail">${detail}</div>
+          </div>
         </div>`;
     } else {
       return `<div class="checkbox-item" style="justify-content:space-between;">
-          <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;"><input type="checkbox" id="eq_${i.id}" value="${i.id}"><label for="eq_${i.id}" style="margin:0;"><strong>${label}</strong><span style="color:var(--text-3);font-size:12px;"> · ${detail}</span></label></div>
+          <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;"><input type="checkbox" id="eq_${i.id}" value="${i.id}"><label for="eq_${i.id}" style="margin:0;display:flex;align-items:center;gap:6px;"><strong>${label}</strong>${statusBadge}<span style="color:var(--text-3);font-size:12px;"> · ${detail}</span></label></div>
           <button class="btn-success" style="padding:5px 12px;font-size:12px;flex-shrink:0;" onclick="addEquipmentItem(${i.id})">Add</button>
         </div>`;
     }
@@ -300,20 +311,31 @@ async function openPersonnelSelector() {
     const isAdded  = !!rowId;
     const eligible = isEligible(p);
 
+    const uploaded     = new Set(docsByPerson[p.id] || []);
+    const allMandatory = mandatoryTypes.every(name => uploaded.has(name));
+    const statusBadge  = !allMandatory
+      ? `<span class="sbadge sbadge-missing">MISSING DOCS</span>`
+      : p.assessed
+      ? `<span class="sbadge sbadge-ready">READY</span>`
+      : `<span class="sbadge sbadge-awaiting">AWAITING REVIEW</span>`;
+
     if (isAdded) {
       return `<div class="item-row" style="margin-bottom:8px;">
-          <div class="item-info"><div class="item-name" style="color:var(--text-3);">${p.full_name}</div><div class="item-detail">${p.position || ''}<em style="color:var(--text-4);"> · Already added</em></div></div>
+          <div class="item-info">
+            <div class="item-name" style="display:flex;align-items:center;gap:6px;">${p.full_name} ${statusBadge}</div>
+            <div class="item-detail">${p.position || ''}<em style="color:var(--text-4);"> · Already added</em></div>
+          </div>
           <button class="btn-danger" onclick="removePersonnel(${rowId},true)">Remove</button>
         </div>`;
     } else if (!eligible) {
-      const uploaded     = new Set(docsByPerson[p.id] || []);
-      const allMandatory = mandatoryTypes.every(name => uploaded.has(name));
-      const reason       = !allMandatory ? 'Missing docs' : 'Already assessed';
       return `<div class="item-row" style="margin-bottom:8px;opacity:0.4;pointer-events:none;">
-          <div class="item-info"><div class="item-name">${p.full_name}</div><div class="item-detail">${p.position || ''} · <em>${reason}</em></div></div>
+          <div class="item-info">
+            <div class="item-name" style="display:flex;align-items:center;gap:6px;">${p.full_name} ${statusBadge}</div>
+            <div class="item-detail">${p.position || ''}</div>
+          </div>
         </div>`;
     } else {
-      return `<div class="checkbox-item" style="justify-content:space-between;"><div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;"><input type="checkbox" id="per_${p.id}" value="${p.id}"><label for="per_${p.id}" style="margin:0;"><strong>${p.full_name}</strong><span style="color:var(--text-3);font-size:12px;"> · ${p.position || ''}</span></label></div><button class="btn-success" style="padding:5px 12px;font-size:12px;flex-shrink:0;" onclick="addPersonnelItem(${p.id})">Add</button></div>`;
+      return `<div class="checkbox-item" style="justify-content:space-between;"><div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;"><input type="checkbox" id="per_${p.id}" value="${p.id}"><label for="per_${p.id}" style="margin:0;display:flex;align-items:center;gap:6px;"><strong>${p.full_name}</strong>${statusBadge}<span style="color:var(--text-3);font-size:12px;"> · ${p.position || ''}</span></label></div><button class="btn-success" style="padding:5px 12px;font-size:12px;flex-shrink:0;" onclick="addPersonnelItem(${p.id})">Add</button></div>`;
     }
   }).join('') || '<div class="empty">No personnel in your database</div>';
   openModal('asPersModal');
