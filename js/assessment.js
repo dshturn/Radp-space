@@ -172,26 +172,54 @@ async function loadSelectedPersonnel(id) {
 }
 
 async function openEquipmentSelector() {
-  const [itemsRes, addedRes] = await Promise.all([
-    fetch(`${SUPABASE_URL}/rest/v1/equipment_items?dismissed=is.false&parent_id=is.null&select=*,equipment_templates(name)&order=created_at`, { headers: getHeaders() }),
-    fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment?assessment_id=eq.${currentAssessmentId}&select=id,equipment_item_id`, { headers: getHeaders() })
+  const h = getHeaders();
+  const [itemsRes, allItemsRes, addedRes, docsRes] = await Promise.all([
+    fetch(`${SUPABASE_URL}/rest/v1/equipment_items?dismissed=is.false&parent_id=is.null&select=*,equipment_templates(name)&order=created_at`, { headers: h }),
+    fetch(`${SUPABASE_URL}/rest/v1/equipment_items?dismissed=is.false&select=id,parent_id`, { headers: h }),
+    fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment?assessment_id=eq.${currentAssessmentId}&select=id,equipment_item_id`, { headers: h }),
+    fetch(`${SUPABASE_URL}/rest/v1/documents?select=equipment_item_id`, { headers: h })
   ]);
   if (itemsRes.status === 401) { localStorage.removeItem('radp_token'); localStorage.removeItem('radp_user'); showPage('login'); return; }
-  const items = await itemsRes.json();
-  const added = addedRes.ok ? await addedRes.json() : [];
+  const items    = await itemsRes.json();
+  const allItems = allItemsRes.ok ? await allItemsRes.json() : [];
+  const added    = addedRes.ok  ? await addedRes.json()    : [];
+  const allDocs  = docsRes.ok   ? await docsRes.json()     : [];
   const addedMap = Object.fromEntries(added.map(a => [String(a.equipment_item_id), a.id]));
+
+  // Build parent→children map and set of item IDs that have at least one document
+  const childrenOf = {};
+  allItems.forEach(i => { if (i.parent_id) { (childrenOf[i.parent_id] = childrenOf[i.parent_id] || []).push(i.id); } });
+  const itemsWithDocs = new Set(allDocs.map(d => d.equipment_item_id));
+  function treeHasDocs(id) {
+    if (itemsWithDocs.has(id)) return true;
+    return (childrenOf[id] || []).some(cid => treeHasDocs(cid));
+  }
+
   document.getElementById('equipSelectorList').innerHTML = items.map(i => {
-    const rowId = addedMap[String(i.id)];
-    const isAdded = !!rowId;
-    return isAdded
-      ? `<div class="item-row" style="margin-bottom:8px;">
-          <div class="item-info"><div class="item-name" style="color:#64748b;">${i.equipment_templates?.name || i.model || '—'}</div><div class="item-detail">S/N: ${i.serial_number || '—'} · <em style="color:#475569;">Already added</em></div></div>
+    const rowId    = addedMap[String(i.id)];
+    const isAdded  = !!rowId;
+    const hasDocs  = treeHasDocs(i.id);
+    // Only AWAITING REVIEW = has docs + not yet assessed
+    const eligible = !i.assessed && hasDocs;
+    const label    = i.equipment_templates?.name || i.model || '—';
+    const detail   = `S/N: ${i.serial_number || '—'}`;
+
+    if (isAdded) {
+      return `<div class="item-row" style="margin-bottom:8px;">
+          <div class="item-info"><div class="item-name" style="color:var(--text-3);">${label}</div><div class="item-detail">${detail} · <em style="color:var(--text-4);">Already added</em></div></div>
           <button class="btn-danger" onclick="removeEquipment(${rowId},true)">Remove</button>
-        </div>`
-      : `<div class="checkbox-item" style="justify-content:space-between;">
-          <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;"><input type="checkbox" id="eq_${i.id}" value="${i.id}"><label for="eq_${i.id}" style="margin:0;"><strong>${i.equipment_templates?.name || i.model || '—'}</strong><span style="color:#64748b;font-size:12px;"> · S/N: ${i.serial_number || '—'}</span></label></div>
+        </div>`;
+    } else if (!eligible) {
+      const reason = !hasDocs ? 'Missing docs' : 'Already assessed';
+      return `<div class="item-row" style="margin-bottom:8px;opacity:0.4;pointer-events:none;">
+          <div class="item-info"><div class="item-name">${label}</div><div class="item-detail">${detail} · <em>${reason}</em></div></div>
+        </div>`;
+    } else {
+      return `<div class="checkbox-item" style="justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;"><input type="checkbox" id="eq_${i.id}" value="${i.id}"><label for="eq_${i.id}" style="margin:0;"><strong>${label}</strong><span style="color:var(--text-3);font-size:12px;"> · ${detail}</span></label></div>
           <button class="btn-success" style="padding:5px 12px;font-size:12px;flex-shrink:0;" onclick="addEquipmentItem(${i.id})">Add</button>
         </div>`;
+    }
   }).join('') || '<div class="empty">No equipment in your database</div>';
   openModal('asEquipModal');
   const eq = document.getElementById('equipSelectorSearch').value;
@@ -239,23 +267,54 @@ async function removeEquipment(id, fromSelector) {
 }
 
 async function openPersonnelSelector() {
+  const h = getHeaders();
   const [peopleRes, addedRes] = await Promise.all([
-    fetch(`${SUPABASE_URL}/rest/v1/personnel?select=*&order=created_at`, { headers: getHeaders() }),
-    fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?assessment_id=eq.${currentAssessmentId}&select=id,personnel_id`, { headers: getHeaders() })
+    fetch(`${SUPABASE_URL}/rest/v1/personnel?select=*&order=created_at`, { headers: h }),
+    fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?assessment_id=eq.${currentAssessmentId}&select=id,personnel_id`, { headers: h })
   ]);
   if (peopleRes.status === 401) { localStorage.removeItem('radp_token'); localStorage.removeItem('radp_user'); showPage('login'); return; }
-  const people   = await peopleRes.json();
-  const added    = addedRes.ok ? await addedRes.json() : [];
-  const addedMap = Object.fromEntries(added.map(a => [String(a.personnel_id), a.id]));
+  const people = await peopleRes.json();
+  const added  = addedRes.ok ? await addedRes.json() : [];
+
+  // Fetch docs for these personnel to verify mandatory uploads
+  let allDocs = [];
+  if (people.length) {
+    const ids = people.map(p => p.id).join(',');
+    const docsRes = await fetch(`${SUPABASE_URL}/rest/v1/personnel_documents?personnel_id=in.(${ids})&select=personnel_id,doc_type_name`, { headers: h });
+    if (docsRes.ok) allDocs = await docsRes.json();
+  }
+
+  const addedMap    = Object.fromEntries(added.map(a => [String(a.personnel_id), a.id]));
+  const docsByPerson = {};
+  allDocs.forEach(d => { (docsByPerson[d.personnel_id] = docsByPerson[d.personnel_id] || []).push(d.doc_type_name); });
+  const mandatoryTypes = PERS_DOC_TYPES.filter(t => t.mandatory).map(t => t.name);
+
+  // Only AWAITING REVIEW = all mandatory docs present + not yet assessed
+  const isEligible = p => {
+    const uploaded = new Set(docsByPerson[p.id] || []);
+    return mandatoryTypes.every(name => uploaded.has(name)) && !p.assessed;
+  };
+
   document.getElementById('persSelectorList').innerHTML = people.map(p => {
-    const rowId = addedMap[String(p.id)];
-    const isAdded = !!rowId;
-    return isAdded
-      ? `<div class="item-row" style="margin-bottom:8px;">
-          <div class="item-info"><div class="item-name" style="color:#64748b;">${p.full_name}</div><div class="item-detail">${p.position || ''}<em style="color:#475569;"> · Already added</em></div></div>
+    const rowId    = addedMap[String(p.id)];
+    const isAdded  = !!rowId;
+    const eligible = isEligible(p);
+
+    if (isAdded) {
+      return `<div class="item-row" style="margin-bottom:8px;">
+          <div class="item-info"><div class="item-name" style="color:var(--text-3);">${p.full_name}</div><div class="item-detail">${p.position || ''}<em style="color:var(--text-4);"> · Already added</em></div></div>
           <button class="btn-danger" onclick="removePersonnel(${rowId},true)">Remove</button>
-        </div>`
-      : `<div class="checkbox-item" style="justify-content:space-between;"><div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;"><input type="checkbox" id="per_${p.id}" value="${p.id}"><label for="per_${p.id}" style="margin:0;"><strong>${p.full_name}</strong><span style="color:#64748b;font-size:12px;"> · ${p.position || ''}</span></label></div><button class="btn-success" style="padding:5px 12px;font-size:12px;flex-shrink:0;" onclick="addPersonnelItem(${p.id})">Add</button></div>`;
+        </div>`;
+    } else if (!eligible) {
+      const uploaded     = new Set(docsByPerson[p.id] || []);
+      const allMandatory = mandatoryTypes.every(name => uploaded.has(name));
+      const reason       = !allMandatory ? 'Missing docs' : 'Already assessed';
+      return `<div class="item-row" style="margin-bottom:8px;opacity:0.4;pointer-events:none;">
+          <div class="item-info"><div class="item-name">${p.full_name}</div><div class="item-detail">${p.position || ''} · <em>${reason}</em></div></div>
+        </div>`;
+    } else {
+      return `<div class="checkbox-item" style="justify-content:space-between;"><div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;"><input type="checkbox" id="per_${p.id}" value="${p.id}"><label for="per_${p.id}" style="margin:0;"><strong>${p.full_name}</strong><span style="color:var(--text-3);font-size:12px;"> · ${p.position || ''}</span></label></div><button class="btn-success" style="padding:5px 12px;font-size:12px;flex-shrink:0;" onclick="addPersonnelItem(${p.id})">Add</button></div>`;
+    }
   }).join('') || '<div class="empty">No personnel in your database</div>';
   openModal('asPersModal');
   const ps = document.getElementById('persSelectorSearch').value;
