@@ -48,9 +48,10 @@ function logout() {
 }
 
 async function loadRegisterOptions() {
+  const anonHeaders = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` };
   const [c, s] = await Promise.all([
-    fetch(`${SUPABASE_URL}/rest/v1/companies?select=name&order=name`, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }).then(r => r.json()),
-    fetch(`${SUPABASE_URL}/rest/v1/service_lines?select=name&order=name`, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }).then(r => r.json())
+    fetch(`${SUPABASE_URL}/rest/v1/companies?select=name&order=name`, { headers: anonHeaders }).then(r => r.json()),
+    fetch(`${SUPABASE_URL}/rest/v1/service_lines?select=name&order=name`, { headers: anonHeaders }).then(r => r.json())
   ]);
   const sel     = document.getElementById('regCompany');
   const current = sel.value;
@@ -81,7 +82,7 @@ async function addNewCompany() {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/companies`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Prefer: 'return=minimal' },
-    body: JSON.stringify({ name })
+    body: JSON.stringify({ name })  // requires RLS policy: anon can INSERT companies
   });
   if (res.ok || res.status === 201) {
     msg.style.color = '#6ee7b7'; msg.textContent = `"${name}" added!`;
@@ -114,9 +115,12 @@ async function register() {
   });
   const data = await res.json();
   if (data.user) {
+    // Use the signup token if Supabase returned one (email-confirm disabled),
+    // otherwise fall back to anon key (requires RLS INSERT policy for anon).
+    const profileToken = data.access_token || SUPABASE_KEY;
     await fetch(`${SUPABASE_URL}/rest/v1/user_profiles`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Prefer: 'resolution=merge-duplicates' },
+      headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${profileToken}`, Prefer: 'resolution=merge-duplicates' },
       body: JSON.stringify({ id: data.user.id, email, full_name: fullName, company, service_line: serviceLine })
     });
     msg.className = 'auth-msg success'; msg.textContent = 'Account created! Waiting for admin approval.';
