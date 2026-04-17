@@ -33,7 +33,7 @@ function showCreate() {
 
 async function loadServiceLines() {
   const u     = getUser();
-  const res   = await fetch(`${SUPABASE_URL}/rest/v1/service_lines?select=name&order=name`, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } });
+  const res   = await fetch(`${SUPABASE_URL}/rest/v1/service_lines?select=name&order=name`, { headers: getHeaders() });
   const lines = await res.json();
   const sel   = document.getElementById('typeOfJob');
   sel.innerHTML = '<option value="">Select type of job...</option>'
@@ -97,14 +97,18 @@ async function loadAssessments() {
   if (!assessments) return;
   const list = document.getElementById('assessmentList');
   if (!assessments.length) { list.innerHTML = '<div class="empty">No assessments yet. Create your first one.</div>'; return; }
-  list.innerHTML = assessments.map(a => `
-    <div class="assessment-card" onclick="showDetail(${a.id})">
+  const validStatuses = new Set(['draft', 'approved', 'pending', 'rejected']);
+  list.innerHTML = assessments.map(a => {
+    const safeStatus = validStatuses.has(a.status) ? a.status : 'draft';
+    return `
+    <div class="assessment-card" onclick="showDetail(${parseInt(a.id)})">
       <div>
-        <div style="font-size:15px;font-weight:bold;">${a.field_well || 'Untitled'}</div>
-        <div style="font-size:12px;color:#64748b;margin-top:4px;">${a.type_of_job || ''} · ${a.date_of_issue || ''}</div>
+        <div style="font-size:15px;font-weight:bold;">${esc(a.field_well) || 'Untitled'}</div>
+        <div style="font-size:12px;color:#64748b;margin-top:4px;">${esc(a.type_of_job) || ''} · ${esc(a.date_of_issue) || ''}</div>
       </div>
-      <span class="badge ${a.status}">${a.status}</span>
-    </div>`).join('');
+      <span class="badge ${safeStatus}">${safeStatus}</span>
+    </div>`;
+  }).join('');
 }
 
 async function createAssessment() {
@@ -138,11 +142,13 @@ async function loadAssessmentDetail(id) {
   const data = await apiFetch(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${id}`, { headers: getHeaders() });
   if (!data) return;
   const a = data[0];
+  const validStatuses = new Set(['draft', 'approved', 'pending', 'rejected']);
+  const safeStatus = validStatuses.has(a.status) ? a.status : 'draft';
   document.getElementById('assessmentInfo').innerHTML = `
-    <h2 style="margin-bottom:12px;">${a.field_well}</h2>
-    <div style="font-size:13px;color:#94a3b8;margin-bottom:6px;">Type: ${a.type_of_job}</div>
-    <div style="font-size:13px;color:#94a3b8;margin-bottom:6px;">Objective: ${a.objective || '—'}</div>
-    <div style="font-size:13px;color:#94a3b8;">Date: ${a.date_of_issue} · Status: <span class="badge ${a.status}">${a.status}</span></div>`;
+    <h2 style="margin-bottom:12px;">${esc(a.field_well)}</h2>
+    <div style="font-size:13px;color:#94a3b8;margin-bottom:6px;">Type: ${esc(a.type_of_job)}</div>
+    <div style="font-size:13px;color:#94a3b8;margin-bottom:6px;">Objective: ${esc(a.objective) || '—'}</div>
+    <div style="font-size:13px;color:#94a3b8;">Date: ${esc(a.date_of_issue)} · Status: <span class="badge ${safeStatus}">${safeStatus}</span></div>`;
   loadSelectedEquipment(id);
   loadSelectedPersonnel(id);
 }
@@ -154,8 +160,8 @@ async function loadSelectedEquipment(id) {
   if (!items.length) { el.innerHTML = '<div class="empty">No equipment selected</div>'; return; }
   el.innerHTML = items.map(i => `
     <div class="item-row">
-      <div class="item-info"><div class="item-name">${i.equipment_items?.equipment_templates?.name || i.equipment_items?.model || '—'}</div><div class="item-detail">S/N: ${i.equipment_items?.serial_number || '—'}</div></div>
-      <button class="btn-danger" onclick="removeEquipment(${i.id})">Remove</button>
+      <div class="item-info"><div class="item-name">${esc(i.equipment_items?.equipment_templates?.name || i.equipment_items?.model || '—')}</div><div class="item-detail">S/N: ${esc(i.equipment_items?.serial_number || '—')}</div></div>
+      <button class="btn-danger" onclick="removeEquipment(${parseInt(i.id)})">Remove</button>
     </div>`).join('');
 }
 
@@ -166,8 +172,8 @@ async function loadSelectedPersonnel(id) {
   if (!items.length) { el.innerHTML = '<div class="empty">No personnel selected</div>'; return; }
   el.innerHTML = items.map(i => `
     <div class="item-row">
-      <div class="item-info"><div class="item-name">${i.personnel?.full_name || '—'}</div><div class="item-detail">${i.personnel?.position || ''} · ID: ${i.personnel?.national_id || '—'}</div></div>
-      <button class="btn-danger" onclick="removePersonnel(${i.id})">Remove</button>
+      <div class="item-info"><div class="item-name">${esc(i.personnel?.full_name || '—')}</div><div class="item-detail">${esc(i.personnel?.position || '')} · ID: ${esc(i.personnel?.national_id || '—')}</div></div>
+      <button class="btn-danger" onclick="removePersonnel(${parseInt(i.id)})">Remove</button>
     </div>`).join('');
 }
 
@@ -201,8 +207,10 @@ async function openEquipmentSelector() {
     const hasDocs  = treeHasDocs(i.id);
     // Only AWAITING REVIEW = has docs + not yet assessed
     const eligible = !i.assessed && hasDocs;
-    const label    = i.equipment_templates?.name || i.model || '—';
-    const detail   = `S/N: ${i.serial_number || '—'}`;
+    const label    = esc(i.equipment_templates?.name || i.model || '—');
+    const detail   = `S/N: ${esc(i.serial_number || '—')}`;
+    const safeId   = parseInt(i.id);
+    const safeRowId = parseInt(rowId);
 
     const statusBadge = !hasDocs
       ? `<span class="sbadge sbadge-missing">MISSING DOCS</span>`
@@ -216,7 +224,7 @@ async function openEquipmentSelector() {
             <div class="item-name" style="display:flex;align-items:center;gap:6px;">${label} ${statusBadge}</div>
             <div class="item-detail">${detail} · <em style="color:var(--text-4);">Already added</em></div>
           </div>
-          <button class="btn-danger" onclick="removeEquipment(${rowId},true)">Remove</button>
+          <button class="btn-danger" onclick="removeEquipment(${safeRowId},true)">Remove</button>
         </div>`;
     } else if (!eligible) {
       return `<div class="item-row" style="margin-bottom:8px;opacity:0.4;pointer-events:none;">
@@ -227,8 +235,8 @@ async function openEquipmentSelector() {
         </div>`;
     } else {
       return `<div class="checkbox-item" style="justify-content:space-between;">
-          <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;"><input type="checkbox" id="eq_${i.id}" value="${i.id}"><label for="eq_${i.id}" style="margin:0;display:flex;align-items:center;gap:6px;"><strong>${label}</strong>${statusBadge}<span style="color:var(--text-3);font-size:12px;"> · ${detail}</span></label></div>
-          <button class="btn-success" style="padding:5px 12px;font-size:12px;flex-shrink:0;" onclick="addEquipmentItem(${i.id})">Add</button>
+          <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;"><input type="checkbox" id="eq_${safeId}" value="${safeId}"><label for="eq_${safeId}" style="margin:0;display:flex;align-items:center;gap:6px;"><strong>${label}</strong>${statusBadge}<span style="color:var(--text-3);font-size:12px;"> · ${detail}</span></label></div>
+          <button class="btn-success" style="padding:5px 12px;font-size:12px;flex-shrink:0;" onclick="addEquipmentItem(${safeId})">Add</button>
         </div>`;
     }
   }).join('') || '<div class="empty">No equipment in your database</div>';
@@ -252,7 +260,7 @@ async function addSelectedEquipment() {
 
 async function addEquipmentItem(itemId) {
   const r = await fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment`, {
-    method: 'POST', headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+    method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal' },
     body: JSON.stringify({ assessment_id: currentAssessmentId, equipment_item_id: itemId })
   });
   if (!r.ok) { showToast('Add failed: ' + r.status, 'error'); return; }
@@ -262,7 +270,7 @@ async function addEquipmentItem(itemId) {
 
 async function addPersonnelItem(persId) {
   const r = await fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel`, {
-    method: 'POST', headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+    method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal' },
     body: JSON.stringify({ assessment_id: currentAssessmentId, personnel_id: persId })
   });
   if (!r.ok) { showToast('Add failed: ' + r.status, 'error'); return; }
@@ -271,7 +279,7 @@ async function addPersonnelItem(persId) {
 }
 
 async function removeEquipment(id, fromSelector) {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment?id=eq.${id}`, { method: 'DELETE', headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Prefer: 'return=minimal' } });
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment?id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
   if (!r.ok) { showToast('Remove failed: ' + r.status, 'error'); return; }
   loadSelectedEquipment(currentAssessmentId);
   if (fromSelector) openEquipmentSelector();
@@ -319,23 +327,25 @@ async function openPersonnelSelector() {
       ? `<span class="sbadge sbadge-ready">READY</span>`
       : `<span class="sbadge sbadge-awaiting">AWAITING REVIEW</span>`;
 
+    const safePId  = parseInt(p.id);
+    const safeRId  = parseInt(rowId);
     if (isAdded) {
       return `<div class="item-row" style="margin-bottom:8px;">
           <div class="item-info">
-            <div class="item-name" style="display:flex;align-items:center;gap:6px;">${p.full_name} ${statusBadge}</div>
-            <div class="item-detail">${p.position || ''}<em style="color:var(--text-4);"> · Already added</em></div>
+            <div class="item-name" style="display:flex;align-items:center;gap:6px;">${esc(p.full_name)} ${statusBadge}</div>
+            <div class="item-detail">${esc(p.position || '')}<em style="color:var(--text-4);"> · Already added</em></div>
           </div>
-          <button class="btn-danger" onclick="removePersonnel(${rowId},true)">Remove</button>
+          <button class="btn-danger" onclick="removePersonnel(${safeRId},true)">Remove</button>
         </div>`;
     } else if (!eligible) {
       return `<div class="item-row" style="margin-bottom:8px;opacity:0.4;pointer-events:none;">
           <div class="item-info">
-            <div class="item-name" style="display:flex;align-items:center;gap:6px;">${p.full_name} ${statusBadge}</div>
-            <div class="item-detail">${p.position || ''}</div>
+            <div class="item-name" style="display:flex;align-items:center;gap:6px;">${esc(p.full_name)} ${statusBadge}</div>
+            <div class="item-detail">${esc(p.position || '')}</div>
           </div>
         </div>`;
     } else {
-      return `<div class="checkbox-item" style="justify-content:space-between;"><div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;"><input type="checkbox" id="per_${p.id}" value="${p.id}"><label for="per_${p.id}" style="margin:0;display:flex;align-items:center;gap:6px;"><strong>${p.full_name}</strong>${statusBadge}<span style="color:var(--text-3);font-size:12px;"> · ${p.position || ''}</span></label></div><button class="btn-success" style="padding:5px 12px;font-size:12px;flex-shrink:0;" onclick="addPersonnelItem(${p.id})">Add</button></div>`;
+      return `<div class="checkbox-item" style="justify-content:space-between;"><div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;"><input type="checkbox" id="per_${safePId}" value="${safePId}"><label for="per_${safePId}" style="margin:0;display:flex;align-items:center;gap:6px;"><strong>${esc(p.full_name)}</strong>${statusBadge}<span style="color:var(--text-3);font-size:12px;"> · ${esc(p.position || '')}</span></label></div><button class="btn-success" style="padding:5px 12px;font-size:12px;flex-shrink:0;" onclick="addPersonnelItem(${safePId})">Add</button></div>`;
     }
   }).join('') || '<div class="empty">No personnel in your database</div>';
   openModal('asPersModal');
@@ -357,7 +367,7 @@ async function addSelectedPersonnel() {
 }
 
 async function removePersonnel(id, fromSelector) {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?id=eq.${id}`, { method: 'DELETE', headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Prefer: 'return=minimal' } });
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
   if (!r.ok) { showToast('Remove failed: ' + r.status, 'error'); return; }
   loadSelectedPersonnel(currentAssessmentId);
   if (fromSelector) openPersonnelSelector();
@@ -413,7 +423,8 @@ async function generateLoR() {
     else                        { validTillBg = '#00aa44'; validTillColor = 'white'; }
   }
   const lorHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>LoR - ${assessment.field_well}</title><style>body{font-family:Arial,sans-serif;font-size:11px;margin:16px;color:#000}h1{font-size:15px;text-align:center;margin-bottom:2px;font-weight:bold}.subtitle{text-align:center;font-size:10px;color:#444;margin-bottom:10px}h2{font-size:11px;margin:12px 0 5px;background:#1e3a5f;color:white;padding:5px 10px}.info-table{width:100%;border-collapse:collapse;margin-bottom:10px}.info-table td{padding:4px 8px;border:1px solid #bbb;font-size:11px}.info-table .lbl{font-weight:bold;background:#e8edf2;width:130px}table{width:100%;border-collapse:collapse;margin-bottom:12px;table-layout:fixed}th{padding:5px 4px;text-align:left;font-size:10px;border:1px solid #bbb;word-wrap:break-word;word-break:break-word;white-space:normal;line-height:1.3}th.sp{background:#1e3a5f;color:white}th.as{background:#2d4a1e;color:white}td{padding:4px 4px;border:1px solid #ddd;font-size:10px;vertical-align:middle;word-wrap:break-word}tr:nth-child(even) td{background:#f7f9f7}tr:nth-child(even) td.ac{background:#eaf4e8}.ac{background:#f0f7ee}.divider{border-left:2px solid #2d4a1e!important}.footer{margin-top:16px;font-size:10px;color:#888;text-align:center;border-top:1px solid #ddd;padding-top:8px}@media print{body{margin:0;font-size:9px}.no-print{display:none}@page{size:A4 landscape;margin:8mm}th,td,.info-table td{font-size:8px;padding:3px 3px}h2{font-size:9px}}</style></head><body><h1>List of Readiness (LoR)</h1><div class="subtitle">Attachment to SMS Process 07.01 "Service Provider Readiness Assessment Process"</div><table class="info-table"><tr><td class="lbl">Service Provider (SP)</td><td><strong>${u.company||'—'}</strong> · ${u.service_line||'—'}</td><td class="lbl">Date of Issue</td><td>${todayStr}</td><td class="lbl">Valid Till</td><td style="background:${validTillBg};color:${validTillColor};font-weight:bold;padding:3px 6px;">${validTillStr}</td></tr><tr><td class="lbl">Request ID</td><td><strong>${assessment.sharepoint_request_id||'—'}</strong></td><td class="lbl">Field / Well</td><td colspan="3">${assessment.field_well||'—'}</td></tr><tr><td class="lbl">Type of Job</td><td colspan="5">${assessment.type_of_job||'—'}</td></tr><tr><td class="lbl">Objective (Short Summary)</td><td colspan="5">${assessment.objective||'—'}</td></tr><tr><td class="lbl">Peer Review Team</td><td colspan="5" style="color:#999;font-style:italic;">To be filled by assessor</td></tr></table><table><colgroup><col style="width:3%"><col style="width:13%"><col style="width:9%"><col style="width:9%"><col style="width:10%"><col style="width:8%"><col style="width:10%"><col style="width:8%"><col style="width:8%"><col style="width:11%"><col style="width:11%"></colgroup><thead><tr><th class="sp" colspan="6">Manpower</th><th class="as divider" colspan="5">Assessor Section</th></tr><tr><th class="sp">#</th><th class="sp">Name</th><th class="sp">Yrs Exp O&G</th><th class="sp">Job Role</th><th class="sp">Document Name</th><th class="sp">Date of Expiry</th><th class="as divider">NAWCOD Unit</th><th class="as">Auditor</th><th class="as">Date of Audit</th><th class="as">Readiness for Operations</th><th class="as">Comment</th></tr></thead><tbody>${persRows||'<tr><td colspan="11" style="text-align:center;color:#999;">No personnel selected</td></tr>'}<tr><th class="sp" colspan="6">Equipment</th><th class="as divider" colspan="5">Assessor Section</th></tr><tr><th class="sp">#</th><th class="sp">Equipment S/N</th><th class="sp">Equipment Description</th><th class="sp">Type of Integrity Check</th><th class="sp">Date of Certification</th><th class="sp">Date of Expiry</th><th class="as divider">NAWCOD Unit</th><th class="as">Auditor</th><th class="as">Date of Audit</th><th class="as">Readiness for Operations</th><th class="as">Comment</th></tr>${equipRows||'<tr><td colspan="11" style="text-align:center;color:#999;">No equipment selected</td></tr>'}</tbody></table><div class="no-print" style="margin-top:12px;"><button onclick="window.print()" style="background:#1e3a5f;color:white;border:none;padding:7px 18px;border-radius:6px;cursor:pointer;font-size:11px;">🖨️ Print / Save as PDF</button></div><div class="footer">Generated by RADP · ${todayStr}</div></body></html>`;
-  const win = window.open('', '_blank');
-  win.document.write(lorHtml);
-  win.document.close();
+  const blob    = new Blob([lorHtml], { type: 'text/html' });
+  const blobUrl = URL.createObjectURL(blob);
+  window.open(blobUrl, '_blank');
+  setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
 }

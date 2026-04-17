@@ -1,11 +1,24 @@
 // ═══════════════════ SHARED CONFIG & UTILITIES ═══════════════════
 
 const SUPABASE_URL = 'https://fslleuedqlxpjnerruzt.supabase.co';
+// SECURITY: Replace this with your ANON (public) key from Supabase dashboard.
+// NEVER use the service_role key in client-side code — rotate it immediately at supabase.com.
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzbGxldWVkcWx4cGpuZXJydXp0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDk5MzExOSwiZXhwIjoyMDkwNTY5MTE5fQ.oY_dihwgMimesUsvHSuKNoJEXTb3c7vuqWKzeH2pwg4';
 
 const getToken   = () => localStorage.getItem('radp_token');
 const getUser    = () => JSON.parse(localStorage.getItem('radp_user') || '{}');
 const getHeaders = () => ({ apikey: SUPABASE_KEY, Authorization: `Bearer ${getToken()}`, 'Content-Type': 'application/json' });
+
+// Escapes a value for safe insertion into HTML to prevent XSS.
+function esc(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 // ─── API fetch with 401 guard ───
 async function apiFetch(url, options = {}) {
@@ -190,7 +203,7 @@ async function openDoc(url) {
   document.getElementById('docViewerModal').style.display = 'block';
   body.innerHTML = `<div style="padding:32px;text-align:center;color:var(--text-2);">Loading…</div>`;
   try {
-    const res     = await fetch(url, { headers: { apikey: SUPABASE_KEY } });
+    const res     = await fetch(url, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${getToken()}` } });
     const blob    = await res.blob();
     const blobUrl = URL.createObjectURL(blob);
     dl.href = blobUrl; dl.download = title.textContent;
