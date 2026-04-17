@@ -200,7 +200,10 @@ async function openDoc(url) {
   dl.href = url;
   box.style.top = '2.5vh'; box.style.left = '2.5vw';
   box.style.width = '95vw'; box.style.height = '95vh';
-  document.getElementById('docViewerModal').style.display = 'block';
+  const modal = document.getElementById('docViewerModal');
+  modal.style.display = 'block';
+  modal._dvEscHandler = (e) => { if (e.key === 'Escape') closeDocViewer(); };
+  document.addEventListener('keydown', modal._dvEscHandler);
   body.innerHTML = `<div style="padding:32px;text-align:center;color:var(--text-2);">Loading…</div>`;
   try {
     const res     = await fetch(url, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${getToken()}` } });
@@ -260,9 +263,14 @@ async function zoomPdf(delta) {
 }
 
 function closeDocViewer() {
-  document.getElementById('docViewerModal').style.display = 'none';
+  const modal = document.getElementById('docViewerModal');
+  modal.style.display = 'none';
   document.getElementById('docViewerBody').innerHTML = '';
   _currentPdf = null;
+  if (modal._dvEscHandler) {
+    document.removeEventListener('keydown', modal._dvEscHandler);
+    modal._dvEscHandler = null;
+  }
 }
 
 // ─── Doc viewer drag + resize ───

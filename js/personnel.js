@@ -153,7 +153,7 @@ async function loadPersonnel(preserveState = false) {
   const pTile = pEl.closest('.dash-tile');
   pEl.textContent  = people.length;
   pSub.textContent = missingMandatory > 0 ? `${missingMandatory} docs missing` : (people.length > 0 ? 'All docs uploaded' : 'None added');
-  pSub.style.color = missingMandatory > 0 ? '#fbbf24' : '#64748b';
+  pSub.style.color = '';
   pTile.className  = 'dash-tile ' + (missingMandatory > 0 ? 'warn' : people.length > 0 ? 'ok' : 'info');
 }
 
@@ -188,12 +188,12 @@ function personnelCard(p, docs) {
       const rowClass = statusText === 'EXPIRED' ? ' status-expired' : statusText === 'EXPIRING' ? ' status-expiring' : '';
       const safeYrs  = p.years_experience != null ? parseInt(p.years_experience) : 'null';
       return `<div class="doc-row${rowClass}" data-doc-id="${parseInt(d.id)}">
-        <div style="flex:1">
-          <div class="doc-name" style="display:flex;align-items:center;gap:6px;">${safeTypeName} ${mandBadge}</div>
+        <div class="flex-1">
+          <div class="doc-name row-gap-xs">${safeTypeName} ${mandBadge}</div>
           ${dateStr ? `<div class="doc-date">${dateStr}</div>` : ''}
           ${yrsStr}
         </div>
-        <div style="display:flex;align-items:center;gap:8px;">
+        <div class="row-gap-sm">
           ${fileBtn}
           <span class="doc-status ${statusClass}">${statusText}</span>
           <button class="btn-edit" onclick="editPersDoc(${parseInt(d.id)},${parseInt(p.id)},this.dataset.type,${t.mandatory ? 'true' : 'false'},this.dataset.issue,this.dataset.expiry,${safeYrs})" data-type="${safeTypeName}" data-issue="${esc(d.issue_date||'')}" data-expiry="${esc(d.expiry_date||'')}" aria-label="Edit ${safeTypeName}">✏</button>
@@ -203,9 +203,9 @@ function personnelCard(p, docs) {
     } else {
       const safeTypeName = esc(t.name);
       return `<div class="doc-row">
-        <div style="flex:1">
-          <div class="doc-name" style="display:flex;align-items:center;gap:6px;">${safeTypeName} ${mandBadge}</div>
-          <div class="doc-date" style="color:#475569;">Not uploaded</div>
+        <div class="flex-1">
+          <div class="doc-name row-gap-xs">${safeTypeName} ${mandBadge}</div>
+          <div class="doc-date text-muted">Not uploaded</div>
         </div>
         <button class="upload-btn" onclick="openAddPersDoc(${parseInt(p.id)}, this.dataset.type, ${t.mandatory ? 'true' : 'false'})" data-type="${safeTypeName}">↑ Upload</button>
       </div>`;
@@ -231,11 +231,11 @@ function personnelCard(p, docs) {
   const safeName = esc(p.full_name);
   return `<div class="app-card" data-id="p${parseInt(p.id)}">
     <div class="card-header">
-      <div style="cursor:pointer;flex:1;" onclick="toggleCard(this.closest('.app-card').querySelector('.btn-toggle'))">
+      <div class="card-clickable" onclick="toggleCard(this.closest('.app-card').querySelector('.btn-toggle'))">
         <div class="card-title">${safeName}</div>
-        <div class="doc-name" style="margin-top:4px;">${esc(p.position || '')} · ID: ${esc(p.national_id || '—')}</div>
+        <div class="doc-name mt-xs">${esc(p.position || '')} · ID: ${esc(p.national_id || '—')}</div>
       </div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <div class="row-wrap">
         ${alertBadge}
         <button class="btn-toggle" onclick="toggleCard(this)" aria-label="Expand ${safeName}">▾</button>
         <button class="btn-danger" onclick="deletePersRecord(${parseInt(p.id)})" aria-label="Delete ${safeName}">✕</button>
@@ -301,7 +301,7 @@ async function savePersDocument() {
     expDate = d.toISOString().split('T')[0];
   }
   const file = document.getElementById('persDocFileInput').files[0];
-  if (!file) { showToast('Please attach a new file — a file is required to save changes', 'warn'); document.getElementById('persDocFileBtn').style.borderColor = '#fda4af'; return; }
+  if (!file) { showToast('Please attach a new file — a file is required to save changes', 'warn'); document.getElementById('persDocFileBtn').style.borderColor = 'var(--bad)'; return; }
 
   let fileUrl = null;
   if (file) {

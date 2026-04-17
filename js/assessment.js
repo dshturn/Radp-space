@@ -15,7 +15,7 @@ async function loadDashAssessments() {
   const draft    = assessments.filter(a => !a.status || a.status === 'draft').length;
   aEl.textContent  = total;
   aSub.textContent = draft > 0 ? `${draft} in progress` : (total > 0 ? `${approved} approved` : 'None yet');
-  aSub.style.color = '#64748b';
+  aSub.style.color = '';
   aTile.className  = 'dash-tile ' + (total > 0 ? 'ok' : 'info');
 }
 
@@ -103,8 +103,8 @@ async function loadAssessments() {
     return `
     <div class="assessment-card" onclick="showDetail(${parseInt(a.id)})">
       <div>
-        <div style="font-size:15px;font-weight:bold;">${esc(a.field_well) || 'Untitled'}</div>
-        <div style="font-size:12px;color:#64748b;margin-top:4px;">${esc(a.type_of_job) || ''} · ${esc(a.date_of_issue) || ''}</div>
+        <div class="assessment-title">${esc(a.field_well) || 'Untitled'}</div>
+        <div class="assessment-meta">${esc(a.type_of_job) || ''} · ${esc(a.date_of_issue) || ''}</div>
       </div>
       <span class="badge ${safeStatus}">${safeStatus}</span>
     </div>`;
@@ -146,9 +146,9 @@ async function loadAssessmentDetail(id) {
   const safeStatus = validStatuses.has(a.status) ? a.status : 'draft';
   document.getElementById('assessmentInfo').innerHTML = `
     <h2 style="margin-bottom:12px;">${esc(a.field_well)}</h2>
-    <div style="font-size:13px;color:#94a3b8;margin-bottom:6px;">Type: ${esc(a.type_of_job)}</div>
-    <div style="font-size:13px;color:#94a3b8;margin-bottom:6px;">Objective: ${esc(a.objective) || '—'}</div>
-    <div style="font-size:13px;color:#94a3b8;">Date: ${esc(a.date_of_issue)} · Status: <span class="badge ${safeStatus}">${safeStatus}</span></div>`;
+    <div class="detail-info">Type: ${esc(a.type_of_job)}</div>
+    <div class="detail-info">Objective: ${esc(a.objective) || '—'}</div>
+    <div class="detail-info" style="margin-bottom:0;">Date: ${esc(a.date_of_issue)} · Status: <span class="badge ${safeStatus}">${safeStatus}</span></div>`;
   loadSelectedEquipment(id);
   loadSelectedPersonnel(id);
 }
@@ -219,24 +219,24 @@ async function openEquipmentSelector() {
       : `<span class="sbadge sbadge-awaiting">AWAITING REVIEW</span>`;
 
     if (isAdded) {
-      return `<div class="item-row" style="margin-bottom:8px;">
+      return `<div class="item-row">
           <div class="item-info">
-            <div class="item-name" style="display:flex;align-items:center;gap:6px;">${label} ${statusBadge}</div>
+            <div class="item-name row-gap-xs">${label} ${statusBadge}</div>
             <div class="item-detail">${detail} · <em style="color:var(--text-4);">Already added</em></div>
           </div>
           <button class="btn-danger" onclick="removeEquipment(${safeRowId},true)">Remove</button>
         </div>`;
     } else if (!eligible) {
-      return `<div class="item-row" style="margin-bottom:8px;opacity:0.4;pointer-events:none;">
+      return `<div class="item-row item-disabled">
           <div class="item-info">
-            <div class="item-name" style="display:flex;align-items:center;gap:6px;">${label} ${statusBadge}</div>
+            <div class="item-name row-gap-xs">${label} ${statusBadge}</div>
             <div class="item-detail">${detail}</div>
           </div>
         </div>`;
     } else {
-      return `<div class="checkbox-item" style="justify-content:space-between;">
-          <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;"><input type="checkbox" id="eq_${safeId}" value="${safeId}"><label for="eq_${safeId}" style="margin:0;display:flex;align-items:center;gap:6px;"><strong>${label}</strong>${statusBadge}<span style="color:var(--text-3);font-size:12px;"> · ${detail}</span></label></div>
-          <button class="btn-success" style="padding:5px 12px;font-size:12px;flex-shrink:0;" onclick="addEquipmentItem(${safeId})">Add</button>
+      return `<div class="checkbox-item">
+          <div class="row-gap-md"><input type="checkbox" id="eq_${safeId}" value="${safeId}"><label for="eq_${safeId}" class="label-row"><strong>${label}</strong>${statusBadge}<span style="color:var(--text-3);font-size:12px;"> · ${detail}</span></label></div>
+          <button class="btn-success btn-success-sm" style="flex-shrink:0;" onclick="addEquipmentItem(${safeId})">Add</button>
         </div>`;
     }
   }).join('') || '<div class="empty">No equipment in your database</div>';
@@ -330,22 +330,22 @@ async function openPersonnelSelector() {
     const safePId  = parseInt(p.id);
     const safeRId  = parseInt(rowId);
     if (isAdded) {
-      return `<div class="item-row" style="margin-bottom:8px;">
+      return `<div class="item-row">
           <div class="item-info">
-            <div class="item-name" style="display:flex;align-items:center;gap:6px;">${esc(p.full_name)} ${statusBadge}</div>
+            <div class="item-name row-gap-xs">${esc(p.full_name)} ${statusBadge}</div>
             <div class="item-detail">${esc(p.position || '')}<em style="color:var(--text-4);"> · Already added</em></div>
           </div>
           <button class="btn-danger" onclick="removePersonnel(${safeRId},true)">Remove</button>
         </div>`;
     } else if (!eligible) {
-      return `<div class="item-row" style="margin-bottom:8px;opacity:0.4;pointer-events:none;">
+      return `<div class="item-row item-disabled">
           <div class="item-info">
-            <div class="item-name" style="display:flex;align-items:center;gap:6px;">${esc(p.full_name)} ${statusBadge}</div>
+            <div class="item-name row-gap-xs">${esc(p.full_name)} ${statusBadge}</div>
             <div class="item-detail">${esc(p.position || '')}</div>
           </div>
         </div>`;
     } else {
-      return `<div class="checkbox-item" style="justify-content:space-between;"><div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;"><input type="checkbox" id="per_${safePId}" value="${safePId}"><label for="per_${safePId}" style="margin:0;display:flex;align-items:center;gap:6px;"><strong>${esc(p.full_name)}</strong>${statusBadge}<span style="color:var(--text-3);font-size:12px;"> · ${esc(p.position || '')}</span></label></div><button class="btn-success" style="padding:5px 12px;font-size:12px;flex-shrink:0;" onclick="addPersonnelItem(${safePId})">Add</button></div>`;
+      return `<div class="checkbox-item"><div class="row-gap-md"><input type="checkbox" id="per_${safePId}" value="${safePId}"><label for="per_${safePId}" class="label-row"><strong>${esc(p.full_name)}</strong>${statusBadge}<span style="color:var(--text-3);font-size:12px;"> · ${esc(p.position || '')}</span></label></div><button class="btn-success btn-success-sm" style="flex-shrink:0;" onclick="addPersonnelItem(${safePId})">Add</button></div>`;
     }
   }).join('') || '<div class="empty">No personnel in your database</div>';
   openModal('asPersModal');

@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
 
 <nav id="mainNav" aria-label="Main navigation">
   <div class="nav-links">
@@ -27,6 +28,7 @@
   </div>
 </nav>
 
+<main id="main-content">
 <!-- ══════════════════ HOME ══════════════════ -->
 <div id="home-page" class="page">
   <div class="auth-wrap">
@@ -34,7 +36,7 @@
       <h1>RADP</h1>
       <p class="auth-subtitle">Readiness Assessment Digital Platform</p>
       <button class="btn-nav" onclick="showPage('login')">Contractor Portal</button>
-      <button class="btn-nav" onclick="showPage('admin-login')" style="background:#1e3a5f;">Admin Dashboard</button>
+      <button class="btn-nav btn-nav-secondary" onclick="showPage('admin-login')">Admin Dashboard</button>
       <button class="btn-install" id="installBtn" onclick="installApp()">⬇ Install as App</button>
     </div>
   </div>
@@ -55,7 +57,7 @@
       </form>
       <div id="loginMsg" class="auth-msg" role="alert"></div>
       <button class="auth-link" onclick="showPage('register')">New contractor? Register here</button>
-      <button class="auth-link" style="color:#475569;margin-top:4px;" onclick="showPage('home')">← Back to Home</button>
+      <button class="auth-back-link" onclick="showPage('home')">← Back to Home</button>
     </div>
   </div>
 </div>
@@ -75,12 +77,12 @@
         <input type="password" id="regPassword" placeholder="Min 6 characters" autocomplete="new-password">
         <label class="auth-label" for="regCompany">Company</label>
         <select id="regCompany" onchange="onCompanyChange(this)"><option value="">Select company...</option></select>
-        <div id="newCompanyWrap" style="display:none;margin-top:-10px;margin-bottom:16px;">
-          <div style="display:flex;gap:8px;">
-            <input type="text" id="newCompanyName" placeholder="Enter company name" style="flex:1;margin-bottom:0;">
-            <button type="button" onclick="addNewCompany()" style="background:#059669;color:white;border:none;padding:10px 14px;border-radius:8px;cursor:pointer;font-size:13px;white-space:nowrap;transition:background 0.2s;">Add</button>
+        <div id="newCompanyWrap">
+          <div class="row-gap-sm">
+            <input type="text" id="newCompanyName" placeholder="Enter company name" class="mb-0">
+            <button type="button" onclick="addNewCompany()" class="btn-success" style="white-space:nowrap;flex-shrink:0;padding:10px 14px;font-size:13px;">Add</button>
           </div>
-          <div id="newCompanyMsg" style="font-size:12px;margin-top:6px;"></div>
+          <div id="newCompanyMsg" class="form-hint"></div>
         </div>
         <label class="auth-label" for="regServiceLine">Service Line</label>
         <select id="regServiceLine"><option value="">Select service line...</option></select>
@@ -103,22 +105,22 @@
       <div class="dash-tile info" style="animation-delay:0ms">
         <div class="dash-val" id="dashEquip">—</div>
         <div class="dash-lbl">Equipment</div>
-        <div class="dash-sub" id="dashEquipSub" style="color:#64748b"></div>
+        <div class="dash-sub" id="dashEquipSub"></div>
       </div>
       <div class="dash-tile info" style="animation-delay:60ms">
         <div class="dash-val" id="dashDocs">—</div>
         <div class="dash-lbl">Documents</div>
-        <div class="dash-sub" id="dashDocsSub" style="color:#64748b"></div>
+        <div class="dash-sub" id="dashDocsSub"></div>
       </div>
       <div class="dash-tile info" style="animation-delay:120ms">
         <div class="dash-val" id="dashPersonnel">—</div>
         <div class="dash-lbl">Personnel</div>
-        <div class="dash-sub" id="dashPersonnelSub" style="color:#64748b"></div>
+        <div class="dash-sub" id="dashPersonnelSub"></div>
       </div>
       <div class="dash-tile info" style="animation-delay:180ms">
         <div class="dash-val" id="dashAssessments">—</div>
         <div class="dash-lbl">Assessments</div>
-        <div class="dash-sub" id="dashAssessmentsSub" style="color:#64748b"></div>
+        <div class="dash-sub" id="dashAssessmentsSub"></div>
       </div>
     </div>
     <div class="tabs">
@@ -126,16 +128,18 @@
       <button class="tab" onclick="showContractorTab('equipment', this)">Equipment</button>
     </div>
     <div id="ct-personnel" class="ct-section active">
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
-        <button class="add-btn" style="margin-bottom:0;" onclick="openAddPersonnel()">+ Add Personnel</button>
-        <input type="text" id="personnelSearch" placeholder="Search personnel…" oninput="filterCards('personnelList',this.value)" style="flex:1;margin-bottom:0;padding:8px 12px;font-size:13px;">
+      <div class="section-row">
+        <button class="add-btn mb-0" onclick="openAddPersonnel()">+ Add Personnel</button>
+        <label for="personnelSearch" class="sr-only">Search personnel</label>
+        <input type="text" id="personnelSearch" class="search-input" placeholder="Search personnel…" oninput="filterCards('personnelList',this.value)">
       </div>
       <div id="personnelList"><div class="skel-card"><div class="skeleton skel-line medium"></div><div class="skeleton skel-line short"></div></div></div>
     </div>
     <div id="ct-equipment" class="ct-section">
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
-        <button class="add-btn" style="margin-bottom:0;" onclick="openAddEquipment()">+ Add Equipment</button>
-        <input type="text" id="equipmentSearch" placeholder="Search equipment…" oninput="filterCards('equipmentList',this.value)" style="flex:1;margin-bottom:0;padding:8px 12px;font-size:13px;">
+      <div class="section-row">
+        <button class="add-btn mb-0" onclick="openAddEquipment()">+ Add Equipment</button>
+        <label for="equipmentSearch" class="sr-only">Search equipment</label>
+        <input type="text" id="equipmentSearch" class="search-input" placeholder="Search equipment…" oninput="filterCards('equipmentList',this.value)">
       </div>
       <div id="equipmentList"><div class="skel-card"><div class="skeleton skel-line medium"></div><div class="skeleton skel-line full"></div><div class="skeleton skel-line short"></div></div></div>
     </div>
@@ -146,7 +150,7 @@
 <div id="assessment-page" class="page">
   <div class="container">
     <div id="listView" class="as-view active">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div class="row-between" style="margin-bottom:16px;">
         <div class="section-label">My Assessments</div>
         <button class="btn-success" onclick="showCreate()">+ New Assessment</button>
       </div>
@@ -170,12 +174,12 @@
         <label for="objective">Objective (optional)</label>
         <textarea id="objective" placeholder="Short summary of the job objective"></textarea>
         <button class="btn-primary" onclick="createAssessment()">Create Assessment</button>
-        <button style="margin-left:8px;background:#334155;color:#e2e8f0;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;" onclick="showList()">Cancel</button>
+        <button class="btn-ghost" style="margin-left:8px;" onclick="showList()">Cancel</button>
       </div>
     </div>
     <div id="detailView" class="as-view">
       <div style="margin-bottom:16px;">
-        <button style="background:#334155;color:#e2e8f0;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px;" onclick="showList()">← Back</button>
+        <button class="btn-ghost-sm" onclick="showList()">← Back</button>
       </div>
       <div class="app-card" id="assessmentInfo"></div>
       <div class="tabs" id="detailTabs">
@@ -183,20 +187,20 @@
         <button class="tab" onclick="showDetailTab('equipment', this)">Equipment</button>
       </div>
       <div id="personnelTab">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div class="row-between mb-sm">
           <div class="section-label">Selected Personnel</div>
           <button class="btn-primary" onclick="openPersonnelSelector()">+ Add Personnel</button>
         </div>
         <div id="selectedPersonnel"></div>
       </div>
       <div id="equipmentTab" style="display:none;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div class="row-between mb-sm">
           <div class="section-label">Selected Equipment</div>
           <button class="btn-primary" onclick="openEquipmentSelector()">+ Add Equipment</button>
         </div>
         <div id="selectedEquipment"></div>
       </div>
-      <div style="margin-top:24px;">
+      <div class="lor-section">
         <button class="lor-btn" onclick="generateLoR()">📄 Generate LoR</button>
       </div>
     </div>
@@ -217,7 +221,7 @@
         <button type="submit" class="btn-main">Login</button>
       </form>
       <div id="adminLoginMsg" class="auth-msg" role="alert"></div>
-      <button class="auth-link" style="color:#475569;margin-top:8px;" onclick="showPage('home')">← Back to Home</button>
+      <button class="auth-back-link" onclick="showPage('home')">← Back to Home</button>
     </div>
   </div>
 </div>
@@ -226,7 +230,7 @@
 <div id="admin-dashboard-page" class="page">
   <div class="admin-header">
     <h1>RADP Admin Panel</h1>
-    <button onclick="adminLogout()">Logout</button>
+    <button class="nav-logout" onclick="adminLogout()">Logout</button>
   </div>
   <div class="container">
     <div class="section-title">Pending Approval</div>
@@ -235,29 +239,30 @@
     <div id="approvedList"></div>
   </div>
 </div>
+</main>
 
 <!-- Document Viewer Modal -->
-<div id="docViewerModal" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.6);">
-  <div id="docViewerBox" style="position:fixed;top:2.5vh;left:2.5vw;width:95vw;height:95vh;background:#1e293b;border-radius:10px;border:1px solid #334155;display:flex;flex-direction:column;overflow:hidden;min-width:320px;min-height:240px;box-shadow:0 24px 80px rgba(0,0,0,0.6);">
-    <div class="dv-resize" data-dir="n"  style="position:absolute;top:-4px;left:8px;right:8px;height:8px;cursor:n-resize;z-index:10;"></div>
-    <div class="dv-resize" data-dir="s"  style="position:absolute;bottom:-4px;left:8px;right:8px;height:8px;cursor:s-resize;z-index:10;"></div>
-    <div class="dv-resize" data-dir="w"  style="position:absolute;left:-4px;top:8px;bottom:8px;width:8px;cursor:w-resize;z-index:10;"></div>
-    <div class="dv-resize" data-dir="e"  style="position:absolute;right:-4px;top:8px;bottom:8px;width:8px;cursor:e-resize;z-index:10;"></div>
-    <div class="dv-resize" data-dir="nw" style="position:absolute;top:-4px;left:-4px;width:16px;height:16px;cursor:nw-resize;z-index:11;"></div>
-    <div class="dv-resize" data-dir="ne" style="position:absolute;top:-4px;right:-4px;width:16px;height:16px;cursor:ne-resize;z-index:11;"></div>
-    <div class="dv-resize" data-dir="sw" style="position:absolute;bottom:-4px;left:-4px;width:16px;height:16px;cursor:sw-resize;z-index:11;"></div>
-    <div class="dv-resize" data-dir="se" style="position:absolute;bottom:-4px;right:-4px;width:16px;height:16px;cursor:se-resize;z-index:11;"></div>
-    <div id="docViewerHeader" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #334155;flex-shrink:0;cursor:grab;user-select:none;">
-      <span id="docViewerTitle" style="font-size:14px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;margin-right:12px;"></span>
-      <div style="display:flex;gap:8px;flex-shrink:0;align-items:center;">
-        <button id="docZoomOut" onclick="zoomPdf(-0.2)" style="display:none;background:#334155;color:#e2e8f0;border:none;padding:7px 12px;border-radius:6px;cursor:pointer;font-size:16px;line-height:1;">−</button>
-        <span id="docZoomLevel" style="display:none;font-size:13px;color:#94a3b8;min-width:40px;text-align:center;"></span>
-        <button id="docZoomIn" onclick="zoomPdf(0.2)" style="display:none;background:#334155;color:#e2e8f0;border:none;padding:7px 12px;border-radius:6px;cursor:pointer;font-size:16px;line-height:1;">+</button>
-        <a id="docViewerDownload" href="#" download style="background:#059669;color:white;border:none;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:13px;text-decoration:none;">↓ Download</a>
-        <button onclick="closeDocViewer()" style="background:#334155;color:#e2e8f0;border:none;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:13px;">✕ Close</button>
+<div id="docViewerModal" class="dv-wrap" role="dialog" aria-modal="true" aria-labelledby="docViewerTitle">
+  <div id="docViewerBox" class="dv-box">
+    <div class="dv-resize" data-dir="n"></div>
+    <div class="dv-resize" data-dir="s"></div>
+    <div class="dv-resize" data-dir="w"></div>
+    <div class="dv-resize" data-dir="e"></div>
+    <div class="dv-resize" data-dir="nw"></div>
+    <div class="dv-resize" data-dir="ne"></div>
+    <div class="dv-resize" data-dir="sw"></div>
+    <div class="dv-resize" data-dir="se"></div>
+    <div id="docViewerHeader" class="dv-header">
+      <span id="docViewerTitle" class="dv-title"></span>
+      <div class="dv-controls">
+        <button id="docZoomOut" onclick="zoomPdf(-0.2)" class="dv-btn" style="display:none;" aria-label="Zoom out">−</button>
+        <span id="docZoomLevel" class="dv-zoom-label" style="display:none;" aria-live="polite"></span>
+        <button id="docZoomIn" onclick="zoomPdf(0.2)" class="dv-btn" style="display:none;" aria-label="Zoom in">+</button>
+        <a id="docViewerDownload" href="#" download class="dv-btn-download">↓ Download</a>
+        <button onclick="closeDocViewer()" class="dv-btn dv-btn-close">✕ Close</button>
       </div>
     </div>
-    <div id="docViewerBody" style="flex:1;overflow:auto;min-height:0;background:#0f172a;"></div>
+    <div id="docViewerBody" class="dv-body"></div>
   </div>
 </div>
 
@@ -304,7 +309,7 @@
 <div class="modal" id="reassignModal" role="dialog" aria-modal="true" aria-labelledby="reassignTitle">
   <div class="modal-box">
     <h3 id="reassignTitle">Change Assignment</h3>
-    <div style="display:flex;flex-direction:column;gap:6px;">
+    <div class="col-gap-sm">
       <div class="reassign-option">
         <input type="radio" name="reassignType" id="reassignStandalone" value="standalone" onchange="onReassignTypeChange(this)" checked>
         <label for="reassignStandalone">Make standalone (top-level equipment)</label>
@@ -348,7 +353,7 @@
 <div class="modal" id="addDocModal" role="dialog" aria-modal="true" aria-labelledby="addDocTitle">
   <div class="modal-box">
     <h3 id="addDocTitle">Add Document</h3>
-    <label for="docTypeSelect" style="color:#94a3b8;font-size:13px;margin-bottom:6px;display:block;">Document Type</label>
+    <label for="docTypeSelect">Document Type</label>
     <select id="docTypeSelect" onchange="onDocTypeChange(this)" style="margin-bottom:12px;">
       <option value="">Select type...</option>
       <option>Maintenance</option>
@@ -360,17 +365,17 @@
       <option value="__new__">+ New document type...</option>
     </select>
     <input type="text" id="docTypeCustom" placeholder="Enter document type name" style="display:none;margin-bottom:12px;">
-    <label for="docIssueDate" style="color:#94a3b8;font-size:13px;margin-bottom:6px;display:block;">Issue Date</label>
+    <label for="docIssueDate">Issue Date</label>
     <input type="date" id="docIssueDate" style="margin-bottom:12px;">
-    <label for="docExpiryDate" style="color:#94a3b8;font-size:13px;margin-bottom:6px;display:block;">Expiry Date</label>
+    <label for="docExpiryDate">Expiry Date</label>
     <input type="date" id="docExpiryDate" style="margin-bottom:8px;">
-    <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#94a3b8;margin-bottom:12px;cursor:pointer;">
-      <input type="checkbox" id="docNoExpiry" onchange="document.getElementById('docExpiryDate').disabled=this.checked;if(this.checked)document.getElementById('docExpiryDate').value='';" style="width:auto;margin:0;">
+    <label class="row-gap-sm" style="margin-bottom:12px;cursor:pointer;">
+      <input type="checkbox" id="docNoExpiry" onchange="document.getElementById('docExpiryDate').disabled=this.checked;if(this.checked)document.getElementById('docExpiryDate').value='';" style="width:auto;margin:0;flex-shrink:0;">
       Not Applicable / No Expiry Date
     </label>
-    <label for="docFileInput" style="color:#94a3b8;font-size:13px;margin-bottom:6px;display:block;">Attachment <span style="color:#fda4af;">*</span></label>
-    <button type="button" id="docFileBtn" onclick="document.getElementById('docFileInput').click()" style="background:#1e293b;border:1px dashed #334155;color:#94a3b8;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:13px;width:100%;margin-bottom:4px;transition:border-color 0.2s,color 0.2s;">📎 Choose file</button>
-    <div id="docFileName" style="font-size:12px;color:#64748b;margin-bottom:12px;"></div>
+    <label for="docFileInput">Attachment <span style="color:var(--bad);">*</span></label>
+    <button type="button" id="docFileBtn" onclick="document.getElementById('docFileInput').click()" style="background:var(--surface);border:1px dashed var(--border);color:var(--text-2);padding:8px 14px;border-radius:8px;cursor:pointer;font-size:13px;width:100%;margin-bottom:4px;transition:border-color 0.2s,color 0.2s;">📎 Choose file</button>
+    <div id="docFileName" class="form-hint" style="margin-bottom:12px;"></div>
     <input type="file" id="docFileInput" accept=".pdf,.jpg,.jpeg,.png" onchange="document.getElementById('docFileName').textContent = this.files[0]?.name || ''">
     <div class="modal-btns">
       <button class="btn-cancel" onclick="closeModal('addDocModal')">Cancel</button>
@@ -409,7 +414,7 @@
       <label for="persDocIssueDate">Issue Date</label>
       <input type="date" id="persDocIssueDate" style="margin-bottom:12px;">
     </div>
-    <div id="persDocAutoExpiryNote" style="display:none;font-size:12px;color:#64748b;margin-bottom:12px;">ℹ Expiry auto-calculated: 2 years from issue date</div>
+    <div id="persDocAutoExpiryNote" class="form-hint" style="display:none;margin-bottom:12px;">ℹ Expiry auto-calculated: 2 years from issue date</div>
     <div id="persDocYearsExpWrap" style="display:none;">
       <label for="persDocYearsExp">Years of Experience in O&G</label>
       <input type="number" id="persDocYearsExp" placeholder="e.g. 5" min="0" max="60" style="margin-bottom:12px;">
@@ -418,9 +423,9 @@
       <label for="persDocExpiryDate">Expiry Date</label>
       <input type="date" id="persDocExpiryDate" style="margin-bottom:12px;">
     </div>
-    <label id="persDocFileLabel" for="persDocFileInput" style="color:#94a3b8;font-size:13px;margin-bottom:6px;display:block;">Attachment <span id="persDocFileRequired" style="color:#fda4af;">*</span></label>
-    <button type="button" id="persDocFileBtn" onclick="document.getElementById('persDocFileInput').click()" style="background:#1e293b;border:1px dashed #334155;color:#94a3b8;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:13px;width:100%;margin-bottom:4px;transition:border-color 0.2s,color 0.2s;">📎 Choose file</button>
-    <div id="persDocFileName" style="font-size:12px;color:#64748b;margin-bottom:12px;"></div>
+    <label id="persDocFileLabel" for="persDocFileInput">Attachment <span id="persDocFileRequired" style="color:var(--bad);">*</span></label>
+    <button type="button" id="persDocFileBtn" onclick="document.getElementById('persDocFileInput').click()" style="background:var(--surface);border:1px dashed var(--border);color:var(--text-2);padding:8px 14px;border-radius:8px;cursor:pointer;font-size:13px;width:100%;margin-bottom:4px;transition:border-color 0.2s,color 0.2s;">📎 Choose file</button>
+    <div id="persDocFileName" class="form-hint" style="margin-bottom:12px;"></div>
     <input type="file" id="persDocFileInput" accept=".pdf,.jpg,.jpeg,.png" onchange="document.getElementById('persDocFileName').textContent = this.files[0]?.name || ''">
     <input type="hidden" id="persDocPersonId">
     <input type="hidden" id="persDocIsMandatory">
@@ -436,11 +441,12 @@
 <div id="asEquipModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="asEquipTitle">
   <div class="modal-scroll">
     <h3 id="asEquipTitle" style="color:var(--accent);margin-bottom:12px;">Select Equipment</h3>
+    <label for="equipSelectorSearch" class="sr-only">Search equipment</label>
     <input type="text" id="equipSelectorSearch" name="equipSelectorSearch" placeholder="Search…" oninput="filterCheckboxList('equipSelectorList',this.value)" style="margin-bottom:12px;padding:8px 12px;font-size:13px;">
     <div id="equipSelectorList"></div>
-    <div style="display:flex;gap:8px;margin-top:16px;">
+    <div class="row-gap-sm" style="margin-top:16px;">
       <button class="btn-primary" onclick="addSelectedEquipment()">Add Selected</button>
-      <button style="background:#334155;color:#e2e8f0;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;" onclick="document.getElementById('asEquipModal').classList.remove('open')">Cancel</button>
+      <button class="btn-ghost" onclick="document.getElementById('asEquipModal').classList.remove('open')">Cancel</button>
     </div>
   </div>
 </div>
@@ -449,18 +455,20 @@
 <div id="asPersModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="asPersTitle">
   <div class="modal-scroll">
     <h3 id="asPersTitle" style="color:var(--accent);margin-bottom:12px;">Select Personnel</h3>
+    <label for="persSelectorSearch" class="sr-only">Search personnel</label>
     <input type="text" id="persSelectorSearch" name="persSelectorSearch" placeholder="Search…" oninput="filterCheckboxList('persSelectorList',this.value)" style="margin-bottom:12px;padding:8px 12px;font-size:13px;">
     <div id="persSelectorList"></div>
-    <div style="display:flex;gap:8px;margin-top:16px;">
+    <div class="row-gap-sm" style="margin-top:16px;">
       <button class="btn-primary" onclick="addSelectedPersonnel()">Add Selected</button>
-      <button style="background:#334155;color:#e2e8f0;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;" onclick="document.getElementById('asPersModal').classList.remove('open')">Cancel</button>
+      <button class="btn-ghost" onclick="document.getElementById('asPersModal').classList.remove('open')">Cancel</button>
     </div>
   </div>
 </div>
 
 <!-- Confirm Dialog Modal -->
-<div class="modal" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmMsgText">
+<div class="modal" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmModalHeading" aria-describedby="confirmMsgText">
   <div class="modal-box">
+    <h3 id="confirmModalHeading" class="sr-only">Confirm Action</h3>
     <div id="confirmMsgText" style="margin-bottom:20px;font-size:14px;line-height:1.5;"></div>
     <div class="modal-btns">
       <button class="btn-cancel" id="confirmCancel">Cancel</button>

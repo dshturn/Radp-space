@@ -131,15 +131,16 @@ async function loadEquipment(preserveState = false) {
   const dcTile = dcEl.closest('.dash-tile');
   dcEl.textContent = totalDocs;
   if (expiredDocs > 0) {
-    dcSub.textContent = `${expiredDocs} expired`; dcSub.style.color = '#fda4af';
+    dcSub.textContent = `${expiredDocs} expired`;
     dcTile.className = 'dash-tile bad';
   } else if (expiringDocs > 0) {
-    dcSub.textContent = `${expiringDocs} expiring soon`; dcSub.style.color = '#fbbf24';
+    dcSub.textContent = `${expiringDocs} expiring soon`;
     dcTile.className = 'dash-tile warn';
   } else {
-    dcSub.textContent = totalDocs > 0 ? 'All valid' : 'No documents'; dcSub.style.color = '#64748b';
+    dcSub.textContent = totalDocs > 0 ? 'All valid' : 'No documents';
     dcTile.className = 'dash-tile ' + (totalDocs > 0 ? 'ok' : 'info');
   }
+  dcSub.style.color = '';
 }
 
 function equipItemCard(item, name, docs, subs = [], docsByItem = {}, subsByParent = {}) {
@@ -167,17 +168,17 @@ function equipItemCard(item, name, docs, subs = [], docsByItem = {}, subsByParen
     const fileBtn = d.file_url ? `<button class="doc-view-btn" data-url="${esc(d.file_url)}" onclick="openDoc(this.dataset.url)" aria-label="View ${typeName} document">↗ View</button>` : '';
     const rowClass = statusText === 'EXPIRED' ? ' status-expired' : statusText === 'EXPIRING' ? ' status-expiring' : '';
     return `<div class="doc-row${rowClass}" data-doc-id="${parseInt(d.id)}">
-      <div style="flex:1">
+      <div class="flex-1">
         <div class="doc-name">${typeName}</div>
         <div class="doc-date">Issue: ${esc(d.issue_date || '—')} · Expiry: ${esc(expiry || '—')}</div>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;">
+      <div class="row-gap-sm">
         ${fileBtn}
         <span class="doc-status ${statusClass}">${statusText}</span>
         <button class="btn-danger" onclick="deleteDoc(${parseInt(d.id)})" aria-label="Delete ${typeName} document">✕</button>
       </div>
     </div>`;
-  }).join('') : `<div class="doc-date" style="padding:8px 0;">No documents yet</div>`;
+  }).join('') : `<div class="doc-date doc-empty">No documents yet</div>`;
 
   // Badge for own docs only (used on DOCUMENTS header)
   const ownDocsBadge = mkBadge(docs.filter(isExp).length, docs.filter(isExpiring).length);
@@ -215,11 +216,11 @@ function equipItemCard(item, name, docs, subs = [], docsByItem = {}, subsByParen
         else if (exp <= _in30) { statusClass = 'doc-status-expiring'; statusText = 'EXPIRING'; }
       }
       const fileBtn = d.file_url ? `<button class="doc-view-btn" data-url="${esc(d.file_url)}" onclick="openDoc(this.dataset.url)" aria-label="View ${typeName} document">↗ View</button>` : '';
-      return `<div class="doc-row" data-doc-id="${parseInt(d.id)}" style="padding:6px 0;">
-        <div style="flex:1"><div class="doc-name">${typeName}</div><div class="doc-date">Issue: ${esc(d.issue_date || '—')} · Expiry: ${esc(expiry || '—')}</div></div>
-        <div style="display:flex;align-items:center;gap:8px;">${fileBtn}<span class="doc-status ${statusClass}">${statusText}</span><button class="btn-danger" onclick="deleteDoc(${parseInt(d.id)})" aria-label="Delete ${typeName} document">✕</button></div>
+      return `<div class="doc-row doc-row-sm" data-doc-id="${parseInt(d.id)}">
+        <div class="flex-1"><div class="doc-name">${typeName}</div><div class="doc-date">Issue: ${esc(d.issue_date || '—')} · Expiry: ${esc(expiry || '—')}</div></div>
+        <div class="row-gap-sm">${fileBtn}<span class="doc-status ${statusClass}">${statusText}</span><button class="btn-danger" onclick="deleteDoc(${parseInt(d.id)})" aria-label="Delete ${typeName} document">✕</button></div>
       </div>`;
-    }).join('') : `<div class="doc-date" style="padding:4px 0;">No documents yet</div>`;
+    }).join('') : `<div class="doc-date doc-empty-sm">No documents yet</div>`;
     const subChildren = subsByParent[sub.id] || [];
     const subOwnDocsBadge = mkBadge(subDocs.filter(isExp).length, subDocs.filter(isExpiring).length);
     const allSubDocs = [...subDocs, ...subChildren.flatMap(sc => docsByItem[sc.id] || [])];
@@ -232,26 +233,26 @@ function equipItemCard(item, name, docs, subs = [], docsByItem = {}, subsByParen
         let statusClass = 'doc-status-valid', statusText = 'VALID';
         if (expiry) { const exp = new Date(expiry); if (exp < _today) { statusClass = 'doc-status-expired'; statusText = 'EXPIRED'; } else if (exp <= _in30) { statusClass = 'doc-status-expiring'; statusText = 'EXPIRING'; } }
         const fileBtn = d.file_url ? `<button class="doc-view-btn" data-url="${esc(d.file_url)}" onclick="openDoc(this.dataset.url)" aria-label="View ${typeName} document">↗ View</button>` : '';
-        return `<div class="doc-row" data-doc-id="${parseInt(d.id)}" style="padding:4px 0;font-size:12px;">
-          <div style="flex:1"><div class="doc-name">${typeName}</div><div class="doc-date">Issue: ${esc(d.issue_date||'—')} · Expiry: ${esc(expiry||'—')}</div></div>
-          <div style="display:flex;align-items:center;gap:6px;">${fileBtn}<span class="doc-status ${statusClass}">${statusText}</span><button class="btn-danger" onclick="deleteDoc(${parseInt(d.id)})" aria-label="Delete ${typeName} document">✕</button></div>
+        return `<div class="doc-row doc-row-xs" data-doc-id="${parseInt(d.id)}">
+          <div class="flex-1"><div class="doc-name">${typeName}</div><div class="doc-date">Issue: ${esc(d.issue_date||'—')} · Expiry: ${esc(expiry||'—')}</div></div>
+          <div class="row-gap-xs">${fileBtn}<span class="doc-status ${statusClass}">${statusText}</span><button class="btn-danger" onclick="deleteDoc(${parseInt(d.id)})" aria-label="Delete ${typeName} document">✕</button></div>
         </div>`;
-      }).join('') : `<div class="doc-date" style="padding:3px 0;font-size:11px;">No documents yet</div>`;
+      }).join('') : `<div class="doc-date doc-empty-xs">No documents yet</div>`;
       const scHasDeeper = (subsByParent[sc.id] || []).length > 0;
       const scAlertBadge = mkBadge(scDocs.filter(isExp).length, scDocs.filter(isExpiring).length);
       const scName   = esc(sc.name || 'Sub-child');
       const scSerial = esc(sc.serial_number || '—');
       return `<div class="sub-child-card" data-id="${parseInt(sc.id)}">
         <div class="sub-child-header">
-          <div style="cursor:pointer;flex:1;" onclick="toggleSubCard(this.closest('.sub-child-card'))">
+          <div class="card-clickable" onclick="toggleSubCard(this.closest('.sub-child-card'))">
             <div class="sub-child-title">${scName}</div>
-            <div style="display:flex;align-items:center;gap:6px;margin-top:1px;">
+            <div class="card-meta">
               <div class="doc-name" style="font-size:10px;">S/N: ${scSerial}</div>
               ${scAlertBadge}
             </div>
           </div>
-          <div style="display:flex;gap:5px;align-items:center;">
-            ${scHasDeeper ? `<span title="Has nested sub-components not shown" style="font-size:10px;color:#94a3b8;background:#1e293b;border:1px solid #334155;padding:2px 7px;border-radius:8px;cursor:default;">↳ ${parseInt((subsByParent[sc.id]).length)}</span>` : ''}
+          <div class="row-gap-xs">
+            ${scHasDeeper ? `<span title="Has nested sub-components not shown" class="depth-badge">↳ ${parseInt((subsByParent[sc.id]).length)}</span>` : ''}
             <button class="btn-reassign" onclick="openReassignModal(${parseInt(sc.id)}, this.dataset.name, ${parseInt(sub.id)})" data-name="${scName}" aria-label="Change parent of ${scName}">⇄</button>
             <button class="btn-toggle" onclick="toggleSubCard(this.closest('.sub-child-card'))" aria-label="Expand ${scName}">▾</button>
             <button class="btn-danger" onclick="deleteEquipItem(${parseInt(sc.id)})" aria-label="Delete ${scName}">✕</button>
@@ -268,7 +269,7 @@ function equipItemCard(item, name, docs, subs = [], docsByItem = {}, subsByParen
               </div>
               <div class="doc-group-body"><div class="doc-group-inner">
                 ${scDocsHtml}
-                <button class="upload-btn" style="font-size:11px;padding:4px 8px;margin-top:8px;margin-bottom:4px;" onclick="openAddDoc(${parseInt(sc.id)})">+ Add Document</button>
+                <button class="upload-btn upload-btn-sm" onclick="openAddDoc(${parseInt(sc.id)})">+ Add Document</button>
               </div></div>
             </div>
           </div></div>
@@ -280,14 +281,14 @@ function equipItemCard(item, name, docs, subs = [], docsByItem = {}, subsByParen
     const subSerial = esc(sub.serial_number || '—');
     return `<div class="sub-card" data-id="${parseInt(sub.id)}">
       <div class="sub-card-header">
-        <div style="cursor:pointer;flex:1;" onclick="toggleSubCard(this.closest('.sub-card'))">
+        <div class="card-clickable" onclick="toggleSubCard(this.closest('.sub-card'))">
           <div class="sub-card-title">${subName}</div>
-          <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
+          <div class="card-meta">
             <div class="doc-name" style="font-size:11px;">S/N: ${subSerial}</div>
             ${subAlertBadge}
           </div>
         </div>
-        <div style="display:flex;gap:6px;align-items:center;">
+        <div class="row-gap-xs">
           <button class="btn-reassign" onclick="openReassignModal(${parseInt(sub.id)}, this.dataset.name, ${parseInt(item.id)})" data-name="${subName}" aria-label="Change parent of ${subName}">⇄</button>
           <button class="btn-toggle" onclick="toggleSubCard(this.closest('.sub-card'))" aria-label="Expand ${subName}">▾</button>
           <button class="btn-danger" onclick="deleteEquipItem(${parseInt(sub.id)})" aria-label="Delete ${subName}">✕</button>
@@ -304,12 +305,12 @@ function equipItemCard(item, name, docs, subs = [], docsByItem = {}, subsByParen
             </div>
             <div class="doc-group-body"><div class="doc-group-inner">
               ${subDocsHtml}
-              <button class="upload-btn" style="font-size:11px;margin-top:8px;margin-bottom:4px;" onclick="openAddDoc(${parseInt(sub.id)})">+ Add Document</button>
+              <button class="upload-btn upload-btn-sm" onclick="openAddDoc(${parseInt(sub.id)})">+ Add Document</button>
             </div></div>
           </div>
-          <div style="margin-top:8px;">
+          <div class="mt-sm">
             ${subChildrenHtml}
-            <button class="add-sub-btn" style="font-size:11px;padding:4px 10px;margin-top:6px;" onclick="openAddSubComponent(${parseInt(sub.id)}, this.dataset.name)" data-name="${subName}">+ Add Sub-child</button>
+            <button class="add-sub-btn add-sub-btn-sm" onclick="openAddSubComponent(${parseInt(sub.id)}, this.dataset.name)" data-name="${subName}">+ Add Sub-child</button>
           </div>
         </div></div>
       </div>
@@ -320,14 +321,14 @@ function equipItemCard(item, name, docs, subs = [], docsByItem = {}, subsByParen
   const safeSerial = esc(item.serial_number || '—');
   return `<div class="app-card" data-id="${parseInt(item.id)}">
     <div class="card-header">
-      <div style="cursor:pointer;flex:1;" onclick="toggleCard(this.closest('.app-card').querySelector('.btn-toggle'))">
+      <div class="card-clickable" onclick="toggleCard(this.closest('.app-card').querySelector('.btn-toggle'))">
         <div class="card-title">${safeName}</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
+        <div class="card-meta">
           <div class="doc-name">S/N: ${safeSerial}</div>
           ${alertBadge}
         </div>
       </div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <div class="row-wrap">
         <button class="btn-reassign" onclick="openReassignModal(${parseInt(item.id)}, this.dataset.name, null)" data-name="${safeName}" aria-label="Change assignment of ${safeName}">⇄</button>
         <button class="btn-toggle" onclick="toggleCard(this)" aria-label="Expand ${safeName}">▾</button>
         <button class="btn-danger" onclick="deleteEquipItem(${parseInt(item.id)})" aria-label="Delete ${safeName}">✕</button>
@@ -344,7 +345,7 @@ function equipItemCard(item, name, docs, subs = [], docsByItem = {}, subsByParen
           </div>
           <div class="doc-group-body"><div class="doc-group-inner">
             ${docsHtml}
-            <button class="upload-btn" style="margin-top:8px;margin-bottom:4px;" onclick="openAddDoc(${parseInt(item.id)})">+ Add Document</button>
+            <button class="upload-btn upload-btn-sm" onclick="openAddDoc(${parseInt(item.id)})">+ Add Document</button>
           </div></div>
         </div>
         <div class="sub-section">
@@ -435,7 +436,7 @@ function renderReassignList(query, preselect) {
     return !q || label.includes(q);
   });
   const container = document.getElementById('reassignList');
-  if (!filtered.length) { container.innerHTML = '<div style="color:#64748b;font-size:13px;padding:8px 0;">No matches</div>'; return; }
+  if (!filtered.length) { container.innerHTML = '<div class="no-matches">No matches</div>'; return; }
   container.innerHTML = filtered.map(i => {
     const level  = !i.parent_id ? 'Equipment' : 'Sub-component';
     const label  = `[${level}] ${esc(i.name || 'Equipment')} · S/N: ${esc(i.serial_number || '—')}`;
@@ -597,8 +598,8 @@ async function saveDocument() {
   const file       = document.getElementById('docFileInput').files[0];
 
   if (!typeName) { showToast('Please select or enter a document type', 'warn'); return; }
-  if (!file) { showToast('Please attach a file — attachment is required', 'warn'); document.getElementById('docFileBtn').style.borderColor = '#fda4af'; return; }
-  document.getElementById('docFileBtn').style.borderColor = '#334155';
+  if (!file) { showToast('Please attach a file — attachment is required', 'warn'); document.getElementById('docFileBtn').style.borderColor = 'var(--bad)'; return; }
+  document.getElementById('docFileBtn').style.borderColor = 'var(--border)';
 
   let fileUrl = null;
   if (file) {
