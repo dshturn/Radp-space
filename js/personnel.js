@@ -103,7 +103,7 @@ async function loadPersonnel(preserveState = false) {
       });
       return `<div class="eq-group collapsed">
         <div class="group-header" onclick="toggleGroup(this)">
-          <span class="group-title">${pos}</span>
+          <span class="group-title">${esc(pos)}</span>
           ${grpBadges(_exp, _expir, _ok, _missing, _review)}
           <span class="group-toggle">▾</span>
         </div>
@@ -176,34 +176,38 @@ function personnelCard(p, docs) {
         if (exp < today)      { statusClass = 'doc-status-expired';  statusText = 'EXPIRED';  }
         else if (exp <= in30) { statusClass = 'doc-status-expiring'; statusText = 'EXPIRING'; }
       }
-      const fileBtn = d.file_url ? `<button onclick="openDoc('${d.file_url}')" class="doc-view-btn" aria-label="View ${t.name} document">↗ View</button>` : '';
+      const safeTypeName = esc(t.name);
+      const fileBtn = d.file_url ? `<button class="doc-view-btn" data-url="${esc(d.file_url)}" onclick="openDoc(this.dataset.url)" aria-label="View ${safeTypeName} document">↗ View</button>` : '';
       const cfg     = PERS_DOC_TYPES.find(x => x.name === t.name) || {};
       const dateStr = cfg.noIssue && cfg.noExpiry ? ''
-                    : cfg.noIssue  ? `Expiry: ${d.expiry_date || '—'}`
-                    : cfg.noExpiry ? `Issue: ${d.issue_date || '—'}`
-                    : `Issue: ${d.issue_date || '—'} · Expiry: ${d.expiry_date || '—'}`;
-      const yrsStr  = t.name === 'CV' && p.years_experience != null ? `<div class="doc-date">${p.years_experience} yrs exp in O&G</div>` : '';
+                    : cfg.noIssue  ? `Expiry: ${esc(d.expiry_date || '—')}`
+                    : cfg.noExpiry ? `Issue: ${esc(d.issue_date || '—')}`
+                    : `Issue: ${esc(d.issue_date || '—')} · Expiry: ${esc(d.expiry_date || '—')}`;
+      const yrsInt  = parseInt(p.years_experience);
+      const yrsStr  = t.name === 'CV' && p.years_experience != null ? `<div class="doc-date">${isNaN(yrsInt) ? '' : yrsInt} yrs exp in O&G</div>` : '';
       const rowClass = statusText === 'EXPIRED' ? ' status-expired' : statusText === 'EXPIRING' ? ' status-expiring' : '';
-      return `<div class="doc-row${rowClass}" data-doc-id="${d.id}">
+      const safeYrs  = p.years_experience != null ? parseInt(p.years_experience) : 'null';
+      return `<div class="doc-row${rowClass}" data-doc-id="${parseInt(d.id)}">
         <div style="flex:1">
-          <div class="doc-name" style="display:flex;align-items:center;gap:6px;">${t.name} ${mandBadge}</div>
+          <div class="doc-name" style="display:flex;align-items:center;gap:6px;">${safeTypeName} ${mandBadge}</div>
           ${dateStr ? `<div class="doc-date">${dateStr}</div>` : ''}
           ${yrsStr}
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
           ${fileBtn}
           <span class="doc-status ${statusClass}">${statusText}</span>
-          <button class="btn-edit" onclick="editPersDoc(${d.id},${p.id},'${t.name}',${t.mandatory},'${d.issue_date||''}','${d.expiry_date||''}',${p.years_experience??'null'})" aria-label="Edit ${t.name}">✏</button>
-          <button class="btn-danger" onclick="deletePersDoc(${d.id})" aria-label="Delete ${t.name} document">✕</button>
+          <button class="btn-edit" onclick="editPersDoc(${parseInt(d.id)},${parseInt(p.id)},this.dataset.type,${t.mandatory ? 'true' : 'false'},this.dataset.issue,this.dataset.expiry,${safeYrs})" data-type="${safeTypeName}" data-issue="${esc(d.issue_date||'')}" data-expiry="${esc(d.expiry_date||'')}" aria-label="Edit ${safeTypeName}">✏</button>
+          <button class="btn-danger" onclick="deletePersDoc(${parseInt(d.id)})" aria-label="Delete ${safeTypeName} document">✕</button>
         </div>
       </div>`;
     } else {
+      const safeTypeName = esc(t.name);
       return `<div class="doc-row">
         <div style="flex:1">
-          <div class="doc-name" style="display:flex;align-items:center;gap:6px;">${t.name} ${mandBadge}</div>
+          <div class="doc-name" style="display:flex;align-items:center;gap:6px;">${safeTypeName} ${mandBadge}</div>
           <div class="doc-date" style="color:#475569;">Not uploaded</div>
         </div>
-        <button class="upload-btn" onclick="openAddPersDoc(${p.id},'${t.name}',${t.mandatory})">↑ Upload</button>
+        <button class="upload-btn" onclick="openAddPersDoc(${parseInt(p.id)}, this.dataset.type, ${t.mandatory ? 'true' : 'false'})" data-type="${safeTypeName}">↑ Upload</button>
       </div>`;
     }
   }).join('');
@@ -224,16 +228,17 @@ function personnelCard(p, docs) {
     alertBadge = `<span class="sbadge sbadge-ready">READY</span>`;
   }
 
-  return `<div class="app-card" data-id="p${p.id}">
+  const safeName = esc(p.full_name);
+  return `<div class="app-card" data-id="p${parseInt(p.id)}">
     <div class="card-header">
       <div style="cursor:pointer;flex:1;" onclick="toggleCard(this.closest('.app-card').querySelector('.btn-toggle'))">
-        <div class="card-title">${p.full_name}</div>
-        <div class="doc-name" style="margin-top:4px;">${p.position || ''} · ID: ${p.national_id || '—'}</div>
+        <div class="card-title">${safeName}</div>
+        <div class="doc-name" style="margin-top:4px;">${esc(p.position || '')} · ID: ${esc(p.national_id || '—')}</div>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         ${alertBadge}
-        <button class="btn-toggle" onclick="toggleCard(this)" aria-label="Expand ${p.full_name}">▾</button>
-        <button class="btn-danger" onclick="deletePersRecord(${p.id})" aria-label="Delete ${p.full_name}">✕</button>
+        <button class="btn-toggle" onclick="toggleCard(this)" aria-label="Expand ${safeName}">▾</button>
+        <button class="btn-danger" onclick="deletePersRecord(${parseInt(p.id)})" aria-label="Delete ${safeName}">✕</button>
       </div>
     </div>
     <div class="card-body"><div class="body-inner"><div class="body-content">

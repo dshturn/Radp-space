@@ -15,17 +15,32 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 
+const STATIC_EXTS = /\.(js|css|svg|png|jpg|jpeg|ico|woff2?|webp)(\?.*)?$/i;
+
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
-  // Let external origins (fonts, CDNs) pass through without SW interception
   if (!e.request.url.startsWith(self.location.origin)) return;
+
+  const url = new URL(e.request.url);
+  const isStatic = STATIC_EXTS.test(url.pathname)
+    || PRECACHE.includes(url.pathname);
+
+  if (!isStatic) {
+    // HTML pages and anything else: always go to network so security
+    // patches reach users immediately and no stale data is served.
+    e.respondWith(fetch(e.request));
+    return;
+  }
+
+  // Static assets: cache-first for performance.
   e.respondWith(
-    fetch(e.request)
-      .then(res => {
+    caches.match(e.request).then(cached => {
+      if (cached) return cached;
+      return fetch(e.request).then(res => {
         const clone = res.clone();
         caches.open(CACHE).then(c => c.put(e.request, clone));
         return res;
-      })
-      .catch(() => caches.match(e.request))
+      });
+    }).catch(() => caches.match(e.request))
   );
 });

@@ -1,6 +1,7 @@
 // ═══════════════════ ADMIN ═══════════════════
 
 let adminToken = '';
+const _adminUserMap = new Map();
 
 async function adminLogin() {
   const email    = document.getElementById('adminEmail').value;
@@ -36,28 +37,34 @@ async function loadUsers() {
 }
 
 function adminUserCard(u) {
-  const editBtn = `<button class="btn-edit" onclick='openEditUser(${JSON.stringify(u)})' aria-label="Edit ${u.full_name}">✏</button>`;
+  _adminUserMap.set(u.id, u);
+  const safeId  = esc(u.id);
+  const editBtn = `<button class="btn-edit" onclick="openEditUser('${safeId}')" aria-label="Edit ${esc(u.full_name)}">✏</button>`;
+  const validStatuses = new Set(['pending', 'approved', 'rejected']);
+  const safeStatus = validStatuses.has(u.status) ? u.status : 'pending';
   const actions = u.status === 'pending' ? `
     <div class="admin-actions">
       ${editBtn}
-      <button class="btn-approve" onclick="updateStatus('${u.id}', 'approved')">Approve</button>
-      <button class="btn-reject"  onclick="updateStatus('${u.id}', 'rejected')">Reject</button>
+      <button class="btn-approve" onclick="updateStatus('${safeId}', 'approved')">Approve</button>
+      <button class="btn-reject"  onclick="updateStatus('${safeId}', 'rejected')">Reject</button>
     </div>` : `
     <div class="admin-actions">
       ${editBtn}
-      <span class="badge ${u.status}">${u.status}</span>
-      <button class="btn-delete" onclick="deleteUser('${u.id}')">Delete</button>
+      <span class="badge ${safeStatus}">${safeStatus}</span>
+      <button class="btn-delete" onclick="deleteUser('${safeId}')">Delete</button>
     </div>`;
   return `<div class="admin-card">
     <div class="admin-info">
-      <div class="name">${u.full_name}</div>
-      <div class="detail">${u.email} · ${u.company || '—'} · ${u.service_line || '—'}</div>
+      <div class="name">${esc(u.full_name)}</div>
+      <div class="detail">${esc(u.email)} · ${esc(u.company || '—')} · ${esc(u.service_line || '—')}</div>
     </div>
     ${actions}
   </div>`;
 }
 
-async function openEditUser(u) {
+async function openEditUser(userId) {
+  const u = _adminUserMap.get(userId);
+  if (!u) return;
   document.getElementById('editUserId').value    = u.id;
   document.getElementById('editFullName').value  = u.full_name  || '';
   document.getElementById('editEmail').value     = u.email      || '';
