@@ -217,11 +217,9 @@ Replace with:
   loadEquipment(true);
 ```
 
-- [ ] **`createSite` in `js/operations.js`** — find the function and add a success toast after the POST succeeds. Read the function first to find the exact lines, then add `showToast('Site created', 'success');` after a successful create response before closing the modal.
+- [ ] **`createSite` and `saveEditSite` in `js/operations.js`** — already have success toasts (`showToast('Site created', 'success')` and `showToast('Site renamed', 'success')`). No change needed.
 
-- [ ] **`saveEditSite` in `js/operations.js`** — similarly add `showToast('Site renamed', 'success');` after a successful PATCH.
-
-- [ ] **`createAssessment` in `js/assessment.js`** — the function navigates to the detail view on success, which is sufficient feedback. No change needed here.
+- [ ] **`createAssessment` in `js/assessment.js`** — navigates to the detail view on success, which is sufficient feedback. No change needed here.
 
 - [ ] **Verify manually:** Add a personnel record → confirm green "Personnel added" toast appears. Upload a document → confirm "Document saved" toast.
 
