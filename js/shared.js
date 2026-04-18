@@ -170,6 +170,7 @@ const UPLOAD_ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'ima
 const UPLOAD_MAX_BYTES = 10 * 1024 * 1024; // 10 MB
 
 function validateUploadFile(file) {
+  if (!file) return false;
   if (!UPLOAD_ALLOWED_TYPES.includes(file.type)) {
     showToast('Only PDF, JPEG, PNG, or WebP files are allowed', 'warn');
     return false;
