@@ -20,18 +20,29 @@ function esc(str) {
     .replace(/'/g, '&#39;');
 }
 
-// ─── API fetch with 401 guard ───
+// ─── API fetch with 401 guard and error surfacing ───
 async function apiFetch(url, options = {}) {
-  const res = await fetch(url, options);
-  if (res.status === 401) {
-    localStorage.removeItem('radp_token');
-    localStorage.removeItem('radp_user');
-    showPage('login');
+  try {
+    const res = await fetch(url, options);
+    if (res.status === 401) {
+      localStorage.removeItem('radp_token');
+      localStorage.removeItem('radp_user');
+      showPage('login');
+      return null;
+    }
+    const data = await res.json().catch(() => null);
+    if (!res.ok) {
+      const msg = data?.message || data?.error || `Request failed (${res.status})`;
+      showToast(msg, 'error');
+      return null;
+    }
+    return Array.isArray(data) ? data : (data ? [data] : []);
+  } catch {
+    showToast('Network error — check your connection and try again.', 'error');
     return null;
   }
-  const data = await res.json();
-  return Array.isArray(data) ? data : [];
 }
+
 
 // ─── Modal open with focus management ───
 function openModal(id) {
