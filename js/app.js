@@ -1,8 +1,8 @@
 // ═══════════════════ ROUTING ═══════════════════
 
-const PAGE_ORDER = { home: 0, login: 1, register: 2, 'admin-login': 3, contractor: 4, assessment: 5, 'admin-dashboard': 6 };
-const PAGE_URLS  = { home: '/', login: '/login', register: '/register', 'admin-login': '/admin', contractor: '/contractor', assessment: '/assessment', 'admin-dashboard': '/admin/dashboard' };
-const NAV_PAGES  = new Set(['contractor', 'assessment']);
+const PAGE_ORDER = { home: 0, login: 1, register: 2, 'admin-login': 3, contractor: 4, assessment: 5, operations: 6, 'admin-dashboard': 7 };
+const PAGE_URLS  = { home: '/', login: '/login', register: '/register', 'admin-login': '/admin', contractor: '/contractor', assessment: '/assessment', operations: '/operations', 'admin-dashboard': '/admin/dashboard' };
+const NAV_PAGES  = new Set(['contractor', 'assessment', 'operations']);
 let currentPage  = null;
 
 function showPage(name, replace = false) {
@@ -21,11 +21,14 @@ function showPage(name, replace = false) {
   nav.style.display = NAV_PAGES.has(name) ? 'flex' : 'none';
   if (NAV_PAGES.has(name)) {
     document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
-    document.getElementById(name === 'contractor' ? 'navContractor' : 'navAssessment').classList.add('active');
+    const navMap = { contractor: 'navContractor', assessment: 'navAssessment', operations: 'navOperations' };
+    document.getElementById(navMap[name])?.classList.add('active');
     const u = getUser();
-    document.getElementById('navUser').textContent     = u.email || '';
-    document.getElementById('welcomeMsg').textContent  = `Welcome, ${u.full_name || 'Contractor'}`;
-    document.getElementById('companyInfo').textContent = `${u.company || ''} · ${u.service_line || ''}`;
+    document.getElementById('navUser').textContent = u.email || '';
+    if (name === 'contractor') {
+      document.getElementById('welcomeMsg').textContent  = `Welcome, ${u.full_name || 'Contractor'}`;
+      document.getElementById('companyInfo').textContent = `${u.company || ''} · ${u.service_line || ''}`;
+    }
   }
 
   replace
@@ -34,6 +37,7 @@ function showPage(name, replace = false) {
 
   if (name === 'contractor') { loadEquipment(); loadPersonnel(); loadDashAssessments(); }
   if (name === 'assessment') { loadAssessments(); }
+  if (name === 'operations') { loadOperations(); }
   if (name === 'register')   { loadRegisterOptions(); }
 }
 
@@ -94,7 +98,8 @@ const _path = window.location.pathname;
 if (_path.includes('admin')) {
   showPage('admin-login', true);
 } else if (getToken()) {
-  if (_path.includes('assessment')) showPage('assessment', true);
+  if (_path.includes('assessment'))  showPage('assessment', true);
+  else if (_path.includes('operations')) showPage('operations', true);
   else showPage('contractor', true);
 } else {
   if (_path.includes('register'))                                        showPage('register', true);

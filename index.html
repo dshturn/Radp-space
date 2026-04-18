@@ -21,6 +21,7 @@
   <div class="nav-links">
     <a href="/contractor" onclick="showPage('contractor');return false;" id="navContractor"><span aria-hidden="true">📋</span> Contractor</a>
     <a href="/assessment" onclick="showPage('assessment');return false;" id="navAssessment"><span aria-hidden="true">📄</span> Assessments</a>
+    <a href="/operations" onclick="showPage('operations');return false;" id="navOperations"><span aria-hidden="true">🏗</span> Operations</a>
   </div>
   <div class="nav-right">
     <span class="nav-user" id="navUser"></span>
@@ -204,6 +205,74 @@
         <button class="lor-btn" onclick="generateLoR()">📄 Generate LoR</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ══════════════════ OPERATIONS ══════════════════ -->
+<div id="operations-page" class="page">
+  <div class="container">
+
+    <!-- List view: site grid -->
+    <div id="opsListView" class="ops-view active">
+      <div class="row-between mb-sm">
+        <div class="section-label">Operation Sites</div>
+        <button class="btn-success" onclick="openCreateSite()">+ New Site</button>
+      </div>
+      <div id="opsGrid" class="ops-grid"></div>
+    </div>
+
+    <!-- Detail view: single site -->
+    <div id="opsDetailView" class="ops-view">
+      <div style="margin-bottom:16px;">
+        <button class="btn-ghost-sm" onclick="showOpsList()">← Back to Sites</button>
+      </div>
+      <div class="ops-detail-header">
+        <div class="ops-detail-title-wrap">
+          <div id="opsSiteTitle" class="ops-detail-title"></div>
+        </div>
+        <div class="ops-detail-actions">
+          <button id="opsEditBtn" class="btn-edit" aria-label="Rename site">✏ Rename</button>
+          <button id="opsArchiveBtn" class="btn-delete" aria-label="Archive site">Archive</button>
+        </div>
+      </div>
+      <!-- Stats bar -->
+      <div class="ops-stats-bar">
+        <div class="ops-stat">
+          <div class="ops-stat-val info" id="opsStatPers">—</div>
+          <div class="ops-stat-lbl">Personnel</div>
+        </div>
+        <div class="ops-stat">
+          <div class="ops-stat-val info" id="opsStatEquip">—</div>
+          <div class="ops-stat-lbl">Equipment</div>
+        </div>
+        <div class="ops-stat">
+          <div class="ops-stat-val info" id="opsStatExpiry">—</div>
+          <div class="ops-stat-lbl">Next Expiry</div>
+        </div>
+      </div>
+      <!-- Tabs -->
+      <div class="tabs" id="opsDetailTabs">
+        <button class="tab active" onclick="showOpsDetailTab('personnel', this)">Personnel</button>
+        <button class="tab" onclick="showOpsDetailTab('equipment', this)">Equipment</button>
+      </div>
+      <!-- Personnel tab -->
+      <div id="opsPersTab">
+        <div class="row-between mb-sm">
+          <div class="section-label">Assigned Personnel</div>
+          <button class="btn-primary" onclick="openSitePersonnelSelector()">+ Add Personnel</button>
+        </div>
+        <div id="opsSitePersonnel"></div>
+      </div>
+      <!-- Equipment tab -->
+      <div id="opsEquipTab" style="display:none;">
+        <div class="row-between mb-sm">
+          <div class="section-label">Assigned Equipment</div>
+          <button class="btn-primary" onclick="openSiteEquipmentSelector()">+ Add Equipment</button>
+        </div>
+        <div id="opsSiteEquipment"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -465,6 +534,63 @@
   </div>
 </div>
 
+<!-- Operations: Create Site Modal -->
+<div class="modal" id="opsCreateModal" role="dialog" aria-modal="true" aria-labelledby="opsCreateTitle">
+  <div class="modal-box">
+    <h3 id="opsCreateTitle">New Operation Site</h3>
+    <label for="newSiteTitle">Site Name</label>
+    <input type="text" id="newSiteTitle" placeholder="e.g. MANIFA / MF-432" autocomplete="off">
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('opsCreateModal')">Cancel</button>
+      <button class="btn-save" onclick="createSite()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- Operations: Edit Site Modal -->
+<div class="modal" id="opsEditModal" role="dialog" aria-modal="true" aria-labelledby="opsEditTitle">
+  <div class="modal-box">
+    <h3 id="opsEditTitle">Rename Site</h3>
+    <label for="editSiteTitle">Site Name</label>
+    <input type="text" id="editSiteTitle" placeholder="Site name" autocomplete="off">
+    <input type="hidden" id="editSiteId">
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('opsEditModal')">Cancel</button>
+      <button class="btn-save" onclick="saveEditSite()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Operations: Assign Personnel Modal -->
+<div id="opsPersModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="opsPersTitle">
+  <div class="modal-scroll">
+    <h3 id="opsPersTitle" style="color:var(--accent);margin-bottom:12px;">Assign Personnel</h3>
+    <p style="font-size:12px;color:var(--text-3);margin-bottom:12px;">Only personnel that have passed an assessment (status: Approved) are shown.</p>
+    <label for="opsPersSelSearch" class="sr-only">Search personnel</label>
+    <input type="text" id="opsPersSelSearch" placeholder="Search…" oninput="filterCheckboxList('opsPersSelList',this.value)" style="margin-bottom:12px;padding:8px 12px;font-size:13px;">
+    <div id="opsPersSelList"></div>
+    <div class="row-gap-sm" style="margin-top:16px;">
+      <button class="btn-primary" onclick="addSelectedSitePersonnel()">Add Selected</button>
+      <button class="btn-ghost" onclick="closeModal('opsPersModal')">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- Operations: Assign Equipment Modal -->
+<div id="opsEquipModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="opsEquipTitle">
+  <div class="modal-scroll">
+    <h3 id="opsEquipTitle" style="color:var(--accent);margin-bottom:12px;">Assign Equipment</h3>
+    <p style="font-size:12px;color:var(--text-3);margin-bottom:12px;">Only equipment that has passed an assessment (status: Approved) is shown.</p>
+    <label for="opsEquipSelSearch" class="sr-only">Search equipment</label>
+    <input type="text" id="opsEquipSelSearch" placeholder="Search…" oninput="filterCheckboxList('opsEquipSelList',this.value)" style="margin-bottom:12px;padding:8px 12px;font-size:13px;">
+    <div id="opsEquipSelList"></div>
+    <div class="row-gap-sm" style="margin-top:16px;">
+      <button class="btn-primary" onclick="addSelectedSiteEquipment()">Add Selected</button>
+      <button class="btn-ghost" onclick="closeModal('opsEquipModal')">Done</button>
+    </div>
+  </div>
+</div>
+
 <!-- Confirm Dialog Modal -->
 <div class="modal" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmModalHeading" aria-describedby="confirmMsgText">
   <div class="modal-box">
@@ -483,6 +609,7 @@
 <script src="/js/equipment.js" defer></script>
 <script src="/js/personnel.js" defer></script>
 <script src="/js/assessment.js" defer></script>
+<script src="/js/operations.js" defer></script>
 <script src="/js/admin.js" defer></script>
 <script src="/js/app.js" defer></script>
 </body>

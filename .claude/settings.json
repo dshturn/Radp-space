@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"C:/Users/dshtu/Radp-space\" && git add -A && git diff --cached --quiet || (git commit -m \"Auto-save from Claude session\" && git push origin main) 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  }
+}
