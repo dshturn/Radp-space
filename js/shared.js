@@ -193,6 +193,15 @@ function validateUploadFile(file) {
   return true;
 }
 
+// ─── Debounce ───
+function debounce(fn, delay) {
+  let timer;
+  return function(...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), delay);
+  };
+}
+
 // ─── Confirm dialog ───
 function showConfirm(message) {
   return new Promise(resolve => {
