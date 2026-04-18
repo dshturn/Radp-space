@@ -76,7 +76,7 @@ The improvement program is sequenced so each phase is stable before the next bui
 **Problem:** Letter of Readiness PDF generation is likely a stub or partially implemented.
 
 **Design:**
-- Audit current `generateLoR()` function in `assessment.js`
+- Inspect current `generateLoR()` in `assessment.js`; replace any stub with a full print-template implementation
 - LoR document structure:
   - Header: company logo placeholder, document title "Letter of Readiness", date of issue
   - Assessment metadata: field/well name, type of job, SharePoint request ID, objective
