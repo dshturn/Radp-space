@@ -599,6 +599,7 @@ async function saveDocument() {
 
   if (!typeName) { showToast('Please select or enter a document type', 'warn'); return; }
   if (!file) { showToast('Please attach a file — attachment is required', 'warn'); document.getElementById('docFileBtn').style.borderColor = 'var(--bad)'; return; }
+  if (!validateUploadFile(file)) return;
   document.getElementById('docFileBtn').style.borderColor = 'var(--border)';
 
   let fileUrl = null;
