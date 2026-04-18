@@ -982,16 +982,20 @@ async function bulkDeleteEquipment() {
 }
 ```
 
-- [ ] **Add a hidden checkbox to each top-level equipment card** in the `equipmentCard` render function (similar to personnelCard). Add before the card header:
+- [ ] **Add a hidden checkbox to each top-level equipment card in `js/equipment.js`** — the top-level card HTML starts around line 322 inside `loadEquipment`. Find the line that reads:
 
 ```js
-return `<div class="app-card" data-id="${parseInt(item.id)}">
-  <input type="checkbox" class="equip-bulk-check" data-id="${parseInt(item.id)}" style="display:${_equipBulkMode ? 'block' : 'none'};margin:8px;" onchange="updateEquipBulkCount()">
-  <div class="card-header">
-  ...
+  return `<div class="app-card" data-id="${parseInt(item.id)}">
+    <div class="card-header">
 ```
 
-Note: Find the exact function that renders the top-level equipment card (search for `function equipCard` or similar in `equipment.js`).
+And change it to:
+
+```js
+  return `<div class="app-card" data-id="${parseInt(item.id)}">
+    <input type="checkbox" class="equip-bulk-check" data-id="${parseInt(item.id)}" style="display:${_equipBulkMode ? 'block' : 'none'};margin:8px;" onchange="updateEquipBulkCount()">
+    <div class="card-header">
+```
 
 - [ ] **Add bulk toggle button and bulk bar to `index.html`** equipment section:
 
