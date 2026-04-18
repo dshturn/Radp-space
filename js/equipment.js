@@ -634,6 +634,7 @@ async function saveDocument() {
     body: JSON.stringify({ assessed: false })
   });
 
+  showToast('Document saved', 'success');
   closeModal('addDocModal');
   loadEquipment(true);
 }

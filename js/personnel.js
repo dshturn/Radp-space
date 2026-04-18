@@ -50,7 +50,8 @@ async function addPersonnel() {
     method: 'POST', headers: { ...getHeaders(), Prefer: 'return=representation' },
     body: JSON.stringify({ contractor_id: getUser().id, full_name: name, position, national_id: nationalId })
   });
-  if (_pRes.ok) { const [_newP] = await _pRes.json(); window._justAddedPersId = _newP?.id; }
+  if (_pRes.ok) { const [_newP] = await _pRes.json(); window._justAddedPersId = _newP?.id; showToast('Personnel added', 'success'); }
+  else { showToast('Failed to add personnel', 'error'); return; }
   closeModal('ctPersModal'); loadPersonnel();
 }
 
@@ -349,6 +350,7 @@ async function savePersDocument() {
       });
     }
   }
+  showToast('Document saved', 'success');
   closeModal('addPersDocModal');
   loadPersonnel();
 }
