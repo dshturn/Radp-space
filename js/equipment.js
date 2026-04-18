@@ -611,7 +611,8 @@ async function saveDocument() {
       headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${getToken()}`, 'Content-Type': file.type },
       body: file
     });
-    if (uploadRes.ok) fileUrl = `${SUPABASE_URL}/storage/v1/object/public/equipment-docs/${path}`;
+    if (!uploadRes.ok) { showToast('File upload failed. Please try again.', 'error'); return; }
+    fileUrl = `${SUPABASE_URL}/storage/v1/object/public/equipment-docs/${path}`;
   }
 
   const _docRes = await fetch(`${SUPABASE_URL}/rest/v1/documents`, {
