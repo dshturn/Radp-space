@@ -182,12 +182,23 @@ logAudit('assessment', data[0].id, 'created', fieldWell);
 logAudit('user', id, 'deleted', 'User account deleted');
 ```
 
-- [ ] **`js/admin.js` — user approval/rejection** — find the approve/reject functions and add:
+- [ ] **`js/admin.js` — user approval/rejection** — `updateStatus` uses `adminToken`, not `getHeaders()`, so `logAudit()` won't work directly. Instead, add an inline fire-and-forget fetch after the successful status PATCH in `updateStatus`:
+
 ```js
-// on approve:
-logAudit('user', userId, 'approved', userEmail);
-// on reject:
-logAudit('user', userId, 'rejected', userEmail);
+async function updateStatus(id, status) {
+  await fetch(`${SUPABASE_URL}/rest/v1/user_profiles?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}`, Prefer: 'return=minimal' },
+    body: JSON.stringify({ status })
+  });
+  // Audit log using admin token
+  fetch(`${SUPABASE_URL}/rest/v1/audit_log`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}`, Prefer: 'return=minimal' },
+    body: JSON.stringify({ actor_id: null, entity_type: 'user', entity_id: String(id), action: status === 'approved' ? 'approved' : 'rejected', label: `User ${status}` })
+  }).catch(() => {});
+  loadUsers();
+}
 ```
 
 - [ ] **Verify manually:** Perform a few actions (add personnel, upload doc, mark assessed). Then in Supabase Table Editor → audit_log → confirm rows are being inserted with correct entity_type, action, and label.
