@@ -165,6 +165,22 @@ function showToast(message, type = 'info') {
   }, 3500);
 }
 
+// ─── File upload validation ───
+const UPLOAD_ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
+const UPLOAD_MAX_BYTES = 10 * 1024 * 1024; // 10 MB
+
+function validateUploadFile(file) {
+  if (!UPLOAD_ALLOWED_TYPES.includes(file.type)) {
+    showToast('Only PDF, JPEG, PNG, or WebP files are allowed', 'warn');
+    return false;
+  }
+  if (file.size > UPLOAD_MAX_BYTES) {
+    showToast('File must be smaller than 10 MB', 'warn');
+    return false;
+  }
+  return true;
+}
+
 // ─── Confirm dialog ───
 function showConfirm(message) {
   return new Promise(resolve => {
