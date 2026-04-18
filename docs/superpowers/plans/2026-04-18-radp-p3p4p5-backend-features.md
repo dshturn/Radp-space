@@ -265,7 +265,9 @@ async function _renderAuditLog() {
   if (dateFrom)     url += `&created_at=gte.${dateFrom}T00:00:00Z`;
   if (dateTo)       url += `&created_at=lte.${dateTo}T23:59:59Z`;
 
-  const res = await fetch(url, { headers: { ...getAdminHeaders(), Prefer: 'count=exact' } });
+  // Admin uses its own token stored in `adminToken` (module-level var in admin.js)
+  const adminH = { apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}`, 'Content-Type': 'application/json' };
+  const res = await fetch(url, { headers: { ...adminH, Prefer: 'count=exact' } });
   if (!res.ok) { showToast('Failed to load audit log', 'error'); return; }
   const rows = await res.json();
   const total = parseInt(res.headers.get('Content-Range')?.split('/')[1] || '0', 10);
