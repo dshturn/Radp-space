@@ -302,6 +302,7 @@ async function savePersDocument() {
   }
   const file = document.getElementById('persDocFileInput').files[0];
   if (!file) { showToast('Please attach a new file — a file is required to save changes', 'warn'); document.getElementById('persDocFileBtn').style.borderColor = 'var(--bad)'; return; }
+  if (!validateUploadFile(file)) return;
 
   let fileUrl = null;
   if (file) {
