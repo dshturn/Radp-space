@@ -124,6 +124,7 @@ async function loadPersonnel(preserveState = false) {
       </div>`;
     }).join('');
   }
+  if (_persBulkMode) updatePersBulkCount();
 
   // Render pagination controls
   const totalPages = Math.ceil(totalCount / _PERS_PAGE_SIZE);
