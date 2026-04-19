@@ -40,9 +40,37 @@ async function loadEquipment(preserveState = false) {
   const items = await res.json();
   const totalCount = parseInt(res.headers.get('Content-Range')?.split('/')[1] || '0', 10);
 
+  // Fetch sub-components for the current page's items
+  const rootIds = items.map(i => i.id).join(',');
+  let allSubs = [];
+  if (rootIds) {
+    const subsRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/equipment_items?dismissed=is.false&parent_id=in.(${rootIds})&select=*&order=created_at`,
+      { headers: h }
+    );
+    if (subsRes.ok) {
+      const directSubs = await subsRes.json();
+      // Also fetch grandchildren (sub-children) for those subs
+      const subIds = directSubs.map(s => s.id).join(',');
+      let grandChildren = [];
+      if (subIds) {
+        const gcRes = await fetch(
+          `${SUPABASE_URL}/rest/v1/equipment_items?dismissed=is.false&parent_id=in.(${subIds})&select=*&order=created_at`,
+          { headers: h }
+        );
+        if (gcRes.ok) grandChildren = await gcRes.json();
+      }
+      allSubs = [...directSubs, ...grandChildren];
+    }
+  }
+
   const activeItems = items;
   const topLevel = items;
   const subsByParent = {};
+  allSubs.forEach(s => {
+    if (!subsByParent[s.parent_id]) subsByParent[s.parent_id] = [];
+    subsByParent[s.parent_id].push(s);
+  });
 
   // Load docs for active items
   const itemIds = activeItems.map(i => i.id).join(',');
