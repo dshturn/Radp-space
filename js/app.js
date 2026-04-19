@@ -16,49 +16,17 @@ function roleOf(user) {
   return (user && user.role) || 'contractor';
 }
 
-// Home → login, remembering the role the user picked so we can show the right subtitle
-// and reject mismatches after auth.
-function selectRole(role) {
-  sessionStorage.setItem('radp_intent', role);
-  const sub = document.getElementById('loginRoleSubtitle');
-  if (sub) {
-    sub.textContent = role === 'operations' ? 'Operations portal'
-                    : role === 'assessor'   ? 'Assessments portal'
-                    : 'Contractor portal';
-  }
-  const link = document.getElementById('loginRegisterLink');
-  if (link) {
-    link.textContent = role === 'contractor'
-      ? 'New contractor? Register here'
-      : 'New user? Register here';
-  }
-  showPage('login');
-}
-
-// Swap register form between contractor variant (company + service line)
-// and operations/assessor variant (Aramco username only). Source of truth is
-// sessionStorage.radp_intent, set when the user picks a tile on the home page.
+// Reset register form to default (service-company) state. Company-based
+// branching (Aramco vs service company) happens in onCompanyChange().
 function configureRegisterForm() {
-  const intent = sessionStorage.getItem('radp_intent') || 'contractor';
-  const isContractor = intent === 'contractor';
-
   const contractorFields = document.getElementById('regContractorFields');
-  if (contractorFields) contractorFields.style.display = isContractor ? '' : 'none';
-
+  if (contractorFields) contractorFields.style.display = '';
   const aramcoWrap = document.getElementById('regAramcoUsernameWrap');
-  if (aramcoWrap) aramcoWrap.style.display = isContractor ? 'none' : 'block';
-
-  const subtitle = document.getElementById('regRoleSubtitle');
-  if (subtitle) {
-    subtitle.textContent = intent === 'operations' ? 'Create your Operations account'
-                         : intent === 'assessor'   ? 'Create your Assessments account'
-                         :                           'Create your contractor account';
-  }
-
+  if (aramcoWrap) aramcoWrap.style.display = 'none';
   const emailLabel = document.getElementById('regEmailLabel');
+  if (emailLabel) emailLabel.textContent = 'Email';
   const emailInput = document.getElementById('regEmail');
-  if (emailLabel) emailLabel.textContent = isContractor ? 'Email' : 'Aramco Email';
-  if (emailInput) emailInput.placeholder = isContractor ? 'you@company.com' : 'you@aramco.com';
+  if (emailInput) emailInput.placeholder = 'you@company.com';
 }
 
 let currentPage  = null;
