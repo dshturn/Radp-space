@@ -1,5 +1,6 @@
 // ═══════════════════ EQUIPMENT ═══════════════════
 let _equipPage = 0;
+let _equipSearch = '';
 const _EQUIP_PAGE_SIZE = 25;
 let _equipBulkMode = false;
 
