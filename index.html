@@ -158,8 +158,13 @@
       <div class="section-row">
         <button class="add-btn mb-0" onclick="openAddEquipment()">+ Add Equipment</button>
         <button class="btn-ghost btn-sm" onclick="exportEquipmentCsv()" aria-label="Export equipment to CSV">↓ CSV</button>
+        <button id="equipBulkToggleBtn" class="btn-ghost btn-sm" onclick="toggleEquipBulkMode()">Select</button>
         <label for="equipmentSearch" class="sr-only">Search equipment</label>
         <input type="text" id="equipmentSearch" class="search-input" placeholder="Search equipment…">
+      </div>
+      <div id="equipBulkBar" style="display:none;" class="bulk-bar">
+        <span id="equipBulkCount" class="bulk-count">0 selected</span>
+        <button class="btn-danger btn-sm" onclick="bulkDeleteEquipment()">Delete Selected</button>
       </div>
       <div id="equipmentList"><div class="skel-card"><div class="skeleton skel-line medium"></div><div class="skeleton skel-line full"></div><div class="skeleton skel-line short"></div></div></div>
       <div id="equipmentPagination"></div>
