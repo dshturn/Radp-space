@@ -129,14 +129,15 @@ async function addNewCompany() {
 async function addNewServiceLine() {
   const name = document.getElementById('newServiceLineName').value.trim();
   const msg  = document.getElementById('newServiceLineMsg');
-  if (!name) { msg.style.color = '#fda4af'; msg.textContent = 'Please enter a service line name.'; return; }
+  // The "+ Add custom" flow is only exposed to Aramco users, so we always
+  // write to aramco_departments here.
+  const label = 'department';
+  if (!name) { msg.style.color = '#fda4af'; msg.textContent = `Please enter a ${label} name.`; return; }
   msg.style.color = '#94a3b8'; msg.textContent = 'Adding...';
-  // Custom service lines added from the register form are Aramco-only — the
-  // UI only exposes this flow to operations/assessor registrations.
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/service_lines`, {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/aramco_departments`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Prefer: 'return=minimal' },
-    body: JSON.stringify({ name, is_aramco: true })
+    body: JSON.stringify({ name })
   });
   if (res.ok || res.status === 201) {
     msg.style.color = '#6ee7b7'; msg.textContent = `"${name}" added!`;
