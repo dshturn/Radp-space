@@ -178,8 +178,8 @@ async function loadPersonnel(preserveState = false) {
   const pEl   = document.getElementById('dashPersonnel');
   const pSub  = document.getElementById('dashPersonnelSub');
   const pTile = pEl.closest('.dash-tile');
-  pEl.textContent  = people.length;
-  pSub.textContent = missingMandatory > 0 ? `${missingMandatory} docs missing` : (people.length > 0 ? 'All docs uploaded' : 'None added');
+  pEl.textContent  = totalCount;
+  pSub.textContent = missingMandatory > 0 ? `${missingMandatory} docs missing` : (totalCount > 0 ? 'All docs uploaded' : 'None added');
   pSub.style.color = '';
   pTile.className  = 'dash-tile ' + (missingMandatory > 0 ? 'warn' : people.length > 0 ? 'ok' : 'info');
 }
