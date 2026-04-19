@@ -25,6 +25,17 @@
   </div>
   <div class="nav-right">
     <span class="nav-user" id="navUser"></span>
+    <button class="notif-bell" id="notifBell" onclick="toggleNotifPanel()" aria-label="Notifications" aria-expanded="false">
+      🔔
+      <span class="notif-badge" id="notifBadge" hidden>0</span>
+    </button>
+    <div class="notif-panel" id="notifPanel" hidden aria-label="Notifications panel">
+      <div class="notif-panel-header">
+        <span>Notifications</span>
+        <button class="notif-mark-read" onclick="markAllNotifsRead()">Mark all read</button>
+      </div>
+      <div id="notifList"><div class="notif-empty">No notifications</div></div>
+    </div>
     <button class="nav-logout" onclick="logout()">Logout</button>
   </div>
 </nav>
