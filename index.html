@@ -404,6 +404,12 @@
     <select id="editCompany"></select>
     <label for="editServiceLine">Service Line</label>
     <select id="editServiceLine"></select>
+    <label for="editRole">Role</label>
+    <select id="editRole">
+      <option value="contractor">Contractor (full access)</option>
+      <option value="operations">Operations (operations tab only)</option>
+      <option value="assessor">Assessor (assessments tab only)</option>
+    </select>
     <input type="hidden" id="editUserId">
     <div class="modal-btns" style="margin-top:4px;">
       <button class="btn-cancel" onclick="closeModal('adminEditModal')">Cancel</button>
