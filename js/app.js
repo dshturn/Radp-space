@@ -51,6 +51,14 @@ function showPage(name, replace = false) {
     document.getElementById(navMap[name])?.classList.add('active');
     const u = getUser();
     document.getElementById('navUser').textContent = u.email || '';
+
+    // Role-based tab visibility: operations users see only Operations, assessors only Assessments.
+    const allowed = ROLE_NAV[roleOf(u)] || ROLE_NAV.contractor;
+    Object.entries(navMap).forEach(([page, linkId]) => {
+      const link = document.getElementById(linkId);
+      if (link) link.style.display = allowed.has(page) ? '' : 'none';
+    });
+
     if (name === 'contractor') {
       document.getElementById('welcomeMsg').textContent  = `Welcome, ${u.full_name || 'Contractor'}`;
       document.getElementById('companyInfo').textContent = `${u.company || ''} · ${u.service_line || ''}`;
