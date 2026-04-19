@@ -30,14 +30,14 @@ function pickRegistrationRole(role) {
 
 // Shape the register form based on the declared role from the picker.
 // Direct URL hit on /register with no prior pick defaults to contractor.
+// Aramco users (operations/assessor) have company auto-set to 'Aramco' on
+// submit, so the company picker is hidden for them.
 function configureRegisterForm() {
   const role = sessionStorage.getItem('radp_reg_role') || 'contractor';
   const isContractor = role === 'contractor';
 
-  const contractorFields = document.getElementById('regContractorFields');
-  if (contractorFields) contractorFields.style.display = isContractor ? '' : 'none';
-  const aramcoWrap = document.getElementById('regAramcoUsernameWrap');
-  if (aramcoWrap) aramcoWrap.style.display = isContractor ? 'none' : 'block';
+  const companyWrap = document.getElementById('regCompanyWrap');
+  if (companyWrap) companyWrap.style.display = isContractor ? '' : 'none';
 
   const subtitle = document.getElementById('regRoleSubtitle');
   if (subtitle) {
@@ -50,6 +50,12 @@ function configureRegisterForm() {
   const emailInput = document.getElementById('regEmail');
   if (emailLabel) emailLabel.textContent = isContractor ? 'Email' : 'Aramco Email';
   if (emailInput) emailInput.placeholder = isContractor ? 'you@company.com' : 'you@aramco.com';
+
+  // Clear any lingering custom-service-line entry state on form re-entry.
+  const newSLWrap = document.getElementById('newServiceLineWrap');
+  if (newSLWrap) newSLWrap.style.display = 'none';
+  const newSLName = document.getElementById('newServiceLineName');
+  if (newSLName) newSLName.value = '';
 }
 
 let currentPage  = null;
