@@ -427,6 +427,7 @@ async function deletePersRecord(id) {
   animateRemoveEl(el, async () => {
     const r = await deletePromise;
     if (!r.ok) { const t = await r.text(); showToast('Delete failed: ' + r.status, 'error'); }
+    else { logAudit('personnel', id, 'deleted', 'Personnel record'); }
     loadPersonnel(true);
   });
 }
