@@ -43,6 +43,24 @@ function showPage(name, replace = false) {
 
 window.addEventListener('popstate', e => { if (e.state?.page) showPage(e.state.page, true); });
 
+// ═══════════════════ DEBOUNCED SEARCH ═══════════════════
+
+document.addEventListener('DOMContentLoaded', () => {
+  const persSearch  = document.getElementById('personnelSearch');
+  const equipSearch = document.getElementById('equipmentSearch');
+
+  if (persSearch) {
+    const debouncedPersFilter = debounce(q => { _persPage = 0; filterCards('personnelList', q); }, 300);
+    persSearch.addEventListener('input', e => debouncedPersFilter(e.target.value));
+    persSearch.removeAttribute('oninput');
+  }
+  if (equipSearch) {
+    const debouncedEquipFilter = debounce(q => { _equipPage = 0; filterCards('equipmentList', q); }, 300);
+    equipSearch.addEventListener('input', e => debouncedEquipFilter(e.target.value));
+    equipSearch.removeAttribute('oninput');
+  }
+});
+
 // ═══════════════════ CONTRACTOR TABS ═══════════════════
 
 const CT_ORDER = { personnel: 0, equipment: 1 };
