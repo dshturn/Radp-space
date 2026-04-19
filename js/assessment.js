@@ -410,32 +410,80 @@ async function generateLoR() {
   const h = getHeaders(), u = getUser();
   const aRes       = await fetch(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${currentAssessmentId}`, { headers: h });
   const assessment = (await aRes.json())[0];
-  const eRes       = await fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment?assessment_id=eq.${currentAssessmentId}&select=*,equipment_items(serial_number,model,equipment_templates(name),documents(*,document_types(document_name)))`, { headers: h });
+  const eRes       = await fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment?assessment_id=eq.${currentAssessmentId}&select=*,equipment_items(id,serial_number,model,name,parent_id,equipment_templates(name),documents(*,document_types(document_name)))`, { headers: h });
   const equipment  = await eRes.json();
   const pRes       = await fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?assessment_id=eq.${currentAssessmentId}&select=*,personnel(*)`, { headers: h });
   const personnel  = await pRes.json();
+
+  // ── Fetch sub-components and sub-sub-components for selected root equipment ──
+  const rootItems = equipment.map(e => e.equipment_items).filter(Boolean);
+  const rootIds   = rootItems.map(i => i.id);
+  let childItems  = [];
+  if (rootIds.length) {
+    const cRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/equipment_items?dismissed=is.false&parent_id=in.(${rootIds.join(',')})&select=id,parent_id,serial_number,model,name,equipment_templates(name),documents(*,document_types(document_name))`,
+      { headers: h }
+    );
+    if (cRes.ok) childItems = await cRes.json();
+  }
+  const childIds = childItems.map(i => i.id);
+  let grandItems = [];
+  if (childIds.length) {
+    const gcRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/equipment_items?dismissed=is.false&parent_id=in.(${childIds.join(',')})&select=id,parent_id,serial_number,model,name,equipment_templates(name),documents(*,document_types(document_name))`,
+      { headers: h }
+    );
+    if (gcRes.ok) grandItems = await gcRes.json();
+  }
+  const kidsByParent = {};
+  [...childItems, ...grandItems].forEach(c => { (kidsByParent[c.parent_id] = kidsByParent[c.parent_id] || []).push(c); });
+
   const today = new Date(); today.setHours(0,0,0,0);
   const todayStr = today.toLocaleDateString('en-GB');
   const allExpiries = [];
+
   let persRows = '', pNum = 1;
   personnel.forEach(p => {
     const per = p.personnel, expiry = per?.expiry_date || '';
     if (expiry && expiry !== '—' && expiry !== '-') allExpiries.push(new Date(expiry));
     persRows += `<tr><td>${pNum++}</td><td>${per?.full_name||'—'}</td><td>${per?.years_experience||'—'}</td><td>${per?.position||'—'}</td><td>${per?.national_id||'—'}</td><td style="${getExpiryStyle(expiry)}">${expiry||'—'}</td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td></tr>`;
   });
+
+  // ── Render equipment recursively: root → sub → sub-sub, each with its docs ──
   let equipRows = '', eNum = 1;
-  equipment.forEach(e => {
-    const item = e.equipment_items, docs = item?.documents || [];
+  const itemName = it => esc(it?.equipment_templates?.name || it?.name || it?.model || '—');
+  const indentFor = depth => depth === 0 ? '' : '&nbsp;'.repeat(depth * 4) + '└─ ';
+  const rowBg = depth => depth === 0 ? '' : depth === 1 ? 'background:#f4f7fa;' : 'background:#eaeff5;';
+
+  function renderItem(item, depth) {
+    const docs = item?.documents || [];
+    const bg   = rowBg(depth);
+    const numCell = depth === 0 ? String(eNum++) : '';
+    const sn      = esc(item?.serial_number || '—');
+    const label   = indentFor(depth) + itemName(item);
+
     if (!docs.length) {
-      equipRows += `<tr><td>${eNum++}</td><td>${item?.serial_number||'—'}</td><td>${item?.equipment_templates?.name||item?.model||'—'}</td><td>—</td><td>—</td><td>—</td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td></tr>`;
+      equipRows += `<tr style="${bg}"><td>${numCell}</td><td>${sn}</td><td>${label}</td><td>—</td><td>—</td><td>—</td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td></tr>`;
     } else {
-      docs.forEach(d => {
+      docs.forEach((d, idx) => {
         const expiry = d.expiry_date || '';
         if (expiry && expiry !== '—' && expiry !== '-') allExpiries.push(new Date(expiry));
-        equipRows += `<tr><td>${eNum++}</td><td>${item?.serial_number||'—'}</td><td>${item?.equipment_templates?.name||item?.model||'—'}</td><td>${d.document_types?.document_name||'—'}</td><td>${d.issue_date||'—'}</td><td style="${getExpiryStyle(expiry)}">${expiry||'—'}</td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td></tr>`;
+        // Only the first doc row repeats #, S/N, and name — subsequent docs blank those cells so the item reads as one grouped entry.
+        equipRows += `<tr style="${bg}">`
+          + `<td>${idx === 0 ? numCell : ''}</td>`
+          + `<td>${idx === 0 ? sn : ''}</td>`
+          + `<td>${idx === 0 ? label : ''}</td>`
+          + `<td>${esc(d.document_types?.document_name || d.doc_type_name || '—')}</td>`
+          + `<td>${esc(d.issue_date || '—')}</td>`
+          + `<td style="${getExpiryStyle(expiry)}">${esc(expiry || '—')}</td>`
+          + `<td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td>`
+          + `</tr>`;
       });
     }
-  });
+
+    (kidsByParent[item.id] || []).forEach(child => renderItem(child, depth + 1));
+  }
+  rootItems.forEach(item => renderItem(item, 0));
   let validTillStr = '—', validTillBg = '#cccccc', validTillColor = '#333';
   if (allExpiries.length) {
     const validTill = new Date(Math.min(...allExpiries.map(d => d.getTime())));
