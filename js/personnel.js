@@ -483,14 +483,26 @@ async function bulkDeletePersonnel() {
   const count = checked.length;
   if (!await showConfirm(`Delete ${count} personnel record${count > 1 ? 's' : ''}? This cannot be undone.`)) return;
 
-  const ids = checked.map(cb => cb.dataset.id);
+  const ids = checked.map(cb => parseInt(cb.dataset.id, 10)).filter(id => !isNaN(id));
   const h   = { ...getHeaders(), Prefer: 'return=minimal' };
-  await Promise.all(ids.map(id => Promise.all([
-    fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?personnel_id=eq.${id}`, { method: 'DELETE', headers: h }),
-    fetch(`${SUPABASE_URL}/rest/v1/personnel_documents?personnel_id=eq.${id}`, { method: 'DELETE', headers: h })
-  ]).then(() => fetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${id}`, { method: 'DELETE', headers: h }))));
-
-  showToast(`${count} personnel record${count > 1 ? 's' : ''} deleted`, 'success');
-  togglePersBulkMode();
-  loadPersonnel();
+  try {
+    const results = await Promise.all(ids.map(id =>
+      Promise.all([
+        fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?personnel_id=eq.${id}`, { method: 'DELETE', headers: h }),
+        fetch(`${SUPABASE_URL}/rest/v1/personnel_documents?personnel_id=eq.${id}`, { method: 'DELETE', headers: h })
+      ]).then(() => fetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${id}`, { method: 'DELETE', headers: h }))
+    ));
+    const failed = results.filter(r => !r.ok);
+    if (failed.length) {
+      showToast(`Delete failed for ${failed.length} record(s)`, 'error');
+      loadPersonnel();
+      return;
+    }
+    showToast(`${count} personnel record${count > 1 ? 's' : ''} deleted`, 'success');
+    togglePersBulkMode();
+    loadPersonnel();
+  } catch (e) {
+    showToast('Network error during bulk delete', 'error');
+    loadPersonnel();
+  }
 }
