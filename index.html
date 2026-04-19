@@ -300,16 +300,42 @@
 </div>
 
 <!-- ══════════════════ ADMIN DASHBOARD ══════════════════ -->
-<div id="admin-dashboard-page" class="page">
+<div id="admin-dashboard-page" class="page" id="adminPage">
   <div class="admin-header">
     <h1>RADP Admin Panel</h1>
     <button class="nav-logout" onclick="adminLogout()">Logout</button>
   </div>
   <div class="container">
-    <div class="section-title">Pending Approval</div>
-    <div id="pendingList"></div>
-    <div class="section-title">Approved Users</div>
-    <div id="approvedList"></div>
+    <div class="tab-bar" id="adminPage">
+      <button class="tab active" onclick="showAdminTab('users', this)">Users</button>
+      <button class="tab" onclick="showAdminTab('pending', this)">Pending</button>
+      <button class="tab" onclick="showAdminTab('auditLog', this)">Audit Log</button>
+    </div>
+    <div id="usersTab">
+      <div class="section-title">Approved Users</div>
+      <div id="approvedList"></div>
+    </div>
+    <div id="pendingTab" style="display:none;">
+      <div class="section-title">Pending Approval</div>
+      <div id="pendingList"></div>
+    </div>
+    <div id="auditLogTab" style="display:none;">
+      <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+        <select id="auditEntityFilter" onchange="loadAuditLog()" style="padding:6px 10px;font-size:13px;border-radius:6px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-1);">
+          <option value="">All types</option>
+          <option value="personnel">Personnel</option>
+          <option value="equipment">Equipment</option>
+          <option value="document">Documents</option>
+          <option value="assessment">Assessments</option>
+          <option value="site">Sites</option>
+          <option value="user">Users</option>
+        </select>
+        <input type="date" id="auditDateFrom" onchange="loadAuditLog()" style="padding:6px 10px;font-size:13px;border-radius:6px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-1);">
+        <input type="date" id="auditDateTo"   onchange="loadAuditLog()" style="padding:6px 10px;font-size:13px;border-radius:6px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-1);">
+      </div>
+      <div id="auditLogList"></div>
+      <div id="auditLogPagination"></div>
+    </div>
   </div>
 </div>
 </main>
