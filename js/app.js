@@ -3,6 +3,32 @@
 const PAGE_ORDER = { home: 0, login: 1, register: 2, 'admin-login': 3, contractor: 4, assessment: 5, operations: 6, 'admin-dashboard': 7 };
 const PAGE_URLS  = { home: '/', login: '/login', register: '/register', 'admin-login': '/admin', contractor: '/contractor', assessment: '/assessment', operations: '/operations', 'admin-dashboard': '/admin/dashboard' };
 const NAV_PAGES  = new Set(['contractor', 'assessment', 'operations']);
+
+// Role → landing page after login, and which nav tabs are visible
+const ROLE_LANDING = { contractor: 'contractor', operations: 'operations', assessor: 'assessment' };
+const ROLE_NAV     = {
+  contractor: new Set(['contractor', 'assessment', 'operations']),
+  operations: new Set(['operations']),
+  assessor:   new Set(['assessment']),
+};
+
+function roleOf(user) {
+  return (user && user.role) || 'contractor';
+}
+
+// Home → login, remembering the role the user picked so we can show the right subtitle
+// and reject mismatches after auth.
+function selectRole(role) {
+  sessionStorage.setItem('radp_intent', role);
+  const sub = document.getElementById('loginRoleSubtitle');
+  if (sub) {
+    sub.textContent = role === 'operations' ? 'Operations portal'
+                    : role === 'assessor'   ? 'Assessments portal'
+                    : 'Contractor portal';
+  }
+  showPage('login');
+}
+
 let currentPage  = null;
 
 function showPage(name, replace = false) {
