@@ -1,6 +1,7 @@
 // ═══════════════════ EQUIPMENT ═══════════════════
 let _equipPage = 0;
 const _EQUIP_PAGE_SIZE = 25;
+let _equipBulkMode = false;
 
 async function openAddEquipment() {
   const u = getUser(), h = getHeaders();
