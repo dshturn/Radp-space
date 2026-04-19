@@ -474,3 +474,16 @@ function stopNotifPolling() {
   clearInterval(_notifInterval);
   _notifInterval = null;
 }
+
+// ─── CSV Export ───
+function exportToCsv(rows, filename) {
+  if (!rows.length) { showToast('Nothing to export', 'warn'); return; }
+  const headers = Object.keys(rows[0]);
+  const escape  = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const csv     = [headers.map(escape).join(','), ...rows.map(r => headers.map(k => escape(r[k])).join(','))].join('\r\n');
+  const blob    = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url     = URL.createObjectURL(blob);
+  const a       = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
