@@ -604,6 +604,7 @@ async function deleteDoc(id) {
   animateRemoveEl(el, async () => {
     const r = await deletePromise;
     if (!r.ok) { showToast('Delete failed: ' + r.status, 'error'); }
+    else { logAudit('document', id, 'deleted', 'Equipment document'); }
     loadEquipment(true);
   });
 }
