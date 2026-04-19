@@ -343,7 +343,11 @@ function editPersDoc(docId, personId, typeName, mandatory, issueDate, expiryDate
 async function savePersDocument() {
   const editId    = document.getElementById('persDocEditId').value;
   const personId  = document.getElementById('persDocPersonId').value;
-  const typeName  = document.getElementById('persDocTypeName').textContent;
+  const isCustom  = document.getElementById('persDocIsCustom').value === 'true';
+  const typeName  = isCustom
+    ? document.getElementById('persDocCustomName').value.trim()
+    : document.getElementById('persDocTypeName').textContent;
+  if (!typeName) { showToast('Please enter a document name', 'warn'); document.getElementById('persDocCustomName').focus(); return; }
   const mandatory = document.getElementById('persDocIsMandatory').value === 'true';
   const cfg       = PERS_DOC_TYPES.find(t => t.name === typeName) || {};
   const issueDate = document.getElementById('persDocIssueDate').value;
