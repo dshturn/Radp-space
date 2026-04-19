@@ -95,8 +95,14 @@ function showDetailTab(tab, el) {
 
 async function loadAssessments() {
   const u = getUser();
-  const assessments = await apiFetch(`${SUPABASE_URL}/rest/v1/assessments?contractor_id=eq.${u.id}&order=created_at.desc`, { headers: getHeaders() });
-  if (!assessments) return;
+  const from = _assessPage * _ASSESS_PAGE_SIZE;
+  const res  = await fetch(
+    `${SUPABASE_URL}/rest/v1/assessments?contractor_id=eq.${u.id}&order=created_at.desc&offset=${from}&limit=${_ASSESS_PAGE_SIZE}`,
+    { headers: { ...getHeaders(), Prefer: 'count=exact' } }
+  );
+  if (!res.ok) { showToast('Failed to load assessments', 'error'); return; }
+  const assessments = await res.json();
+  const totalCount = parseInt(res.headers.get('Content-Range')?.split('/')[1] || '0', 10);
   const list = document.getElementById('assessmentList');
   if (!assessments.length) { list.innerHTML = '<div class="empty">No assessments yet. Create your first one.</div>'; return; }
   const validStatuses = new Set(['draft', 'approved', 'pending', 'rejected']);
@@ -111,6 +117,20 @@ async function loadAssessments() {
       <span class="badge ${safeStatus}">${safeStatus}</span>
     </div>`;
   }).join('');
+
+  const totalPages = Math.ceil(totalCount / _ASSESS_PAGE_SIZE);
+  const pagEl = document.getElementById('assessmentPagination');
+  if (pagEl) {
+    if (totalPages <= 1) { pagEl.innerHTML = ''; }
+    else {
+      pagEl.innerHTML = `
+        <div class="pagination">
+          <button class="pag-btn" onclick="_assessPage=Math.max(0,_assessPage-1);loadAssessments()" ${_assessPage === 0 ? 'disabled' : ''}>← Prev</button>
+          <span class="pag-info">Page ${_assessPage + 1} of ${totalPages}</span>
+          <button class="pag-btn" onclick="_assessPage=Math.min(${totalPages-1},_assessPage+1);loadAssessments()" ${_assessPage >= totalPages - 1 ? 'disabled' : ''}>Next →</button>
+        </div>`;
+    }
+  }
 }
 
 async function createAssessment() {
