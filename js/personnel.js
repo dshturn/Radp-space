@@ -258,6 +258,7 @@ function personnelCard(p, docs) {
 
   const safeName = esc(p.full_name);
   return `<div class="app-card" data-id="p${parseInt(p.id)}">
+    <input type="checkbox" class="bulk-check" data-id="${parseInt(p.id)}" style="display:${_persBulkMode ? 'block' : 'none'};margin:8px;" onchange="updatePersBulkCount()">
     <div class="card-header">
       <div class="card-clickable" onclick="toggleCard(this.closest('.app-card').querySelector('.btn-toggle'))">
         <div class="card-title">${safeName}</div>
