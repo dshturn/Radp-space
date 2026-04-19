@@ -734,3 +734,35 @@ async function exportEquipmentCsv() {
   });
   exportToCsv(rows, `equipment-${new Date().toISOString().slice(0,10)}.csv`);
 }
+
+function toggleEquipBulkMode() {
+  _equipBulkMode = !_equipBulkMode;
+  document.getElementById('equipBulkBar').style.display = _equipBulkMode ? 'flex' : 'none';
+  document.getElementById('equipBulkToggleBtn').textContent = _equipBulkMode ? 'Cancel' : 'Select';
+  document.querySelectorAll('#equipmentList .equip-bulk-check').forEach(cb => {
+    cb.style.display = _equipBulkMode ? 'block' : 'none';
+    cb.checked = false;
+  });
+  updateEquipBulkCount();
+}
+
+function updateEquipBulkCount() {
+  const count = document.querySelectorAll('#equipmentList .equip-bulk-check:checked').length;
+  document.getElementById('equipBulkCount').textContent = `${count} selected`;
+}
+
+async function bulkDeleteEquipment() {
+  const checked = [...document.querySelectorAll('#equipmentList .equip-bulk-check:checked')];
+  if (!checked.length) { showToast('Select at least one item', 'warn'); return; }
+  const count = checked.length;
+  if (!await showConfirm(`Delete ${count} equipment item${count > 1 ? 's' : ''} and all sub-items? This cannot be undone.`)) return;
+
+  const ids = checked.map(cb => cb.dataset.id);
+  const h   = { ...getHeaders(), Prefer: 'return=minimal' };
+  await Promise.all(ids.map(id =>
+    fetch(`${SUPABASE_URL}/rest/v1/equipment_items?id=eq.${id}`, { method: 'DELETE', headers: h })
+  ));
+  showToast(`${count} equipment item${count > 1 ? 's' : ''} deleted`, 'success');
+  toggleEquipBulkMode();
+  loadEquipment();
+}
