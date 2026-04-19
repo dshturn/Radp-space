@@ -1,5 +1,8 @@
 // ═══════════════════ PERSONNEL ═══════════════════
 
+let _persPage = 0;
+const _PERS_PAGE_SIZE = 25;
+
 const PERS_DOC_TYPES = [
   { name: 'CV',               mandatory: true,  noIssue: true,  noExpiry: true              },
   { name: 'Medical Report',   mandatory: true,  noIssue: false, noExpiry: true, autoExpiry: 2 },
