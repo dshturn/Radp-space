@@ -378,6 +378,7 @@ async function savePersDocument() {
     }
   }
   showToast('Document saved', 'success');
+  logAudit('document', _savedDocId, editId ? 'updated' : 'uploaded', 'Personnel document');
   closeModal('addPersDocModal');
   loadPersonnel();
 }
