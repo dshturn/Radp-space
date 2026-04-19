@@ -124,6 +124,21 @@ async function loadPersonnel(preserveState = false) {
     }).join('');
   }
 
+  // Render pagination controls
+  const totalPages = Math.ceil(totalCount / _PERS_PAGE_SIZE);
+  const pagEl = document.getElementById('personnelPagination');
+  if (pagEl) {
+    if (totalPages <= 1) { pagEl.innerHTML = ''; }
+    else {
+      pagEl.innerHTML = `
+        <div class="pagination">
+          <button class="pag-btn" onclick="_persPage=Math.max(0,_persPage-1);loadPersonnel()" ${_persPage === 0 ? 'disabled' : ''}>← Prev</button>
+          <span class="pag-info">Page ${_persPage + 1} of ${totalPages}</span>
+          <button class="pag-btn" onclick="_persPage=Math.min(${totalPages-1},_persPage+1);loadPersonnel()" ${_persPage >= totalPages - 1 ? 'disabled' : ''}>Next →</button>
+        </div>`;
+    }
+  }
+
   if (preserveState) {
     // Suppress transitions so state restoration is instant (no animate-open flash)
     const noTrans = document.createElement('style');
