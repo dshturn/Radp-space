@@ -707,3 +707,28 @@ async function markEquipAssessed(itemId) {
   logAudit('equipment', itemId, 'updated', 'Marked as assessed');
   loadEquipment(true);
 }
+
+async function exportEquipmentCsv() {
+  const h = getHeaders();
+  const items = await apiFetch(`${SUPABASE_URL}/rest/v1/equipment_items?dismissed=is.false&parent_id=is.null&select=*,equipment_templates(name)&order=created_at`, { headers: h });
+  if (!items) return;
+  const ids  = items.map(i => i.id).join(',');
+  let docs = [];
+  if (ids) docs = await apiFetch(`${SUPABASE_URL}/rest/v1/documents?equipment_item_id=in.(${ids})&select=*`, { headers: h }) || [];
+  const docsByItem = {};
+  docs.forEach(d => { (docsByItem[d.equipment_item_id] = docsByItem[d.equipment_item_id] || []).push(d); });
+
+  const rows = items.map(i => {
+    const iDocs   = docsByItem[i.id] || [];
+    const earliest = iDocs.filter(d => d.expiry_date).map(d => d.expiry_date).sort()[0] || '';
+    return {
+      'Name':          i.equipment_templates?.name || i.name || '',
+      'Model':         i.model || '',
+      'Serial Number': i.serial_number || '',
+      'Assessed':      i.assessed ? 'Yes' : 'No',
+      'Next Expiry':   earliest,
+      'Docs':          iDocs.length,
+    };
+  });
+  exportToCsv(rows, `equipment-${new Date().toISOString().slice(0,10)}.csv`);
+}
