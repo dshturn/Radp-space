@@ -69,7 +69,15 @@ async function loadPersonnel(preserveState = false) {
   }
 
   const h = getHeaders();
-  const people = await apiFetch(`${SUPABASE_URL}/rest/v1/personnel?select=*&order=created_at`, { headers: h });
+  const from = _persPage * _PERS_PAGE_SIZE;
+  const res  = await fetch(
+    `${SUPABASE_URL}/rest/v1/personnel?select=*&order=created_at&offset=${from}&limit=${_PERS_PAGE_SIZE}`,
+    { headers: { ...h, Prefer: 'count=exact' } }
+  );
+  if (res.status === 401) { localStorage.removeItem('radp_token'); localStorage.removeItem('radp_user'); showPage('login'); return; }
+  if (!res.ok) { showToast('Failed to load personnel', 'error'); return; }
+  const people = await res.json();
+  const totalCount = parseInt(res.headers.get('Content-Range')?.split('/')[1] || '0', 10);
   if (!people) return;
 
   // Load all personnel docs in one shot
