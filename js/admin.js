@@ -57,7 +57,7 @@ function adminUserCard(u) {
   return `<div class="admin-card">
     <div class="admin-info">
       <div class="name">${esc(u.full_name)}</div>
-      <div class="detail">${esc(u.email)} · ${esc(u.company || '—')} · ${esc(u.service_line || '—')} · role: ${roleLabel}</div>
+      <div class="detail">${esc(u.email)} · ${esc(u.company || '—')} · ${esc(u.aramco_department || u.service_line || '—')} · role: ${roleLabel}</div>
     </div>
     ${actions}
   </div>`;
