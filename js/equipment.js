@@ -687,9 +687,18 @@ async function saveDocument() {
 }
 
 async function markEquipAssessed(itemId) {
-  await fetch(`${SUPABASE_URL}/rest/v1/equipment_items?id=eq.${itemId}`, {
+  const card = document.querySelector(`[data-id="${itemId}"]`);
+  const badge = card?.querySelector('.sbadge-awaiting');
+  if (badge) { badge.className = 'sbadge sbadge-ready'; badge.textContent = 'READY'; }
+
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/equipment_items?id=eq.${itemId}`, {
     method: 'PATCH', headers: { ...getHeaders(), Prefer: 'return=minimal' },
     body: JSON.stringify({ assessed: true })
   });
+  if (!r.ok) {
+    if (badge) { badge.className = 'sbadge sbadge-awaiting'; badge.textContent = 'AWAITING REVIEW'; }
+    showToast('Failed to mark as assessed', 'error');
+    return;
+  }
   loadEquipment(true);
 }
