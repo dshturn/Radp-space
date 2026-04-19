@@ -26,7 +26,39 @@ function selectRole(role) {
                     : role === 'assessor'   ? 'Assessments portal'
                     : 'Contractor portal';
   }
+  const link = document.getElementById('loginRegisterLink');
+  if (link) {
+    link.textContent = role === 'contractor'
+      ? 'New contractor? Register here'
+      : 'New user? Register here';
+  }
   showPage('login');
+}
+
+// Swap register form between contractor variant (company + service line)
+// and operations/assessor variant (Aramco username only). Source of truth is
+// sessionStorage.radp_intent, set when the user picks a tile on the home page.
+function configureRegisterForm() {
+  const intent = sessionStorage.getItem('radp_intent') || 'contractor';
+  const isContractor = intent === 'contractor';
+
+  const contractorFields = document.getElementById('regContractorFields');
+  if (contractorFields) contractorFields.style.display = isContractor ? '' : 'none';
+
+  const aramcoWrap = document.getElementById('regAramcoUsernameWrap');
+  if (aramcoWrap) aramcoWrap.style.display = isContractor ? 'none' : 'block';
+
+  const subtitle = document.getElementById('regRoleSubtitle');
+  if (subtitle) {
+    subtitle.textContent = intent === 'operations' ? 'Create your Operations account'
+                         : intent === 'assessor'   ? 'Create your Assessments account'
+                         :                           'Create your contractor account';
+  }
+
+  const emailLabel = document.getElementById('regEmailLabel');
+  const emailInput = document.getElementById('regEmail');
+  if (emailLabel) emailLabel.textContent = isContractor ? 'Email' : 'Aramco Email';
+  if (emailInput) emailInput.placeholder = isContractor ? 'you@company.com' : 'you@aramco.com';
 }
 
 let currentPage  = null;
