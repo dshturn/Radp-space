@@ -673,7 +673,8 @@ async function saveDocument() {
       ai_status:   'pending'
     })
   });
-  if (_docRes.ok) { const [_newDoc] = await _docRes.json(); window._justAddedDocId = _newDoc?.id; }
+  let _savedEquipDocId = null;
+  if (_docRes.ok) { const [_newDoc] = await _docRes.json(); window._justAddedDocId = _newDoc?.id; _savedEquipDocId = _newDoc?.id; }
 
   // Reset assessed flag whenever a document is added
   await fetch(`${SUPABASE_URL}/rest/v1/equipment_items?id=eq.${currentDocItemId}`, {
