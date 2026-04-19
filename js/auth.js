@@ -99,29 +99,52 @@ async function addNewCompany() {
 }
 
 async function register() {
-  const fullName    = document.getElementById('regFullName').value.trim();
-  const email       = document.getElementById('regEmail').value.trim();
-  const password    = document.getElementById('regPassword').value;
-  const company     = document.getElementById('regCompany').value;
-  const serviceLine = document.getElementById('regServiceLine').value;
-  const msg         = document.getElementById('registerMsg');
-  if (!fullName || !email || !password || !company || !serviceLine || company === '__new__') {
-    msg.className = 'auth-msg error';
-    msg.textContent = company === '__new__' ? 'Please finish adding your company first.' : 'Please fill all fields.';
-    return;
+  const role     = sessionStorage.getItem('radp_reg_role') || 'contractor';
+  const fullName = document.getElementById('regFullName').value.trim();
+  const email    = document.getElementById('regEmail').value.trim();
+  const password = document.getElementById('regPassword').value;
+  const msg      = document.getElementById('registerMsg');
+
+  // Build the profile payload based on declared role. Contractors provide
+  // company + service line; Aramco staff (operations/assessor) provide an
+  // Aramco username instead.
+  let profile;
+  if (role === 'contractor') {
+    const company     = document.getElementById('regCompany').value;
+    const serviceLine = document.getElementById('regServiceLine').value;
+    if (!fullName || !email || !password || !company || !serviceLine || company === '__new__') {
+      msg.className = 'auth-msg error';
+      msg.textContent = company === '__new__' ? 'Please finish adding your company first.' : 'Please fill all fields.';
+      return;
+    }
+    profile = { email, full_name: fullName, company, service_line: serviceLine, role };
+  } else {
+    const aramcoUsername = document.getElementById('regAramcoUsername').value.trim();
+    if (!fullName || !email || !aramcoUsername || !password) {
+      msg.className = 'auth-msg error';
+      msg.textContent = 'Please fill all fields.';
+      return;
+    }
+    profile = { email, full_name: fullName, aramco_username: aramcoUsername, role };
   }
+
+  const signupMeta = role === 'contractor'
+    ? { full_name: fullName, company: profile.company, service_line: profile.service_line }
+    : { full_name: fullName, aramco_username: profile.aramco_username };
+
   const res  = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY },
-    body: JSON.stringify({ email, password, options: { data: { full_name: fullName, company, service_line: serviceLine } } })
+    body: JSON.stringify({ email, password, options: { data: signupMeta } })
   });
   const data = await res.json();
   if (data.user) {
     await fetch(`${SUPABASE_URL}/rest/v1/user_profiles`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Prefer: 'resolution=merge-duplicates' },
-      body: JSON.stringify({ id: data.user.id, email, full_name: fullName, company, service_line: serviceLine, role: 'contractor' })
+      body: JSON.stringify({ id: data.user.id, ...profile })
     });
+    sessionStorage.removeItem('radp_reg_role');
     msg.className = 'auth-msg success'; msg.textContent = 'Account created! Waiting for admin approval.';
   } else {
     msg.className = 'auth-msg error'; msg.textContent = 'Registration failed. Try again.';
