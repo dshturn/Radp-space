@@ -2,6 +2,7 @@
 
 let _persPage = 0;
 const _PERS_PAGE_SIZE = 25;
+let _persBulkMode = false;
 
 const PERS_DOC_TYPES = [
   { name: 'CV',               mandatory: true,  noIssue: true,  noExpiry: true              },
