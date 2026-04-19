@@ -73,7 +73,7 @@ async function loadPersonnel(preserveState = false) {
   const h = getHeaders();
   const from = _persPage * _PERS_PAGE_SIZE;
   const res  = await fetch(
-    `${SUPABASE_URL}/rest/v1/personnel?select=*&order=created_at&offset=${from}&limit=${_PERS_PAGE_SIZE}`,
+    `${SUPABASE_URL}/rest/v1/personnel?select=*&order=created_at${_persSearch ? `&name=ilike.*${encodeURIComponent(_persSearch)}*` : ''}&offset=${from}&limit=${_PERS_PAGE_SIZE}`,
     { headers: { ...h, Prefer: 'count=exact' } }
   );
   if (res.status === 401) { localStorage.removeItem('radp_token'); localStorage.removeItem('radp_user'); showPage('login'); return; }
