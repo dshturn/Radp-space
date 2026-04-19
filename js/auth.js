@@ -55,9 +55,14 @@ async function loadRegisterOptions() {
   const isContractor = role === 'contractor';
   const anonH        = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` };
 
-  const [companies, serviceLines] = await Promise.all([
+  // Contractors pick from service_lines; Aramco users pick from aramco_departments.
+  const optionsUrl = isContractor
+    ? `${SUPABASE_URL}/rest/v1/service_lines?select=name&order=name`
+    : `${SUPABASE_URL}/rest/v1/aramco_departments?select=name&order=name`;
+
+  const [companies, options] = await Promise.all([
     fetch(`${SUPABASE_URL}/rest/v1/companies?select=name&order=name`, { headers: anonH }).then(r => r.json()),
-    fetch(`${SUPABASE_URL}/rest/v1/service_lines?select=name,is_aramco&order=name`, { headers: anonH }).then(r => r.json())
+    fetch(optionsUrl, { headers: anonH }).then(r => r.json())
   ]);
 
   // Company dropdown: contractor variant is the only case that uses this
@@ -69,12 +74,11 @@ async function loadRegisterOptions() {
     + '<option value="__new__">+ Add new company...</option>';
   if (current) cSel.value = current;
 
-  // Service line dropdown filtered by role. Aramco users get "+ Add custom"
-  // so new Aramco service lines (like NAWCOD) can grow over time.
-  const filtered = serviceLines.filter(s => !!s.is_aramco === !isContractor);
+  // Aramco users get "+ Add custom" so the department list can grow over time.
   const svcSel = document.getElementById('regServiceLine');
-  let svcHtml = '<option value="">Select service line...</option>'
-    + filtered.map(x => `<option value="${x.name}">${x.name}</option>`).join('');
+  const placeholder = isContractor ? 'Select service line...' : 'Select department...';
+  let svcHtml = `<option value="">${placeholder}</option>`
+    + options.map(x => `<option value="${x.name}">${x.name}</option>`).join('');
   if (!isContractor) svcHtml += '<option value="__new__">+ Add custom...</option>';
   svcSel.innerHTML = svcHtml;
 }
