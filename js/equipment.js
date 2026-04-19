@@ -592,6 +592,7 @@ async function deleteEquipItem(id) {
   animateRemoveEl(el, async () => {
     const r = await deletePromise;
     if (!r.ok) { showToast('Delete failed: ' + r.status, 'error'); }
+    else { logAudit('equipment', id, 'deleted', 'Equipment item'); }
     loadEquipment(true);
   });
 }
