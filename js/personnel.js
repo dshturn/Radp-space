@@ -347,6 +347,7 @@ async function savePersDocument() {
   const payload = { issue_date: issueDate || null, expiry_date: expDate || null };
   if (fileUrl) payload.file_url = fileUrl;
 
+  let _savedDocId = editId ? parseInt(editId) : null;
   if (editId) {
     await fetch(`${SUPABASE_URL}/rest/v1/personnel_documents?id=eq.${editId}`, {
       method: 'PATCH', headers: { ...getHeaders(), Prefer: 'return=minimal' },
@@ -357,7 +358,7 @@ async function savePersDocument() {
       method: 'POST', headers: { ...getHeaders(), Prefer: 'return=representation' },
       body: JSON.stringify({ personnel_id: parseInt(personId), doc_type_name: typeName, is_mandatory: mandatory, ...payload })
     });
-    if (_pdRes.ok) { const [_newPd] = await _pdRes.json(); window._justAddedPersDocId = _newPd?.id; }
+    if (_pdRes.ok) { const [_newPd] = await _pdRes.json(); window._justAddedPersDocId = _newPd?.id; _savedDocId = _newPd?.id; }
   }
 
   // Reset assessed flag whenever a document is added or updated
