@@ -223,6 +223,25 @@ function showConfirm(message) {
   });
 }
 
+// ─── Audit logging ───
+async function logAudit(entityType, entityId, action, label, metadata = {}) {
+  const u = getUser();
+  if (!u?.id) return; // not logged in, skip
+  // Fire-and-forget: audit failures must never block the user action
+  fetch(`${SUPABASE_URL}/rest/v1/audit_log`, {
+    method: 'POST',
+    headers: { ...getHeaders(), Prefer: 'return=minimal' },
+    body: JSON.stringify({
+      actor_id:    u.id,
+      entity_type: entityType,
+      entity_id:   String(entityId),
+      action,
+      label:       label || null,
+      metadata:    Object.keys(metadata).length ? metadata : null
+    })
+  }).catch(() => {}); // silently swallow network errors on audit writes
+}
+
 // ─── Document viewer ───
 let _currentPdf = null, _pdfScale = 1;
 
