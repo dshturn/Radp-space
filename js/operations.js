@@ -273,6 +273,7 @@ async function archiveSite(id) {
     body: JSON.stringify({ status: 'archived' })
   });
   if (!r.ok) { showToast('Failed to archive', 'error'); return; }
+  logAudit('site', id, 'deleted', 'Site archived');
   showToast('Site archived', 'info');
   showOpsList();
 }
