@@ -140,3 +140,74 @@ function adminLogout() {
   adminToken = '';
   showPage('home');
 }
+
+function showAdminTab(tab, el) {
+  ['usersTab','pendingTab','auditLogTab'].forEach(id => {
+    const panel = document.getElementById(id);
+    if (panel) panel.style.display = 'none';
+  });
+  document.querySelectorAll('#adminPage .tab').forEach(t => t.classList.remove('active'));
+  const target = document.getElementById(tab + 'Tab');
+  if (target) target.style.display = 'block';
+  if (el) el.classList.add('active');
+  if (tab === 'auditLog') loadAuditLog();
+}
+
+let _auditPage = 0;
+const _AUDIT_PAGE_SIZE = 50;
+
+async function loadAuditLog() {
+  _auditPage = 0;
+  await _renderAuditLog();
+}
+
+async function _renderAuditLog() {
+  const entityFilter = document.getElementById('auditEntityFilter')?.value || '';
+  const dateFrom     = document.getElementById('auditDateFrom')?.value || '';
+  const dateTo       = document.getElementById('auditDateTo')?.value || '';
+
+  let url = `${SUPABASE_URL}/rest/v1/audit_log?order=created_at.desc&offset=${_auditPage * _AUDIT_PAGE_SIZE}&limit=${_AUDIT_PAGE_SIZE}`;
+  if (entityFilter) url += `&entity_type=eq.${entityFilter}`;
+  if (dateFrom)     url += `&created_at=gte.${dateFrom}T00:00:00Z`;
+  if (dateTo)       url += `&created_at=lte.${dateTo}T23:59:59Z`;
+
+  const adminH = { apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}`, 'Content-Type': 'application/json' };
+  const res = await fetch(url, { headers: { ...adminH, Prefer: 'count=exact' } });
+  if (!res.ok) { showToast('Failed to load audit log', 'error'); return; }
+  const rows = await res.json();
+  const total = parseInt(res.headers.get('Content-Range')?.split('/')[1] || '0', 10);
+
+  const list = document.getElementById('auditLogList');
+  if (!rows.length) { list.innerHTML = '<div class="empty">No audit entries found</div>'; document.getElementById('auditLogPagination').innerHTML = ''; return; }
+
+  list.innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border);text-align:left;">
+          <th style="padding:8px 10px;color:var(--text-3);font-weight:500;">Time</th>
+          <th style="padding:8px 10px;color:var(--text-3);font-weight:500;">Type</th>
+          <th style="padding:8px 10px;color:var(--text-3);font-weight:500;">Action</th>
+          <th style="padding:8px 10px;color:var(--text-3);font-weight:500;">Label</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map(r => `
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:8px 10px;color:var(--text-3);white-space:nowrap;">${new Date(r.created_at).toLocaleString()}</td>
+            <td style="padding:8px 10px;"><span style="font-size:11px;padding:2px 6px;border-radius:4px;background:var(--surface-3,#334155);color:var(--text-2);">${esc(r.entity_type)}</span></td>
+            <td style="padding:8px 10px;color:var(--text-1);">${esc(r.action)}</td>
+            <td style="padding:8px 10px;color:var(--text-2);">${esc(r.label || '—')}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+
+  const totalPages = Math.ceil(total / _AUDIT_PAGE_SIZE);
+  const pagEl = document.getElementById('auditLogPagination');
+  if (totalPages <= 1) { pagEl.innerHTML = ''; return; }
+  pagEl.innerHTML = `
+    <div class="pagination">
+      <button class="pag-btn" onclick="_auditPage=Math.max(0,_auditPage-1);_renderAuditLog()" ${_auditPage===0?'disabled':''}>← Prev</button>
+      <span class="pag-info">Page ${_auditPage+1} of ${totalPages}</span>
+      <button class="pag-btn" onclick="_auditPage=Math.min(${totalPages-1},_auditPage+1);_renderAuditLog()" ${_auditPage>=totalPages-1?'disabled':''}>Next →</button>
+    </div>`;
+}
