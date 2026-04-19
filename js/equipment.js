@@ -683,6 +683,7 @@ async function saveDocument() {
   });
 
   showToast('Document saved', 'success');
+  logAudit('document', _savedEquipDocId, 'uploaded', 'Equipment document');
   closeModal('addDocModal');
   loadEquipment(true);
 }
