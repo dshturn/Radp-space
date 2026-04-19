@@ -150,12 +150,19 @@ const _path = window.location.pathname;
 if (_path.includes('admin')) {
   showPage('admin-login', true);
 } else if (getToken()) {
-  if (_path.includes('assessment'))  showPage('assessment', true);
-  else if (_path.includes('operations')) showPage('operations', true);
-  else showPage('contractor', true);
+  const _role    = roleOf(getUser());
+  const _allowed = ROLE_NAV[_role] || ROLE_NAV.contractor;
+  const _landing = ROLE_LANDING[_role] || 'contractor';
+  // Respect the URL only if the role is permitted to view it; otherwise redirect to role landing.
+  let _target;
+  if      (_path.includes('assessment') && _allowed.has('assessment')) _target = 'assessment';
+  else if (_path.includes('operations') && _allowed.has('operations')) _target = 'operations';
+  else if (_path.includes('contractor') && _allowed.has('contractor')) _target = 'contractor';
+  else                                                                 _target = _landing;
+  showPage(_target, true);
 } else {
   if (_path.includes('register'))                                        showPage('register', true);
   else if (_path.includes('login'))                                      showPage('login', true);
-  else if (_path.includes('contractor') || _path.includes('assessment')) showPage('login', true);
+  else if (_path.includes('contractor') || _path.includes('assessment') || _path.includes('operations')) showPage('login', true);
   else                                                                   showPage('home', true);
 }
