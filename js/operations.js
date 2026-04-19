@@ -200,6 +200,20 @@ async function loadOperations() {
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tile.click(); }
     });
   });
+
+  const totalPages = Math.ceil(totalCount / _SITES_PAGE_SIZE);
+  const pagEl = document.getElementById('sitesPagination');
+  if (pagEl) {
+    if (totalPages <= 1) { pagEl.innerHTML = ''; }
+    else {
+      pagEl.innerHTML = `
+        <div class="pagination">
+          <button class="pag-btn" onclick="_sitesPage=Math.max(0,_sitesPage-1);loadOperations()" ${_sitesPage === 0 ? 'disabled' : ''}>← Prev</button>
+          <span class="pag-info">Page ${_sitesPage + 1} of ${totalPages}</span>
+          <button class="pag-btn" onclick="_sitesPage=Math.min(${totalPages-1},_sitesPage+1);loadOperations()" ${_sitesPage >= totalPages - 1 ? 'disabled' : ''}>Next →</button>
+        </div>`;
+    }
+  }
 }
 
 // ── Create site ───────────────────────────────────────────
