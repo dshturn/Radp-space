@@ -1,9 +1,7 @@
 // ═══════════════════ SHARED CONFIG & UTILITIES ═══════════════════
 
 const SUPABASE_URL = 'https://fslleuedqlxpjnerruzt.supabase.co';
-// SECURITY: Replace this with your ANON (public) key from Supabase dashboard.
-// NEVER use the service_role key in client-side code — rotate it immediately at supabase.com.
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzbGxldWVkcWx4cGpuZXJydXp0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDk5MzExOSwiZXhwIjoyMDkwNTY5MTE5fQ.oY_dihwgMimesUsvHSuKNoJEXTb3c7vuqWKzeH2pwg4';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzbGxldWVkcWx4cGpuZXJydXp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5OTMxMTksImV4cCI6MjA5MDU2OTExOX0.H1narO5BF5uF2KwlKtKvioz3mun2ecxb1Lg_xVDLdt4';
 
 const getToken   = () => localStorage.getItem('radp_token');
 const getUser    = () => JSON.parse(localStorage.getItem('radp_user') || '{}');
