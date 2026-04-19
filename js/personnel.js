@@ -300,6 +300,8 @@ function personnelCard(p, docs) {
     </div>
     <div class="card-body"><div class="body-inner"><div class="body-content">
       ${docRows}
+      ${customRows ? `<div class="custom-docs-section"><div class="custom-docs-label">Additional Documents</div>${customRows}</div>` : ''}
+      <button class="add-custom-doc-btn" onclick="openAddCustomPersDoc(${parseInt(p.id)})">+ Add Custom Document</button>
     </div></div></div>
   </div>`;
 }
