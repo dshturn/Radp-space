@@ -74,13 +74,9 @@
         <input type="text" id="regFullName" placeholder="John Smith" autocomplete="name">
         <label class="auth-label" for="regEmail" id="regEmailLabel">Email</label>
         <input type="email" id="regEmail" placeholder="you@company.com" autocomplete="email">
-        <div id="regAramcoUsernameWrap" style="display:none;">
-          <label class="auth-label" for="regAramcoUsername">Aramco User Name</label>
-          <input type="text" id="regAramcoUsername" placeholder="e.g. jsmith" autocomplete="username">
-        </div>
         <label class="auth-label" for="regPassword">Password</label>
         <input type="password" id="regPassword" placeholder="Min 6 characters" autocomplete="new-password">
-        <div id="regContractorFields">
+        <div id="regCompanyWrap">
           <label class="auth-label" for="regCompany">Company</label>
           <select id="regCompany" onchange="onCompanyChange(this)"><option value="">Select company...</option></select>
           <div id="newCompanyWrap">
@@ -90,8 +86,15 @@
             </div>
             <div id="newCompanyMsg" class="form-hint"></div>
           </div>
-          <label class="auth-label" for="regServiceLine">Service Line</label>
-          <select id="regServiceLine"><option value="">Select service line...</option></select>
+        </div>
+        <label class="auth-label" for="regServiceLine">Service Line</label>
+        <select id="regServiceLine" onchange="onServiceLineChange(this)"><option value="">Select service line...</option></select>
+        <div id="newServiceLineWrap" style="display:none;">
+          <div class="row-gap-sm">
+            <input type="text" id="newServiceLineName" placeholder="Enter service line name" class="mb-0">
+            <button type="button" onclick="addNewServiceLine()" class="btn-success" style="white-space:nowrap;flex-shrink:0;padding:10px 14px;font-size:13px;">Add</button>
+          </div>
+          <div id="newServiceLineMsg" class="form-hint"></div>
         </div>
         <button type="submit" class="btn-main">Create Account</button>
       </form>
