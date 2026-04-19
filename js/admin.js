@@ -110,6 +110,12 @@ async function updateStatus(id, status) {
     headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}`, Prefer: 'return=minimal' },
     body: JSON.stringify({ status })
   });
+  // Audit log using admin token (logAudit() uses contractor JWT, doesn't apply here)
+  fetch(`${SUPABASE_URL}/rest/v1/audit_log`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}`, Prefer: 'return=minimal' },
+    body: JSON.stringify({ actor_id: null, entity_type: 'user', entity_id: String(id), action: status === 'approved' ? 'approved' : 'rejected', label: `User ${status}` })
+  }).catch(() => {});
   loadUsers();
 }
 
