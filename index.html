@@ -143,8 +143,13 @@
       <div class="section-row">
         <button class="add-btn mb-0" onclick="openAddPersonnel()">+ Add Personnel</button>
         <button class="btn-ghost btn-sm" onclick="exportPersonnelCsv()" aria-label="Export personnel to CSV">↓ CSV</button>
+        <button id="persBulkToggleBtn" class="btn-ghost btn-sm" onclick="togglePersBulkMode()">Select</button>
         <label for="personnelSearch" class="sr-only">Search personnel</label>
         <input type="text" id="personnelSearch" class="search-input" placeholder="Search personnel…">
+      </div>
+      <div id="persBulkBar" style="display:none;" class="bulk-bar">
+        <span id="persBulkCount" class="bulk-count">0 selected</span>
+        <button class="btn-danger btn-sm" onclick="bulkDeletePersonnel()">Delete Selected</button>
       </div>
       <div id="personnelList"><div class="skel-card"><div class="skeleton skel-line medium"></div><div class="skeleton skel-line short"></div></div></div>
       <div id="personnelPagination"></div>
