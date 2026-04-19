@@ -1,7 +1,7 @@
 // ═══════════════════ ROUTING ═══════════════════
 
-const PAGE_ORDER = { home: 0, login: 1, register: 2, 'admin-login': 3, contractor: 4, assessment: 5, operations: 6, 'admin-dashboard': 7 };
-const PAGE_URLS  = { home: '/', login: '/login', register: '/register', 'admin-login': '/admin', contractor: '/contractor', assessment: '/assessment', operations: '/operations', 'admin-dashboard': '/admin/dashboard' };
+const PAGE_ORDER = { login: 0, register: 1, 'admin-login': 2, contractor: 3, assessment: 4, operations: 5, 'admin-dashboard': 6 };
+const PAGE_URLS  = { login: '/', register: '/register', 'admin-login': '/admin', contractor: '/contractor', assessment: '/assessment', operations: '/operations', 'admin-dashboard': '/admin/dashboard' };
 const NAV_PAGES  = new Set(['contractor', 'assessment', 'operations']);
 
 // Role → landing page after login, and which nav tabs are visible
