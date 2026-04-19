@@ -152,31 +152,36 @@ async function addNewServiceLine() {
 }
 
 async function register() {
-  const role        = sessionStorage.getItem('radp_reg_role') || 'contractor';
-  const fullName    = document.getElementById('regFullName').value.trim();
-  const email       = document.getElementById('regEmail').value.trim();
-  const password    = document.getElementById('regPassword').value;
-  const serviceLine = document.getElementById('regServiceLine').value;
-  const msg         = document.getElementById('registerMsg');
+  const role         = sessionStorage.getItem('radp_reg_role') || 'contractor';
+  const isContractor = role === 'contractor';
+  const fullName     = document.getElementById('regFullName').value.trim();
+  const email        = document.getElementById('regEmail').value.trim();
+  const password     = document.getElementById('regPassword').value;
+  const choice       = document.getElementById('regServiceLine').value;
+  const msg          = document.getElementById('registerMsg');
 
   // Contractor picks their company; operations/assessor are always Aramco.
-  const company = role === 'contractor' ? document.getElementById('regCompany').value : 'Aramco';
+  const company = isContractor ? document.getElementById('regCompany').value : 'Aramco';
 
-  if (!fullName || !email || !password || !company || !serviceLine
-      || company === '__new__' || serviceLine === '__new__') {
+  if (!fullName || !email || !password || !company || !choice
+      || company === '__new__' || choice === '__new__') {
     msg.className = 'auth-msg error';
-    msg.textContent = company === '__new__'     ? 'Please finish adding your company first.'
-                    : serviceLine === '__new__' ? 'Please finish adding your service line first.'
-                    :                             'Please fill all fields.';
+    msg.textContent = company === '__new__' ? 'Please finish adding your company first.'
+                    : choice === '__new__'  ? (isContractor ? 'Please finish adding your service line first.'
+                                                            : 'Please finish adding your department first.')
+                    :                         'Please fill all fields.';
     return;
   }
 
-  const profile = { email, full_name: fullName, company, service_line: serviceLine, role };
+  // Contractor's pick lives in service_line; Aramco pick lives in aramco_department.
+  const profile = isContractor
+    ? { email, full_name: fullName, company, service_line: choice, role }
+    : { email, full_name: fullName, company, aramco_department: choice, role };
 
   const res  = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY },
-    body: JSON.stringify({ email, password, options: { data: { full_name: fullName, company, service_line: serviceLine } } })
+    body: JSON.stringify({ email, password, options: { data: { full_name: fullName, company, ...(isContractor ? { service_line: choice } : { aramco_department: choice }) } } })
   });
   const data = await res.json();
   if (data.user) {
