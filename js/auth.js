@@ -19,7 +19,7 @@ async function login() {
     return;
   }
 
-  const profileRes = await fetch(`${SUPABASE_URL}/rest/v1/user_profiles?id=eq.${data.user.id}&select=status,full_name,company,service_line`, {
+  const profileRes = await fetch(`${SUPABASE_URL}/rest/v1/user_profiles?id=eq.${data.user.id}&select=status,role,full_name,company,service_line`, {
     headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${data.access_token}` }
   });
   const profiles = await profileRes.json();
@@ -36,9 +36,20 @@ async function login() {
     return;
   }
 
+  // If the user clicked a role tile on home, validate it matches their assigned role.
+  // Contractors have full access so they can enter via any tile.
+  const intent = sessionStorage.getItem('radp_intent');
+  const role   = profile.role || 'contractor';
+  if (intent && intent !== role && role !== 'contractor') {
+    msg.className = 'auth-msg error';
+    msg.textContent = `Your account is a ${role} account — please use the ${role === 'operations' ? 'Operations' : 'Assessments'} tile.`;
+    return;
+  }
+  sessionStorage.removeItem('radp_intent');
+
   localStorage.setItem('radp_token', data.access_token);
   localStorage.setItem('radp_user', JSON.stringify({ id: data.user.id, email: data.user.email, ...profile }));
-  showPage('contractor');
+  showPage(ROLE_LANDING[role] || 'contractor');
   startNotifPolling();
 }
 
