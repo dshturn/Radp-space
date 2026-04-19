@@ -121,15 +121,18 @@ async function loadOperations() {
                  + '<div class="skel-card"><div class="skeleton skel-line full"></div><div class="skeleton skel-line short"></div></div>'
                  + '<div class="skel-card"><div class="skeleton skel-line medium"></div><div class="skeleton skel-line full"></div></div>';
 
-  const sites = await apiFetch(
+  const from = _sitesPage * _SITES_PAGE_SIZE;
+  const res  = await fetch(
     `${SUPABASE_URL}/rest/v1/operation_sites`
     + `?contractor_id=eq.${u.id}&status=eq.active&order=created_at.desc`
     + `&select=*,operation_site_personnel(personnel_id,personnel(expiry_date))`
-    + `,operation_site_equipment(equipment_item_id,equipment_items(documents(expiry_date)))`,
-    { headers: getHeaders() }
+    + `,operation_site_equipment(equipment_item_id,equipment_items(documents(expiry_date)))`
+    + `&offset=${from}&limit=${_SITES_PAGE_SIZE}`,
+    { headers: { ...getHeaders(), Prefer: 'count=exact' } }
   );
-
-  if (!sites) return;
+  if (!res.ok) { showToast('Failed to load sites', 'error'); return; }
+  const sites = await res.json();
+  const totalCount = parseInt(res.headers.get('Content-Range')?.split('/')[1] || '0', 10);
 
   if (!sites.length) {
     grid.innerHTML = `
