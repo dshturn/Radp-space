@@ -112,6 +112,7 @@ async function loadEquipment(preserveState = false) {
         </div>`;
       }).join('')
     : '<div class="empty">No equipment yet. Click "+ Add Equipment" to start.</div>';
+  if (_equipBulkMode) updateEquipBulkCount();
 
   const totalPages = Math.ceil(totalCount / _EQUIP_PAGE_SIZE);
   const pagEl = document.getElementById('equipmentPagination');
