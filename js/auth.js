@@ -43,6 +43,7 @@ async function login() {
 }
 
 function logout() {
+  stopNotifPolling();
   localStorage.removeItem('radp_token');
   localStorage.removeItem('radp_user');
   showPage('home');
