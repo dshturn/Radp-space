@@ -181,7 +181,7 @@ async function loadPersonnel(preserveState = false) {
   pEl.textContent  = totalCount;
   pSub.textContent = missingMandatory > 0 ? `${missingMandatory} docs missing` : (totalCount > 0 ? 'All docs uploaded' : 'None added');
   pSub.style.color = '';
-  pTile.className  = 'dash-tile ' + (missingMandatory > 0 ? 'warn' : people.length > 0 ? 'ok' : 'info');
+  pTile.className  = 'dash-tile ' + (missingMandatory > 0 ? 'warn' : totalCount > 0 ? 'ok' : 'info');
 }
 
 function personnelCard(p, docs) {
