@@ -394,10 +394,21 @@ async function deletePersDoc(id) {
 }
 
 async function markPersAssessed(personId) {
-  await fetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${personId}`, {
+  // Optimistic: swap badge immediately
+  const card = document.querySelector(`[data-id="p${personId}"]`);
+  const badge = card?.querySelector('.sbadge-awaiting');
+  if (badge) { badge.className = 'sbadge sbadge-ready'; badge.textContent = 'READY'; }
+
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${personId}`, {
     method: 'PATCH', headers: { ...getHeaders(), Prefer: 'return=minimal' },
     body: JSON.stringify({ assessed: true })
   });
+  if (!r.ok) {
+    // Roll back
+    if (badge) { badge.className = 'sbadge sbadge-awaiting'; badge.textContent = 'AWAITING REVIEW'; }
+    showToast('Failed to mark as assessed', 'error');
+    return;
+  }
   loadPersonnel(true);
 }
 
