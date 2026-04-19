@@ -99,45 +99,28 @@ async function addNewCompany() {
 }
 
 async function register() {
-  const intent      = sessionStorage.getItem('radp_intent') || 'contractor';
   const fullName    = document.getElementById('regFullName').value.trim();
   const email       = document.getElementById('regEmail').value.trim();
   const password    = document.getElementById('regPassword').value;
+  const company     = document.getElementById('regCompany').value;
+  const serviceLine = document.getElementById('regServiceLine').value;
   const msg         = document.getElementById('registerMsg');
-
-  // Operations/assessor: only name, aramco email, aramco username, password.
-  // Contractor keeps the original company + service-line flow.
-  let profile;
-  if (intent === 'contractor') {
-    const company     = document.getElementById('regCompany').value;
-    const serviceLine = document.getElementById('regServiceLine').value;
-    if (!fullName || !email || !password || !company || !serviceLine || company === '__new__') {
-      msg.className = 'auth-msg error';
-      msg.textContent = company === '__new__' ? 'Please finish adding your company first.' : 'Please fill all fields.';
-      return;
-    }
-    profile = { email, full_name: fullName, company, service_line: serviceLine, role: 'contractor' };
-  } else {
-    const aramcoUsername = document.getElementById('regAramcoUsername').value.trim();
-    if (!fullName || !email || !aramcoUsername || !password) {
-      msg.className = 'auth-msg error';
-      msg.textContent = 'Please fill all fields.';
-      return;
-    }
-    profile = { email, full_name: fullName, aramco_username: aramcoUsername, role: intent };
+  if (!fullName || !email || !password || !company || !serviceLine || company === '__new__') {
+    msg.className = 'auth-msg error';
+    msg.textContent = company === '__new__' ? 'Please finish adding your company first.' : 'Please fill all fields.';
+    return;
   }
-
   const res  = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY },
-    body: JSON.stringify({ email, password, options: { data: { full_name: fullName } } })
+    body: JSON.stringify({ email, password, options: { data: { full_name: fullName, company, service_line: serviceLine } } })
   });
   const data = await res.json();
   if (data.user) {
     await fetch(`${SUPABASE_URL}/rest/v1/user_profiles`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Prefer: 'resolution=merge-duplicates' },
-      body: JSON.stringify({ id: data.user.id, ...profile })
+      body: JSON.stringify({ id: data.user.id, email, full_name: fullName, company, service_line: serviceLine, role: 'contractor' })
     });
     msg.className = 'auth-msg success'; msg.textContent = 'Account created! Waiting for admin approval.';
   } else {
