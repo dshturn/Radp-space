@@ -438,7 +438,7 @@ async function loadNotifications() {
   list.innerHTML = items.map(n => {
     const typeClass = n.type === 'expiry_critical' ? 'notif-critical' : n.type === 'expiry_urgent' ? 'notif-urgent' : 'notif-warning';
     const daysText  = n.days_until === null ? '' : n.days_until <= 0 ? 'Expired' : `Expires in ${n.days_until}d`;
-    return `<div class="notif-item ${n.read ? '' : 'unread'} ${typeClass}" onclick="markNotifRead('${n.id}',this)">
+    return `<div class="notif-item ${n.read ? '' : 'unread'} ${typeClass}" data-id="${esc(n.id)}" onclick="markNotifRead(this.dataset.id,this)">
       <div class="notif-item-label">${esc(n.entity_label || '—')}</div>
       <div class="notif-item-meta">${daysText}</div>
     </div>`;
