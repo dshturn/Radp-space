@@ -757,12 +757,24 @@ async function bulkDeleteEquipment() {
   const count = checked.length;
   if (!await showConfirm(`Delete ${count} equipment item${count > 1 ? 's' : ''} and all sub-items? This cannot be undone.`)) return;
 
-  const ids = checked.map(cb => cb.dataset.id);
+  const ids = checked.map(cb => parseInt(cb.dataset.id, 10)).filter(id => !isNaN(id));
   const h   = { ...getHeaders(), Prefer: 'return=minimal' };
-  await Promise.all(ids.map(id =>
-    fetch(`${SUPABASE_URL}/rest/v1/equipment_items?id=eq.${id}`, { method: 'DELETE', headers: h })
-  ));
-  showToast(`${count} equipment item${count > 1 ? 's' : ''} deleted`, 'success');
-  toggleEquipBulkMode();
-  loadEquipment();
+  try {
+    const results = await Promise.all(ids.map(id =>
+      fetch(`${SUPABASE_URL}/rest/v1/documents?equipment_item_id=eq.${id}`, { method: 'DELETE', headers: h })
+        .then(() => fetch(`${SUPABASE_URL}/rest/v1/equipment_items?id=eq.${id}`, { method: 'DELETE', headers: h }))
+    ));
+    const failed = results.filter(r => !r.ok);
+    if (failed.length) {
+      showToast(`Delete failed for ${failed.length} item(s)`, 'error');
+      loadEquipment();
+      return;
+    }
+    showToast(`${count} equipment item${count > 1 ? 's' : ''} deleted`, 'success');
+    toggleEquipBulkMode();
+    loadEquipment();
+  } catch (e) {
+    showToast('Network error during bulk delete', 'error');
+    loadEquipment();
+  }
 }
