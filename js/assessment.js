@@ -157,6 +157,7 @@ async function createAssessment() {
     body: JSON.stringify({ contractor_id: getUser().id, field_well: fieldWell, type_of_job: typeOfJob, objective, sharepoint_request_id: requestId || null })
   });
   const data = await res.json();
+  logAudit('assessment', data[0].id, 'created', fieldWell);
   showDetail(data[0].id);
 }
 
