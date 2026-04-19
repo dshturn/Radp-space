@@ -84,6 +84,20 @@ async function loadEquipment(preserveState = false) {
       }).join('')
     : '<div class="empty">No equipment yet. Click "+ Add Equipment" to start.</div>';
 
+  const totalPages = Math.ceil(totalCount / _EQUIP_PAGE_SIZE);
+  const pagEl = document.getElementById('equipmentPagination');
+  if (pagEl) {
+    if (totalPages <= 1) { pagEl.innerHTML = ''; }
+    else {
+      pagEl.innerHTML = `
+        <div class="pagination">
+          <button class="pag-btn" onclick="_equipPage=Math.max(0,_equipPage-1);loadEquipment()" ${_equipPage === 0 ? 'disabled' : ''}>← Prev</button>
+          <span class="pag-info">Page ${_equipPage + 1} of ${totalPages}</span>
+          <button class="pag-btn" onclick="_equipPage=Math.min(${totalPages-1},_equipPage+1);loadEquipment()" ${_equipPage >= totalPages - 1 ? 'disabled' : ''}>Next →</button>
+        </div>`;
+    }
+  }
+
   if (preserveState) {
     // Suppress transitions so state restoration is instant (no animate-open flash)
     const noTrans = document.createElement('style');
