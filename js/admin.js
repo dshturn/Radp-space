@@ -84,6 +84,9 @@ async function openEditUser(userId) {
   sSel.innerHTML = '<option value="">Select service line...</option>'
     + serviceLines.map(s => `<option value="${s.name}"${s.name === u.service_line ? ' selected' : ''}>${s.name}</option>`).join('');
 
+  const rSel = document.getElementById('editRole');
+  if (rSel) rSel.value = u.role || 'contractor';
+
   openModal('adminEditModal');
 }
 
