@@ -459,3 +459,37 @@ async function exportPersonnelCsv() {
   });
   exportToCsv(rows, `personnel-${new Date().toISOString().slice(0,10)}.csv`);
 }
+
+function togglePersBulkMode() {
+  _persBulkMode = !_persBulkMode;
+  document.getElementById('persBulkBar').style.display = _persBulkMode ? 'flex' : 'none';
+  document.getElementById('persBulkToggleBtn').textContent = _persBulkMode ? 'Cancel' : 'Select';
+  document.querySelectorAll('#personnelList .bulk-check').forEach(cb => {
+    cb.style.display = _persBulkMode ? 'block' : 'none';
+    cb.checked = false;
+  });
+  updatePersBulkCount();
+}
+
+function updatePersBulkCount() {
+  const count = document.querySelectorAll('#personnelList .bulk-check:checked').length;
+  document.getElementById('persBulkCount').textContent = `${count} selected`;
+}
+
+async function bulkDeletePersonnel() {
+  const checked = [...document.querySelectorAll('#personnelList .bulk-check:checked')];
+  if (!checked.length) { showToast('Select at least one person', 'warn'); return; }
+  const count = checked.length;
+  if (!await showConfirm(`Delete ${count} personnel record${count > 1 ? 's' : ''}? This cannot be undone.`)) return;
+
+  const ids = checked.map(cb => cb.dataset.id);
+  const h   = { ...getHeaders(), Prefer: 'return=minimal' };
+  await Promise.all(ids.map(id => Promise.all([
+    fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?personnel_id=eq.${id}`, { method: 'DELETE', headers: h }),
+    fetch(`${SUPABASE_URL}/rest/v1/personnel_documents?personnel_id=eq.${id}`, { method: 'DELETE', headers: h })
+  ]).then(() => fetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${id}`, { method: 'DELETE', headers: h }))));
+
+  showToast(`${count} personnel record${count > 1 ? 's' : ''} deleted`, 'success');
+  togglePersBulkMode();
+  loadPersonnel();
+}
