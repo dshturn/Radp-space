@@ -228,10 +228,12 @@ async function createSite() {
   if (!title) { showToast('Enter a site name', 'warn'); return; }
   const r = await fetch(`${SUPABASE_URL}/rest/v1/operation_sites`, {
     method: 'POST',
-    headers: { ...getHeaders(), Prefer: 'return=minimal' },
+    headers: { ...getHeaders(), Prefer: 'return=representation' },
     body: JSON.stringify({ contractor_id: getUser().id, title })
   });
   if (!r.ok) { showToast('Failed to create site', 'error'); return; }
+  const [newSite] = await r.json();
+  logAudit('site', newSite.id, 'created', title);
   closeModal('opsCreateModal');
   showToast('Site created', 'success');
   loadOperations();
