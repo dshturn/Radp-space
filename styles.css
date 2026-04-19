@@ -90,6 +90,7 @@ body { font-family: 'Barlow', Arial, sans-serif; background: var(--bg); color: v
 /* Home */
 .home-card { text-align: center; max-width: 400px; }
 .home-card h1 { font-size: 32px; margin-bottom: 8px; }
+.role-select-title { font-size: 13px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); margin: 20px 0 10px; }
 .btn-nav { display: block; background: var(--accent); color: white; padding: 12px 24px; border-radius: 8px; border: none; width: 100%; font-size: 15px; text-align: center; margin: 8px 0; cursor: pointer; text-decoration: none; transition: background 0.2s ease, transform 0.15s ease; }
 .btn-nav:hover { background: var(--accent-h); transform: translateY(-1px); }
 .btn-nav-secondary { background: var(--info-bg); }
