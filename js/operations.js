@@ -530,3 +530,58 @@ async function removeSiteEquipment(rowId, fromSelector = false) {
   if (fromSelector) { loadSiteDetail(currentSiteId); openSiteEquipmentSelector(); }
   else loadSiteDetail(currentSiteId);
 }
+
+async function printSiteSummary() {
+  const h = getHeaders();
+  const [siteRes, persRes, equipRes] = await Promise.all([
+    apiFetch(`${SUPABASE_URL}/rest/v1/operation_sites?id=eq.${currentSiteId}`, { headers: h }),
+    apiFetch(`${SUPABASE_URL}/rest/v1/operation_site_personnel?site_id=eq.${currentSiteId}&select=*,personnel(full_name,position,national_id)`, { headers: h }),
+    apiFetch(`${SUPABASE_URL}/rest/v1/operation_site_equipment?site_id=eq.${currentSiteId}&select=*,equipment_items(serial_number,model,equipment_templates(name))`, { headers: h }),
+  ]);
+  if (!siteRes || !persRes || !equipRes) return;
+  const site = siteRes[0];
+  if (!site) { showToast('Site not found', 'error'); return; }
+  const today = new Date().toLocaleDateString('en-GB');
+  const persRows = persRes.map(r => `
+    <tr>
+      <td>${esc(r.personnel?.full_name || '—')}</td>
+      <td>${esc(r.personnel?.position || '—')}</td>
+      <td>${esc(r.personnel?.national_id || '—')}</td>
+    </tr>`).join('');
+  const equipRows = equipRes.map(r => `
+    <tr>
+      <td>${esc(r.equipment_items?.equipment_templates?.name || r.equipment_items?.model || '—')}</td>
+      <td>${esc(r.equipment_items?.model || '—')}</td>
+      <td>${esc(r.equipment_items?.serial_number || '—')}</td>
+    </tr>`).join('');
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Site Summary — ${esc(site.title)}</title>
+    <style>
+      body { font-family:Arial,sans-serif; font-size:12px; margin:20px; color:#000; }
+      h1 { font-size:16px; margin-bottom:4px; }
+      h2 { font-size:13px; margin:16px 0 6px; background:#1e3a5f; color:#fff; padding:5px 10px; }
+      table { width:100%; border-collapse:collapse; margin-bottom:12px; }
+      th { text-align:left; padding:5px 8px; font-size:11px; background:#e8edf2; border:1px solid #bbb; }
+      td { padding:4px 8px; border:1px solid #ddd; font-size:11px; }
+      .meta { color:#555; font-size:11px; margin-bottom:12px; }
+      @media print { @page { size:A4; margin:12mm; } }
+    </style>
+  </head><body>
+    <h1>Operation Site Summary</h1>
+    <div class="meta"><strong>${esc(site.title)}</strong> · Printed ${today}</div>
+    <h2>Personnel (${persRes.length})</h2>
+    <table>
+      <thead><tr><th>Name</th><th>Position</th><th>National ID</th></tr></thead>
+      <tbody>${persRows || '<tr><td colspan="3">No personnel assigned</td></tr>'}</tbody>
+    </table>
+    <h2>Equipment (${equipRes.length})</h2>
+    <table>
+      <thead><tr><th>Description</th><th>Model</th><th>Serial No.</th></tr></thead>
+      <tbody>${equipRows || '<tr><td colspan="3">No equipment assigned</td></tr>'}</tbody>
+    </table>
+    <div style="margin-top:16px;"><button onclick="window.print()" style="background:#1e3a5f;color:white;border:none;padding:7px 18px;border-radius:6px;cursor:pointer;">Print / Save PDF</button></div>
+  </body></html>`;
+  const blob = new Blob([html], { type: 'text/html' });
+  const url  = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
