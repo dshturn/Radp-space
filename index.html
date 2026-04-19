@@ -384,6 +384,20 @@
   </div>
 </div>
 
+<!-- Registration: Role Picker Modal -->
+<div class="modal" id="rolePickerModal" role="dialog" aria-modal="true" aria-labelledby="rolePickerTitle">
+  <div class="modal-box">
+    <h3 id="rolePickerTitle">I am a…</h3>
+    <p class="form-hint" style="margin:-4px 0 12px;">Select your role to continue</p>
+    <button class="btn-main" style="margin:6px 0;" onclick="pickRegistrationRole('contractor')">Contractor (service company)</button>
+    <button class="btn-main" style="margin:6px 0;" onclick="pickRegistrationRole('operations')">Operations (Aramco)</button>
+    <button class="btn-main" style="margin:6px 0;" onclick="pickRegistrationRole('assessor')">Assessor (Aramco)</button>
+    <div class="modal-btns" style="margin-top:8px;">
+      <button class="btn-cancel" onclick="closeModal('rolePickerModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- Admin: Edit User Modal -->
 <div class="modal" id="adminEditModal" role="dialog" aria-modal="true" aria-labelledby="adminEditTitle">
   <div class="modal-box">
