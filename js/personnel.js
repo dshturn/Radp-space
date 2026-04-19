@@ -1,6 +1,7 @@
 // ═══════════════════ PERSONNEL ═══════════════════
 
 let _persPage = 0;
+let _persSearch = '';
 const _PERS_PAGE_SIZE = 25;
 let _persBulkMode = false;
 
