@@ -242,6 +242,32 @@ function personnelCard(p, docs) {
     }
   }).join('');
 
+  const customDocs = docs.filter(d => !PERS_DOC_TYPES.find(t => t.name === d.doc_type_name));
+  const customRows = customDocs.map(d => {
+    const safeName = esc(d.doc_type_name);
+    const dateStr  = [d.issue_date && `Issue: ${esc(d.issue_date)}`, d.expiry_date && `Expiry: ${esc(d.expiry_date)}`].filter(Boolean).join(' · ');
+    let statusClass = 'doc-status-valid', statusText = 'VALID';
+    if (d.expiry_date) {
+      const exp = new Date(d.expiry_date);
+      if (exp < today)      { statusClass = 'doc-status-expired';  statusText = 'EXPIRED';  }
+      else if (exp <= in30) { statusClass = 'doc-status-expiring'; statusText = 'EXPIRING'; }
+    }
+    const fileBtn = d.file_url ? `<button class="doc-view-btn" data-url="${esc(d.file_url)}" onclick="openDoc(this.dataset.url)" aria-label="View ${safeName}">↗ View</button>` : '';
+    const rowClass = statusText === 'EXPIRED' ? ' status-expired' : statusText === 'EXPIRING' ? ' status-expiring' : '';
+    return `<div class="doc-row${rowClass}" data-doc-id="${parseInt(d.id)}">
+      <div class="flex-1">
+        <div class="doc-name row-gap-xs">${safeName} <span class="doc-badge-opt">Custom</span></div>
+        ${dateStr ? `<div class="doc-date">${dateStr}</div>` : ''}
+      </div>
+      <div class="row-gap-sm">
+        ${fileBtn}
+        <span class="doc-status ${statusClass}">${statusText}</span>
+        <button class="btn-edit" onclick="editPersDoc(${parseInt(d.id)},${parseInt(p.id)},this.dataset.type,'false',this.dataset.issue,this.dataset.expiry,null)" data-type="${safeName}" data-issue="${esc(d.issue_date||'')}" data-expiry="${esc(d.expiry_date||'')}" aria-label="Edit ${safeName}">✏</button>
+        <button class="btn-danger" onclick="deletePersDoc(${parseInt(d.id)})" aria-label="Delete ${safeName}">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+
   const expiredCount  = docs.filter(d => d.expiry_date && new Date(d.expiry_date) < today).length;
   const expiringCount = docs.filter(d => { if (!d.expiry_date) return false; const e = new Date(d.expiry_date); return e >= today && e <= in30; }).length;
   const allMandatoryUploaded = PERS_DOC_TYPES.filter(t => t.mandatory).every(t => docMap[t.name]);
