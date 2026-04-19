@@ -161,8 +161,7 @@ if (_path.includes('admin')) {
   else                                                                 _target = _landing;
   showPage(_target, true);
 } else {
-  if (_path.includes('register'))                                        showPage('register', true);
-  else if (_path.includes('login'))                                      showPage('login', true);
-  else if (_path.includes('contractor') || _path.includes('assessment') || _path.includes('operations')) showPage('login', true);
-  else                                                                   showPage('home', true);
+  // No token → login is the entry point. Register URL is the only exception.
+  if (_path.includes('register')) showPage('register', true);
+  else                            showPage('login', true);
 }
