@@ -511,3 +511,9 @@ input[type="file"] { display: none; }
 .dv-btn-download { background: var(--success); color: white; border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; text-decoration: none; display: inline-flex; align-items: center; }
 .dv-zoom-label { font-size: 13px; color: var(--text-2); min-width: 40px; text-align: center; }
 .dv-body { flex: 1; overflow: auto; min-height: 0; background: var(--bg); }
+
+/* ── Pagination ── */
+.pagination { display:flex; align-items:center; gap:12px; padding:12px 0; justify-content:center; }
+.pag-btn { padding:6px 14px; border-radius:6px; border:1px solid var(--border,#334155); background:var(--surface-2,#1e293b); color:var(--text-1,#f1f5f9); font-size:12px; cursor:pointer; }
+.pag-btn:disabled { opacity:0.4; cursor:default; }
+.pag-info { font-size:12px; color:var(--text-3,#64748b); }
