@@ -50,13 +50,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const equipSearch = document.getElementById('equipmentSearch');
 
   if (persSearch) {
-    const debouncedPersFilter = debounce(q => { _persPage = 0; filterCards('personnelList', q); }, 300);
-    persSearch.addEventListener('input', e => debouncedPersFilter(e.target.value));
+    const debouncedPersSearch = debounce(q => { _persSearch = q.trim(); _persPage = 0; loadPersonnel(); }, 300);
+    persSearch.addEventListener('input', e => debouncedPersSearch(e.target.value));
     persSearch.removeAttribute('oninput');
   }
   if (equipSearch) {
-    const debouncedEquipFilter = debounce(q => { _equipPage = 0; filterCards('equipmentList', q); }, 300);
-    equipSearch.addEventListener('input', e => debouncedEquipFilter(e.target.value));
+    const debouncedEquipSearch = debounce(q => { _equipSearch = q.trim(); _equipPage = 0; loadEquipment(); }, 300);
+    equipSearch.addEventListener('input', e => debouncedEquipSearch(e.target.value));
     equipSearch.removeAttribute('oninput');
   }
 });
