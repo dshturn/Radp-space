@@ -412,6 +412,7 @@ async function markPersAssessed(personId) {
     showToast('Failed to mark as assessed', 'error');
     return;
   }
+  logAudit('personnel', personId, 'updated', 'Marked as assessed');
   loadPersonnel(true);
 }
 
