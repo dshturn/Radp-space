@@ -53,10 +53,11 @@ function adminUserCard(u) {
       <span class="badge ${safeStatus}">${safeStatus}</span>
       <button class="btn-delete" onclick="deleteUser('${safeId}')">Delete</button>
     </div>`;
+  const roleLabel = esc(u.role || 'contractor');
   return `<div class="admin-card">
     <div class="admin-info">
       <div class="name">${esc(u.full_name)}</div>
-      <div class="detail">${esc(u.email)} · ${esc(u.company || '—')} · ${esc(u.service_line || '—')}</div>
+      <div class="detail">${esc(u.email)} · ${esc(u.company || '—')} · ${esc(u.service_line || '—')} · role: ${roleLabel}</div>
     </div>
     ${actions}
   </div>`;
