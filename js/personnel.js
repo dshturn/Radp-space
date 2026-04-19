@@ -432,3 +432,29 @@ async function deletePersRecord(id) {
     loadPersonnel(true);
   });
 }
+
+async function exportPersonnelCsv() {
+  const h = getHeaders();
+  const people = await apiFetch(`${SUPABASE_URL}/rest/v1/personnel?select=*&order=created_at`, { headers: h });
+  if (!people) return;
+  const personIds = people.map(p => p.id).join(',');
+  let docs = [];
+  if (personIds) docs = await apiFetch(`${SUPABASE_URL}/rest/v1/personnel_documents?personnel_id=in.(${personIds})&select=*`, { headers: h }) || [];
+  const docsByPerson = {};
+  docs.forEach(d => { (docsByPerson[d.personnel_id] = docsByPerson[d.personnel_id] || []).push(d); });
+
+  const rows = people.map(p => {
+    const pDocs    = docsByPerson[p.id] || [];
+    const allMand  = PERS_DOC_TYPES.filter(t => t.mandatory).every(t => pDocs.some(d => d.doc_type_name === t.name));
+    const earliest = pDocs.filter(d => d.expiry_date).map(d => d.expiry_date).sort()[0] || '';
+    return {
+      'Full Name':      p.full_name,
+      'Position':       p.position || '',
+      'National ID':    p.national_id || '',
+      'Assessed':       p.assessed ? 'Yes' : 'No',
+      'Next Expiry':    earliest,
+      'Missing Mandatory Docs': allMand ? 'No' : 'Yes',
+    };
+  });
+  exportToCsv(rows, `personnel-${new Date().toISOString().slice(0,10)}.csv`);
+}
