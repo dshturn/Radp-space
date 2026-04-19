@@ -39,6 +39,7 @@ async function login() {
   localStorage.setItem('radp_token', data.access_token);
   localStorage.setItem('radp_user', JSON.stringify({ id: data.user.id, email: data.user.email, ...profile }));
   showPage('contractor');
+  startNotifPolling();
 }
 
 function logout() {

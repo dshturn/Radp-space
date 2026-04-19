@@ -517,3 +517,21 @@ input[type="file"] { display: none; }
 .pag-btn { padding:6px 14px; border-radius:6px; border:1px solid var(--border,#334155); background:var(--surface-2,#1e293b); color:var(--text-1,#f1f5f9); font-size:12px; cursor:pointer; }
 .pag-btn:disabled { opacity:0.4; cursor:default; }
 .pag-info { font-size:12px; color:var(--text-3,#64748b); }
+
+/* ── Notification Bell ── */
+.notif-bell { position:relative; background:none; border:none; cursor:pointer; font-size:18px; padding:4px 8px; color:var(--text-2); }
+.notif-bell:hover { color:var(--text-1); }
+.notif-badge { position:absolute; top:0; right:0; background:var(--bad,#ef4444); color:#fff; border-radius:999px; font-size:10px; font-weight:700; min-width:16px; height:16px; display:flex; align-items:center; justify-content:center; padding:0 4px; }
+.notif-panel { position:absolute; top:52px; right:16px; width:320px; max-height:420px; overflow-y:auto; background:var(--surface-2,#1e293b); border:1px solid var(--border,#334155); border-radius:10px; box-shadow:0 8px 32px rgba(0,0,0,0.4); z-index:200; }
+.notif-panel-header { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid var(--border); font-size:13px; font-weight:600; color:var(--text-1); }
+.notif-mark-read { background:none; border:none; color:var(--accent,#f59e0b); font-size:12px; cursor:pointer; }
+.notif-item { padding:10px 16px; border-bottom:1px solid var(--border); font-size:13px; }
+.notif-item.unread { background:var(--surface-3,#334155); }
+.notif-item-label { color:var(--text-1); margin-bottom:2px; }
+.notif-item-meta  { color:var(--text-3); font-size:11px; }
+.notif-empty { padding:20px 16px; color:var(--text-3); font-size:13px; text-align:center; }
+.notif-critical { border-left:3px solid var(--bad,#ef4444); }
+.notif-urgent   { border-left:3px solid var(--warn,#f59e0b); }
+.notif-warning  { border-left:3px solid var(--accent,#f59e0b); opacity:0.85; }
+/* nav needs position:relative for the panel to anchor */
+#mainNav { position:relative; }

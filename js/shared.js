@@ -385,3 +385,92 @@ function closeDocViewer() {
     });
   });
 })();
+
+// ─── Notifications ───
+let _notifPanelOpen = false;
+let _notifInterval  = null;
+
+function toggleNotifPanel() {
+  const panel = document.getElementById('notifPanel');
+  const bell  = document.getElementById('notifBell');
+  _notifPanelOpen = !_notifPanelOpen;
+  panel.hidden = !_notifPanelOpen;
+  bell.setAttribute('aria-expanded', String(_notifPanelOpen));
+  if (_notifPanelOpen) loadNotifications();
+}
+
+// Close panel when clicking outside
+document.addEventListener('click', e => {
+  if (_notifPanelOpen && !e.target.closest('#notifBell') && !e.target.closest('#notifPanel')) {
+    _notifPanelOpen = false;
+    document.getElementById('notifPanel').hidden = true;
+    document.getElementById('notifBell').setAttribute('aria-expanded', 'false');
+  }
+});
+
+async function loadNotifUnreadCount() {
+  const u = getUser();
+  if (!u?.id) return;
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/notifications?contractor_id=eq.${u.id}&read=eq.false&select=id`,
+    { headers: { ...getHeaders(), Prefer: 'count=exact' } }
+  );
+  if (!res.ok) return;
+  const count = parseInt(res.headers.get('Content-Range')?.split('/')[1] || '0', 10);
+  const badge = document.getElementById('notifBadge');
+  if (!badge) return;
+  if (count > 0) { badge.textContent = count > 99 ? '99+' : count; badge.hidden = false; }
+  else           { badge.textContent = '0'; badge.hidden = true; }
+}
+
+async function loadNotifications() {
+  const u = getUser();
+  if (!u?.id) return;
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/notifications?contractor_id=eq.${u.id}&order=created_at.desc&limit=30`,
+    { headers: getHeaders() }
+  );
+  if (!res.ok) return;
+  const items = await res.json();
+  const list  = document.getElementById('notifList');
+  if (!items.length) { list.innerHTML = '<div class="notif-empty">No notifications</div>'; return; }
+
+  list.innerHTML = items.map(n => {
+    const typeClass = n.type === 'expiry_critical' ? 'notif-critical' : n.type === 'expiry_urgent' ? 'notif-urgent' : 'notif-warning';
+    const daysText  = n.days_until === null ? '' : n.days_until <= 0 ? 'Expired' : `Expires in ${n.days_until}d`;
+    return `<div class="notif-item ${n.read ? '' : 'unread'} ${typeClass}" onclick="markNotifRead('${n.id}',this)">
+      <div class="notif-item-label">${esc(n.entity_label || '—')}</div>
+      <div class="notif-item-meta">${daysText}</div>
+    </div>`;
+  }).join('');
+}
+
+async function markNotifRead(id, el) {
+  el?.classList.remove('unread');
+  await fetch(`${SUPABASE_URL}/rest/v1/notifications?id=eq.${id}`, {
+    method: 'PATCH', headers: { ...getHeaders(), Prefer: 'return=minimal' },
+    body: JSON.stringify({ read: true })
+  });
+  loadNotifUnreadCount();
+}
+
+async function markAllNotifsRead() {
+  const u = getUser();
+  if (!u?.id) return;
+  await fetch(`${SUPABASE_URL}/rest/v1/notifications?contractor_id=eq.${u.id}&read=eq.false`, {
+    method: 'PATCH', headers: { ...getHeaders(), Prefer: 'return=minimal' },
+    body: JSON.stringify({ read: true })
+  });
+  loadNotifications();
+  loadNotifUnreadCount();
+}
+
+function startNotifPolling() {
+  loadNotifUnreadCount();
+  _notifInterval = setInterval(loadNotifUnreadCount, 5 * 60 * 1000); // every 5 minutes
+}
+
+function stopNotifPolling() {
+  clearInterval(_notifInterval);
+  _notifInterval = null;
+}
