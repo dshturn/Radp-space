@@ -278,43 +278,65 @@ function personnelCard(p, docs) {
   </div>`;
 }
 
-function openAddPersDoc(personId, typeName, mandatory) {
-  const cfg = PERS_DOC_TYPES.find(t => t.name === typeName) || {};
-  document.getElementById('persDocPersonId').value       = personId;
-  document.getElementById('persDocIsMandatory').value    = mandatory;
-  document.getElementById('persDocTypeName').textContent = typeName;
+function _resetPersDocModal() {
   document.getElementById('persDocIssueDate').value      = '';
   document.getElementById('persDocExpiryDate').value     = '';
   document.getElementById('persDocFileInput').value      = '';
   document.getElementById('persDocFileName').textContent = '';
   document.getElementById('persDocFileBtn').style.borderColor = '';
+  document.getElementById('persDocYearsExp').value       = '';
+  document.getElementById('persDocEditId').value         = '';
+  document.getElementById('persDocFileRequired').style.display = 'inline';
+}
+
+function openAddPersDoc(personId, typeName, mandatory) {
+  const cfg = PERS_DOC_TYPES.find(t => t.name === typeName) || {};
+  _resetPersDocModal();
+  document.getElementById('persDocPersonId').value       = personId;
+  document.getElementById('persDocIsMandatory').value    = mandatory;
+  document.getElementById('persDocIsCustom').value       = 'false';
+  document.getElementById('persDocTypeName').textContent = typeName;
+  document.getElementById('persDocCustomNameWrap').style.display = 'none';
   document.getElementById('persDocIssueDateWrap').style.display  = cfg.noIssue    ? 'none' : 'block';
   document.getElementById('persDocExpiryDateWrap').style.display = cfg.noExpiry   ? 'none' : 'block';
   document.getElementById('persDocAutoExpiryNote').style.display = cfg.autoExpiry ? 'block' : 'none';
   document.getElementById('persDocYearsExpWrap').style.display   = typeName === 'CV' ? 'block' : 'none';
-  document.getElementById('persDocYearsExp').value  = '';
-  document.getElementById('persDocEditId').value     = '';
-  document.getElementById('persDocFileRequired').style.display = 'inline';
+  openModal('addPersDocModal');
+}
+
+function openAddCustomPersDoc(personId) {
+  _resetPersDocModal();
+  document.getElementById('persDocPersonId').value       = personId;
+  document.getElementById('persDocIsMandatory').value    = 'false';
+  document.getElementById('persDocIsCustom').value       = 'true';
+  document.getElementById('persDocTypeName').textContent = '';
+  document.getElementById('persDocCustomName').value     = '';
+  document.getElementById('persDocCustomNameWrap').style.display = 'block';
+  document.getElementById('persDocIssueDateWrap').style.display  = 'block';
+  document.getElementById('persDocExpiryDateWrap').style.display = 'block';
+  document.getElementById('persDocAutoExpiryNote').style.display = 'none';
+  document.getElementById('persDocYearsExpWrap').style.display   = 'none';
   openModal('addPersDocModal');
 }
 
 function editPersDoc(docId, personId, typeName, mandatory, issueDate, expiryDate, yearsExp) {
-  const cfg = PERS_DOC_TYPES.find(t => t.name === typeName) || {};
+  const cfg      = PERS_DOC_TYPES.find(t => t.name === typeName) || {};
+  const isCustom = !PERS_DOC_TYPES.find(t => t.name === typeName);
+  _resetPersDocModal();
   document.getElementById('persDocEditId').value         = docId;
   document.getElementById('persDocPersonId').value       = personId;
   document.getElementById('persDocIsMandatory').value    = mandatory;
-  document.getElementById('persDocTypeName').textContent = typeName;
+  document.getElementById('persDocIsCustom').value       = isCustom ? 'true' : 'false';
+  document.getElementById('persDocTypeName').textContent = isCustom ? '' : typeName;
+  document.getElementById('persDocCustomNameWrap').style.display = isCustom ? 'block' : 'none';
+  document.getElementById('persDocCustomName').value     = isCustom ? typeName : '';
   document.getElementById('persDocIssueDate').value      = issueDate  || '';
   document.getElementById('persDocExpiryDate').value     = expiryDate || '';
-  document.getElementById('persDocFileInput').value      = '';
-  document.getElementById('persDocFileName').textContent = '';
-  document.getElementById('persDocFileBtn').style.borderColor = '';
   document.getElementById('persDocIssueDateWrap').style.display  = cfg.noIssue    ? 'none' : 'block';
   document.getElementById('persDocExpiryDateWrap').style.display = cfg.noExpiry   ? 'none' : 'block';
   document.getElementById('persDocAutoExpiryNote').style.display = cfg.autoExpiry ? 'block' : 'none';
   document.getElementById('persDocYearsExpWrap').style.display   = typeName === 'CV' ? 'block' : 'none';
-  document.getElementById('persDocYearsExp').value  = yearsExp != null ? yearsExp : '';
-  document.getElementById('persDocFileRequired').style.display = 'inline';
+  document.getElementById('persDocYearsExp').value       = yearsExp != null ? yearsExp : '';
   openModal('addPersDocModal');
 }
 
