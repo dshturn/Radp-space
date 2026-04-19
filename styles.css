@@ -536,6 +536,12 @@ input[type="file"] { display: none; }
 /* nav needs position:relative for the panel to anchor */
 #mainNav { position:relative; }
 
+/* ── Custom Documents ── */
+.custom-docs-section { margin-top:12px; }
+.custom-docs-label { font-size:11px; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:.05em; margin-bottom:6px; }
+.add-custom-doc-btn { display:block; width:100%; margin-top:10px; padding:7px 12px; background:transparent; border:1px dashed var(--border); border-radius:8px; color:var(--text-3); font-size:12px; cursor:pointer; transition:border-color .2s,color .2s; }
+.add-custom-doc-btn:hover { border-color:var(--accent); color:var(--accent); }
+
 /* ── Bulk Actions ── */
 .bulk-bar { display:flex; align-items:center; gap:12px; padding:8px 0; flex-wrap:wrap; }
 .bulk-count { font-size:13px; color:var(--text-3); }
