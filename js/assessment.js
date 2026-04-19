@@ -1,6 +1,8 @@
 // ═══════════════════ ASSESSMENT ═══════════════════
 
 let currentAssessmentId = null;
+let _assessPage = 0;
+const _ASSESS_PAGE_SIZE = 25;
 
 // ── Mini dashboard: assessments tile ──
 async function loadDashAssessments() {
