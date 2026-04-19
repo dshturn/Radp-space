@@ -16,17 +16,40 @@ function roleOf(user) {
   return (user && user.role) || 'contractor';
 }
 
-// Reset register form to default (service-company) state. Company-based
-// branching (Aramco vs service company) happens in onCompanyChange().
+// Role picker: opens before the register form so the user self-declares
+// their role, which shapes the fields they see.
+function openRolePicker() {
+  openModal('rolePickerModal');
+}
+
+function pickRegistrationRole(role) {
+  sessionStorage.setItem('radp_reg_role', role);
+  closeModal('rolePickerModal');
+  showPage('register');
+}
+
+// Shape the register form based on the declared role from the picker.
+// Direct URL hit on /register with no prior pick defaults to contractor.
 function configureRegisterForm() {
+  const role = sessionStorage.getItem('radp_reg_role') || 'contractor';
+  const isContractor = role === 'contractor';
+
   const contractorFields = document.getElementById('regContractorFields');
-  if (contractorFields) contractorFields.style.display = '';
+  if (contractorFields) contractorFields.style.display = isContractor ? '' : 'none';
   const aramcoWrap = document.getElementById('regAramcoUsernameWrap');
-  if (aramcoWrap) aramcoWrap.style.display = 'none';
+  if (aramcoWrap) aramcoWrap.style.display = isContractor ? 'none' : 'block';
+
+  const subtitle = document.getElementById('regRoleSubtitle');
+  if (subtitle) {
+    subtitle.textContent = role === 'operations' ? 'Create your Operations account'
+                         : role === 'assessor'   ? 'Create your Assessments account'
+                         :                         'Create your contractor account';
+  }
+
   const emailLabel = document.getElementById('regEmailLabel');
-  if (emailLabel) emailLabel.textContent = 'Email';
   const emailInput = document.getElementById('regEmail');
-  if (emailInput) emailInput.placeholder = 'you@company.com';
+  if (emailLabel) emailLabel.textContent = isContractor ? 'Email' : 'Aramco Email';
+  if (emailInput) emailInput.placeholder = isContractor ? 'you@company.com' : 'you@aramco.com';
 }
 
 let currentPage  = null;
