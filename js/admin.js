@@ -143,7 +143,7 @@ async function deleteUser(id) {
 
 function adminLogout() {
   adminToken = '';
-  showPage('home');
+  showPage('login');
 }
 
 function showAdminTab(tab, el) {
