@@ -51,19 +51,32 @@ function logout() {
 }
 
 async function loadRegisterOptions() {
-  const [c, s] = await Promise.all([
-    fetch(`${SUPABASE_URL}/rest/v1/companies?select=name&order=name`, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }).then(r => r.json()),
-    fetch(`${SUPABASE_URL}/rest/v1/service_lines?select=name&order=name`, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }).then(r => r.json())
+  const role         = sessionStorage.getItem('radp_reg_role') || 'contractor';
+  const isContractor = role === 'contractor';
+  const anonH        = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` };
+
+  const [companies, serviceLines] = await Promise.all([
+    fetch(`${SUPABASE_URL}/rest/v1/companies?select=name&order=name`, { headers: anonH }).then(r => r.json()),
+    fetch(`${SUPABASE_URL}/rest/v1/service_lines?select=name,is_aramco&order=name`, { headers: anonH }).then(r => r.json())
   ]);
-  const sel     = document.getElementById('regCompany');
-  const current = sel.value;
-  sel.innerHTML = '<option value="">Select company...</option>'
-    + c.map(x => `<option value="${x.name}">${x.name}</option>`).join('')
+
+  // Company dropdown: contractor variant is the only case that uses this
+  // UI — Aramco users have company auto-set to 'Aramco' on submit.
+  const cSel = document.getElementById('regCompany');
+  const current = cSel.value;
+  cSel.innerHTML = '<option value="">Select company...</option>'
+    + companies.map(x => `<option value="${x.name}">${x.name}</option>`).join('')
     + '<option value="__new__">+ Add new company...</option>';
-  if (current) sel.value = current;
+  if (current) cSel.value = current;
+
+  // Service line dropdown filtered by role. Aramco users get "+ Add custom"
+  // so new Aramco service lines (like NAWCOD) can grow over time.
+  const filtered = serviceLines.filter(s => !!s.is_aramco === !isContractor);
   const svcSel = document.getElementById('regServiceLine');
-  svcSel.innerHTML = '<option value="">Select service line...</option>'
-    + s.map(x => `<option value="${x.name}">${x.name}</option>`).join('');
+  let svcHtml = '<option value="">Select service line...</option>'
+    + filtered.map(x => `<option value="${x.name}">${x.name}</option>`).join('');
+  if (!isContractor) svcHtml += '<option value="__new__">+ Add custom...</option>';
+  svcSel.innerHTML = svcHtml;
 }
 
 function onCompanyChange(sel) {
@@ -71,6 +84,17 @@ function onCompanyChange(sel) {
   if (sel.value === '__new__') {
     wrap.style.display = 'block';
     document.getElementById('newCompanyName').focus();
+  } else {
+    wrap.style.display = 'none';
+  }
+}
+
+function onServiceLineChange(sel) {
+  const wrap = document.getElementById('newServiceLineWrap');
+  if (!wrap) return;
+  if (sel.value === '__new__') {
+    wrap.style.display = 'block';
+    document.getElementById('newServiceLineName').focus();
   } else {
     wrap.style.display = 'none';
   }
@@ -92,6 +116,30 @@ async function addNewCompany() {
     await loadRegisterOptions();
     document.getElementById('regCompany').value = name;
     document.getElementById('newCompanyWrap').style.display = 'none';
+    msg.textContent = '';
+  } else {
+    msg.style.color = '#fda4af'; msg.textContent = 'Failed to add. It may already exist.';
+  }
+}
+
+async function addNewServiceLine() {
+  const name = document.getElementById('newServiceLineName').value.trim();
+  const msg  = document.getElementById('newServiceLineMsg');
+  if (!name) { msg.style.color = '#fda4af'; msg.textContent = 'Please enter a service line name.'; return; }
+  msg.style.color = '#94a3b8'; msg.textContent = 'Adding...';
+  // Custom service lines added from the register form are Aramco-only — the
+  // UI only exposes this flow to operations/assessor registrations.
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/service_lines`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Prefer: 'return=minimal' },
+    body: JSON.stringify({ name, is_aramco: true })
+  });
+  if (res.ok || res.status === 201) {
+    msg.style.color = '#6ee7b7'; msg.textContent = `"${name}" added!`;
+    document.getElementById('newServiceLineName').value = '';
+    await loadRegisterOptions();
+    document.getElementById('regServiceLine').value = name;
+    document.getElementById('newServiceLineWrap').style.display = 'none';
     msg.textContent = '';
   } else {
     msg.style.color = '#fda4af'; msg.textContent = 'Failed to add. It may already exist.';
