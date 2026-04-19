@@ -47,7 +47,10 @@
     <div class="auth-card home-card">
       <h1>RADP</h1>
       <p class="auth-subtitle">Readiness Assessment Digital Platform</p>
-      <button class="btn-nav" onclick="showPage('login')">Contractor Portal</button>
+      <h2 class="role-select-title">Select your role</h2>
+      <button class="btn-nav" onclick="selectRole('contractor')">Contractor Portal</button>
+      <button class="btn-nav" onclick="selectRole('operations')">Operations</button>
+      <button class="btn-nav" onclick="selectRole('assessor')">Assessments</button>
       <button class="btn-nav btn-nav-secondary" onclick="showPage('admin-login')">Admin Dashboard</button>
       <button class="btn-install" id="installBtn" onclick="installApp()">⬇ Install as App</button>
     </div>
