@@ -36,17 +36,7 @@ async function login() {
     return;
   }
 
-  // If the user clicked a role tile on home, validate it matches their assigned role.
-  // Contractors have full access so they can enter via any tile.
-  const intent = sessionStorage.getItem('radp_intent');
-  const role   = profile.role || 'contractor';
-  if (intent && intent !== role && role !== 'contractor') {
-    msg.className = 'auth-msg error';
-    msg.textContent = `Your account is a ${role} account — please use the ${role === 'operations' ? 'Operations' : 'Assessments'} tile.`;
-    return;
-  }
-  sessionStorage.removeItem('radp_intent');
-
+  const role = profile.role || 'contractor';
   localStorage.setItem('radp_token', data.access_token);
   localStorage.setItem('radp_user', JSON.stringify({ id: data.user.id, email: data.user.email, ...profile }));
   showPage(ROLE_LANDING[role] || 'contractor');
