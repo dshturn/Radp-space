@@ -104,7 +104,7 @@ function showPage(name, replace = false) {
   if (name === 'contractor') { loadEquipment(); loadPersonnel(); loadDashAssessments(); }
   if (name === 'assessment') { loadAssessments(); }
   if (name === 'operations') { loadOperations(); }
-  if (name === 'register')   { loadRegisterOptions(); }
+  if (name === 'register')   { configureRegisterForm(); loadRegisterOptions(); }
 }
 
 window.addEventListener('popstate', e => { if (e.state?.page) showPage(e.state.page, true); });
