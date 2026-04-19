@@ -30,16 +30,19 @@ async function loadEquipment(preserveState = false) {
   }
   const h = getHeaders();
 
-  const items = await apiFetch(`${SUPABASE_URL}/rest/v1/equipment_items?select=*&order=created_at`, { headers: h });
-  if (!items) return;
+  const from = _equipPage * _EQUIP_PAGE_SIZE;
+  const res  = await fetch(
+    `${SUPABASE_URL}/rest/v1/equipment_items?dismissed=is.false&parent_id=is.null&select=*,equipment_templates(name)&order=created_at&offset=${from}&limit=${_EQUIP_PAGE_SIZE}`,
+    { headers: { ...h, Prefer: 'count=exact' } }
+  );
+  if (res.status === 401) { localStorage.removeItem('radp_token'); localStorage.removeItem('radp_user'); showPage('login'); return; }
+  if (!res.ok) { showToast('Failed to load equipment', 'error'); return; }
+  const items = await res.json();
+  const totalCount = parseInt(res.headers.get('Content-Range')?.split('/')[1] || '0', 10);
 
-  const activeItems = items.filter(i => !i.dismissed);
-  const topLevel = activeItems.filter(i => !i.parent_id);
+  const activeItems = items;
+  const topLevel = items;
   const subsByParent = {};
-  activeItems.filter(i => i.parent_id).forEach(i => {
-    if (!subsByParent[i.parent_id]) subsByParent[i.parent_id] = [];
-    subsByParent[i.parent_id].push(i);
-  });
 
   // Load docs for active items
   const itemIds = activeItems.map(i => i.id).join(',');
