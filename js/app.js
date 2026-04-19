@@ -51,11 +51,18 @@ function configureRegisterForm() {
   if (emailLabel) emailLabel.textContent = isContractor ? 'Email' : 'Aramco Email';
   if (emailInput) emailInput.placeholder = isContractor ? 'you@company.com' : 'you@aramco.com';
 
-  // Clear any lingering custom-service-line entry state on form re-entry.
+  // Aramco users pick a department (from aramco_departments) instead of a service line.
+  const slLabel = document.getElementById('regServiceLineLabel');
+  if (slLabel) slLabel.textContent = isContractor ? 'Service Line' : 'Aramco Department';
+  const newSLName = document.getElementById('newServiceLineName');
+  if (newSLName) {
+    newSLName.placeholder = isContractor ? 'Enter service line name' : 'Enter department name';
+    newSLName.value = '';
+  }
+
+  // Clear any lingering custom-entry state on form re-entry.
   const newSLWrap = document.getElementById('newServiceLineWrap');
   if (newSLWrap) newSLWrap.style.display = 'none';
-  const newSLName = document.getElementById('newServiceLineName');
-  if (newSLName) newSLName.value = '';
 }
 
 let currentPage  = null;
