@@ -34,7 +34,7 @@ async function loadEquipment(preserveState = false) {
 
   const from = _equipPage * _EQUIP_PAGE_SIZE;
   const res  = await fetch(
-    `${SUPABASE_URL}/rest/v1/equipment_items?dismissed=is.false&parent_id=is.null&select=*,equipment_templates(name)&order=created_at&offset=${from}&limit=${_EQUIP_PAGE_SIZE}`,
+    `${SUPABASE_URL}/rest/v1/equipment_items?dismissed=is.false&parent_id=is.null&select=*,equipment_templates(name)&order=created_at${_equipSearch ? `&equipment_templates.name=ilike.*${encodeURIComponent(_equipSearch)}*` : ''}&offset=${from}&limit=${_EQUIP_PAGE_SIZE}`,
     { headers: { ...h, Prefer: 'count=exact' } }
   );
   if (res.status === 401) { localStorage.removeItem('radp_token'); localStorage.removeItem('radp_user'); showPage('login'); return; }
