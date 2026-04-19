@@ -368,6 +368,7 @@ function equipItemCard(item, name, docs, subs = [], docsByItem = {}, subsByParen
   const safeName   = esc(name);
   const safeSerial = esc(item.serial_number || '—');
   return `<div class="app-card" data-id="${parseInt(item.id)}">
+    <input type="checkbox" class="equip-bulk-check" data-id="${parseInt(item.id)}" style="display:${_equipBulkMode ? 'block' : 'none'};margin:8px;" onchange="updateEquipBulkCount()">
     <div class="card-header">
       <div class="card-clickable" onclick="toggleCard(this.closest('.app-card').querySelector('.btn-toggle'))">
         <div class="card-title">${safeName}</div>
