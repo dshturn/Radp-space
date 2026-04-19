@@ -704,5 +704,6 @@ async function markEquipAssessed(itemId) {
     showToast('Failed to mark as assessed', 'error');
     return;
   }
+  logAudit('equipment', itemId, 'updated', 'Marked as assessed');
   loadEquipment(true);
 }
