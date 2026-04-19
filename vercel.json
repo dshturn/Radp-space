@@ -2,6 +2,7 @@
   "rewrites": [
     { "source": "/contractor",       "destination": "/index.html" },
     { "source": "/assessment",       "destination": "/index.html" },
+    { "source": "/operations",       "destination": "/index.html" },
     { "source": "/login",            "destination": "/index.html" },
     { "source": "/register",         "destination": "/index.html" },
     { "source": "/admin",            "destination": "/index.html" },
