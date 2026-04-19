@@ -391,6 +391,7 @@ async function deletePersDoc(id) {
   animateRemoveEl(el, async () => {
     const r = await deletePromise;
     if (!r.ok) { showToast('Delete failed: ' + r.status, 'error'); }
+    else { logAudit('document', id, 'deleted', 'Personnel document'); }
     loadPersonnel(true);
   });
 }
