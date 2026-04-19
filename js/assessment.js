@@ -450,33 +450,37 @@ async function generateLoR() {
   });
 
   // ── Render equipment recursively: root → sub → sub-sub, each with its docs ──
+  // Depth tint is applied per-<td> because the LoR stylesheet sets td backgrounds
+  // via nth-child(even) zebra striping, which would otherwise override a <tr> bg.
   let equipRows = '', eNum = 1;
   const itemName = it => esc(it?.equipment_templates?.name || it?.name || it?.model || '—');
   const indentFor = depth => depth === 0 ? '' : '&nbsp;'.repeat(depth * 4) + '└─ ';
-  const rowBg = depth => depth === 0 ? '' : depth === 1 ? 'background:#f4f7fa;' : 'background:#eaeff5;';
+  const tdBg = depth => depth === 0 ? '' : depth === 1 ? 'background:#eef3f8!important;' : 'background:#dde5ee!important;';
 
   function renderItem(item, depth) {
     const docs = item?.documents || [];
-    const bg   = rowBg(depth);
+    const bg   = tdBg(depth);
+    const td   = (content, extra = '') => `<td style="${bg}${extra}">${content}</td>`;
+    const tdAc = () => `<td class="ac" style="${bg}"></td>`;
     const numCell = depth === 0 ? String(eNum++) : '';
     const sn      = esc(item?.serial_number || '—');
     const label   = indentFor(depth) + itemName(item);
 
     if (!docs.length) {
-      equipRows += `<tr style="${bg}"><td>${numCell}</td><td>${sn}</td><td>${label}</td><td>—</td><td>—</td><td>—</td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td></tr>`;
+      equipRows += `<tr>${td(numCell)}${td(sn)}${td(label)}${td('—')}${td('—')}${td('—')}${tdAc()}${tdAc()}${tdAc()}${tdAc()}${tdAc()}</tr>`;
     } else {
       docs.forEach((d, idx) => {
         const expiry = d.expiry_date || '';
         if (expiry && expiry !== '—' && expiry !== '-') allExpiries.push(new Date(expiry));
         // Only the first doc row repeats #, S/N, and name — subsequent docs blank those cells so the item reads as one grouped entry.
-        equipRows += `<tr style="${bg}">`
-          + `<td>${idx === 0 ? numCell : ''}</td>`
-          + `<td>${idx === 0 ? sn : ''}</td>`
-          + `<td>${idx === 0 ? label : ''}</td>`
-          + `<td>${esc(d.document_types?.document_name || d.doc_type_name || '—')}</td>`
-          + `<td>${esc(d.issue_date || '—')}</td>`
-          + `<td style="${getExpiryStyle(expiry)}">${esc(expiry || '—')}</td>`
-          + `<td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td>`
+        equipRows += `<tr>`
+          + td(idx === 0 ? numCell : '')
+          + td(idx === 0 ? sn      : '')
+          + td(idx === 0 ? label   : '')
+          + td(esc(d.document_types?.document_name || d.doc_type_name || '—'))
+          + td(esc(d.issue_date || '—'))
+          + td(esc(expiry || '—'), getExpiryStyle(expiry))
+          + tdAc() + tdAc() + tdAc() + tdAc() + tdAc()
           + `</tr>`;
       });
     }
