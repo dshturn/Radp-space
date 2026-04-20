@@ -334,19 +334,38 @@ function openAddPersDoc(personId, typeName, mandatory) {
   openModal('addPersDocModal');
 }
 
-function openAddCustomPersDoc(personId) {
+async function openAddCustomPersDoc(personId) {
   _resetPersDocModal();
   document.getElementById('persDocPersonId').value       = personId;
   document.getElementById('persDocIsMandatory').value    = 'false';
   document.getElementById('persDocIsCustom').value       = 'true';
   document.getElementById('persDocTypeName').textContent = '';
   document.getElementById('persDocCustomName').value     = '';
-  document.getElementById('persDocCustomNameWrap').style.display = 'block';
+  // Dropdown is the primary input; free-text only appears when "+ Add new..." is chosen.
+  document.getElementById('persDocCustomSelectWrap').style.display = 'block';
+  document.getElementById('persDocCustomNameWrap').style.display   = 'none';
   document.getElementById('persDocIssueDateWrap').style.display  = 'block';
   document.getElementById('persDocExpiryDateWrap').style.display = 'block';
   document.getElementById('persDocAutoExpiryNote').style.display = 'none';
   document.getElementById('persDocYearsExpWrap').style.display   = 'none';
   openModal('addPersDocModal');
+
+  const types = await apiFetch(`${SUPABASE_URL}/rest/v1/personnel_doc_types?select=name&order=name`, { headers: getHeaders() }) || [];
+  document.getElementById('persDocCustomTypeSelect').innerHTML =
+    '<option value="">Select type...</option>'
+    + types.map(t => `<option value="${t.name}">${t.name}</option>`).join('')
+    + '<option value="__new__">+ Add new type...</option>';
+}
+
+function onPersDocCustomTypeChange(sel) {
+  const wrap = document.getElementById('persDocCustomNameWrap');
+  if (sel.value === '__new__') {
+    wrap.style.display = 'block';
+    document.getElementById('persDocCustomName').value = '';
+    document.getElementById('persDocCustomName').focus();
+  } else {
+    wrap.style.display = 'none';
+  }
 }
 
 function editPersDoc(docId, personId, typeName, mandatory, issueDate, expiryDate, yearsExp) {
