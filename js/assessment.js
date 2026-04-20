@@ -156,7 +156,9 @@ async function createAssessment() {
     method: 'POST', headers: { ...getHeaders(), Prefer: 'return=representation' },
     body: JSON.stringify({ contractor_id: getUser().id, field_well: fieldWell, type_of_job: typeOfJob, objective, sharepoint_request_id: requestId || null })
   });
+  if (!res.ok) { showToast('Failed to create assessment', 'error'); return; }
   const data = await res.json();
+  if (!data?.[0]?.id) { showToast('Unexpected error creating assessment', 'error'); return; }
   logAudit('assessment', data[0].id, 'created', fieldWell);
   showDetail(data[0].id);
 }
