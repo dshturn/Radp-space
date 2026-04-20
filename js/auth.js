@@ -70,7 +70,7 @@ async function loadRegisterOptions() {
   const cSel = document.getElementById('regCompany');
   const current = cSel.value;
   cSel.innerHTML = '<option value="">Select company...</option>'
-    + companies.map(x => `<option value="${x.name}">${x.name}</option>`).join('')
+    + companies.map(x => `<option value="${esc(x.name)}">${esc(x.name)}</option>`).join('')
     + '<option value="__new__">+ Add new company...</option>';
   if (current) cSel.value = current;
 
