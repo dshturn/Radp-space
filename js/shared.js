@@ -445,7 +445,7 @@ async function loadNotifications() {
 
 async function markNotifRead(id, el) {
   el?.classList.remove('unread');
-  await fetch(`${SUPABASE_URL}/rest/v1/notifications?id=eq.${id}`, {
+  await fetch(`${SUPABASE_URL}/rest/v1/notifications?id=eq.${parseInt(id)}`, {
     method: 'PATCH', headers: { ...getHeaders(), Prefer: 'return=minimal' },
     body: JSON.stringify({ read: true })
   });
