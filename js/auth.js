@@ -136,7 +136,7 @@ async function addNewServiceLine() {
   msg.style.color = '#94a3b8'; msg.textContent = 'Adding...';
   const res = await fetch(`${SUPABASE_URL}/rest/v1/aramco_departments`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Prefer: 'return=minimal' },
+    headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${getToken() || SUPABASE_KEY}`, Prefer: 'return=minimal' },
     body: JSON.stringify({ name })
   });
   if (res.ok || res.status === 201) {
