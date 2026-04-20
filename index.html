@@ -551,8 +551,14 @@
   <div class="modal-box">
     <h3 id="addPersDocTitle">Add Document</h3>
     <div id="persDocTypeName" style="font-size:14px;font-weight:bold;color:var(--accent);margin-bottom:14px;"></div>
+    <div id="persDocCustomSelectWrap" style="display:none;">
+      <label for="persDocCustomTypeSelect">Document Type <span style="color:var(--bad);">*</span></label>
+      <select id="persDocCustomTypeSelect" onchange="onPersDocCustomTypeChange(this)" style="margin-bottom:12px;">
+        <option value="">Select type...</option>
+      </select>
+    </div>
     <div id="persDocCustomNameWrap" style="display:none;">
-      <label for="persDocCustomName">Document Name <span style="color:var(--bad);">*</span></label>
+      <label for="persDocCustomName" id="persDocCustomNameLabel">Document Name <span style="color:var(--bad);">*</span></label>
       <input type="text" id="persDocCustomName" placeholder="e.g. Offshore Survival Certificate" style="margin-bottom:12px;">
     </div>
     <div id="persDocIssueDateWrap">
