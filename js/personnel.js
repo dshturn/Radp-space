@@ -373,6 +373,7 @@ function editPersDoc(docId, personId, typeName, mandatory, issueDate, expiryDate
   const isCustom = !PERS_DOC_TYPES.find(t => t.name === typeName);
   _resetPersDocModal();
   document.getElementById('persDocEditId').value         = docId;
+  document.getElementById('persDocFileRequired').style.display = 'none';
   document.getElementById('persDocPersonId').value       = personId;
   document.getElementById('persDocIsMandatory').value    = mandatory;
   document.getElementById('persDocIsCustom').value       = isCustom ? 'true' : 'false';
