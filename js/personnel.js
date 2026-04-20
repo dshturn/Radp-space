@@ -315,6 +315,8 @@ function _resetPersDocModal() {
   document.getElementById('persDocYearsExp').value       = '';
   document.getElementById('persDocEditId').value         = '';
   document.getElementById('persDocFileRequired').style.display = 'inline';
+  document.getElementById('persDocCustomSelectWrap').style.display = 'none';
+  document.getElementById('persDocCustomTypeSelect').value = '';
 }
 
 function openAddPersDoc(personId, typeName, mandatory) {
