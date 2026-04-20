@@ -78,7 +78,7 @@ async function loadRegisterOptions() {
   const svcSel = document.getElementById('regServiceLine');
   const placeholder = isContractor ? 'Select service line...' : 'Select department...';
   let svcHtml = `<option value="">${placeholder}</option>`
-    + options.map(x => `<option value="${x.name}">${x.name}</option>`).join('');
+    + options.map(x => `<option value="${esc(x.name)}">${esc(x.name)}</option>`).join('');
   if (!isContractor) svcHtml += '<option value="__new__">+ Add custom...</option>';
   svcSel.innerHTML = svcHtml;
 }
