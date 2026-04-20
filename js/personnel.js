@@ -377,7 +377,9 @@ function editPersDoc(docId, personId, typeName, mandatory, issueDate, expiryDate
   document.getElementById('persDocIsMandatory').value    = mandatory;
   document.getElementById('persDocIsCustom').value       = isCustom ? 'true' : 'false';
   document.getElementById('persDocTypeName').textContent = isCustom ? '' : typeName;
-  document.getElementById('persDocCustomNameWrap').style.display = isCustom ? 'block' : 'none';
+  // Edit mode: rename via free-text, dropdown not applicable.
+  document.getElementById('persDocCustomSelectWrap').style.display = 'none';
+  document.getElementById('persDocCustomNameWrap').style.display   = isCustom ? 'block' : 'none';
   document.getElementById('persDocCustomName').value     = isCustom ? typeName : '';
   document.getElementById('persDocIssueDate').value      = issueDate  || '';
   document.getElementById('persDocExpiryDate').value     = expiryDate || '';
