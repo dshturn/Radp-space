@@ -448,7 +448,7 @@ async function generateLoR() {
   personnel.forEach(p => {
     const per = p.personnel, expiry = per?.expiry_date || '';
     if (expiry && expiry !== '—' && expiry !== '-') allExpiries.push(new Date(expiry));
-    persRows += `<tr><td>${pNum++}</td><td>${per?.full_name||'—'}</td><td>${per?.years_experience||'—'}</td><td>${per?.position||'—'}</td><td>${per?.national_id||'—'}</td><td style="${getExpiryStyle(expiry)}">${expiry||'—'}</td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td></tr>`;
+    persRows += `<tr><td>${pNum++}</td><td>${esc(per?.full_name||'—')}</td><td>${esc(String(per?.years_experience||'—'))}</td><td>${esc(per?.position||'—')}</td><td>${esc(per?.national_id||'—')}</td><td style="${getExpiryStyle(expiry)}">${esc(expiry||'—')}</td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td></tr>`;
   });
 
   // ── Render equipment recursively: root → sub → sub-sub, each with its docs ──
