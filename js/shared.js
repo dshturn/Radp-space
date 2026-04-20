@@ -1,7 +1,7 @@
 // ═══════════════════ SHARED CONFIG & UTILITIES ═══════════════════
 
-const SUPABASE_URL = 'https://fslleuedqlxpjnerruzt.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzbGxldWVkcWx4cGpuZXJydXp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5OTMxMTksImV4cCI6MjA5MDU2OTExOX0.H1narO5BF5uF2KwlKtKvioz3mun2ecxb1Lg_xVDLdt4';
+const SUPABASE_URL = window.SUPABASE_CONFIG?.url || '';
+const SUPABASE_KEY = window.SUPABASE_CONFIG?.key || '';
 
 const getToken   = () => localStorage.getItem('radp_token');
 const getUser    = () => JSON.parse(localStorage.getItem('radp_user') || '{}');
