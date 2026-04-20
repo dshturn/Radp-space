@@ -87,11 +87,11 @@ async function openEditUser(userId) {
 
   const cSel = document.getElementById('editCompany');
   cSel.innerHTML = '<option value="">Select company...</option>'
-    + companies.map(c => `<option value="${c.name}"${c.name === u.company ? ' selected' : ''}>${c.name}</option>`).join('');
+    + companies.map(c => `<option value="${esc(c.name)}"${c.name === u.company ? ' selected' : ''}>${esc(c.name)}</option>`).join('');
 
   const sSel = document.getElementById('editServiceLine');
   sSel.innerHTML = '<option value="">Select service line...</option>'
-    + serviceLines.map(s => `<option value="${s.name}"${s.name === u.service_line ? ' selected' : ''}>${s.name}</option>`).join('');
+    + serviceLines.map(s => `<option value="${esc(s.name)}"${s.name === u.service_line ? ' selected' : ''}>${esc(s.name)}</option>`).join('');
 
   const rSel = document.getElementById('editRole');
   if (rSel) rSel.value = u.role || 'contractor';
