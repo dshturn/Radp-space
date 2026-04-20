@@ -395,10 +395,32 @@ async function savePersDocument() {
   const editId    = document.getElementById('persDocEditId').value;
   const personId  = document.getElementById('persDocPersonId').value;
   const isCustom  = document.getElementById('persDocIsCustom').value === 'true';
-  const typeName  = isCustom
-    ? document.getElementById('persDocCustomName').value.trim()
-    : document.getElementById('persDocTypeName').textContent;
-  if (!typeName) { showToast('Please enter a document name', 'warn'); document.getElementById('persDocCustomName').focus(); return; }
+
+  // Custom add: read from dropdown; if "+ Add new...", use text input and register the new type.
+  // Custom edit: read from text input (rename).
+  // Built-in: read the displayed type name.
+  let typeName;
+  if (isCustom) {
+    const isAdd     = !editId;
+    const selectEl  = document.getElementById('persDocCustomTypeSelect');
+    const selected  = isAdd ? selectEl.value : '';
+    const freeText  = document.getElementById('persDocCustomName').value.trim();
+    if (isAdd && !selected) { showToast('Please select a document type', 'warn'); selectEl.focus(); return; }
+    if (isAdd && selected === '__new__') {
+      if (!freeText) { showToast('Please enter a new document type name', 'warn'); document.getElementById('persDocCustomName').focus(); return; }
+      typeName = freeText;
+      // Register for everyone's future use. Conflict on the unique name just means it already existed.
+      await fetch(`${SUPABASE_URL}/rest/v1/personnel_doc_types`, {
+        method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal,resolution=ignore-duplicates' },
+        body: JSON.stringify({ name: freeText })
+      }).catch(() => {});
+    } else {
+      typeName = isAdd ? selected : freeText;
+    }
+  } else {
+    typeName = document.getElementById('persDocTypeName').textContent;
+  }
+  if (!typeName) { showToast('Please enter a document name', 'warn'); return; }
   const mandatory = document.getElementById('persDocIsMandatory').value === 'true';
   const cfg       = PERS_DOC_TYPES.find(t => t.name === typeName) || {};
   const issueDate = document.getElementById('persDocIssueDate').value;
