@@ -23,6 +23,8 @@
   --success-h: #047857;
   --danger:    #dc2626;
   --danger-h:  #b91c1c;
+  --shadow-modal: 0 24px 60px rgba(0,0,0,0.6);
+  --skeleton-stop: #2a3a50;
 }
 
 /* === Reset === */
