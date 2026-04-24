@@ -49,10 +49,10 @@ async function showPage(name, replace = false) {
     currentPage = name;
 
     // Hide all pages and show the current one
-    document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     const pageEl = document.getElementById(`${name}-page`);
     if (!pageEl) throw new Error(`Page #${name}-page not found`);
-    pageEl.style.display = '';
+    pageEl.classList.add('active');
 
     // Add animation class
     pageEl.classList.remove('entering', 'slide-in-right', 'slide-in-left');
