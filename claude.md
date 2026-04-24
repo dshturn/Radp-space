@@ -42,12 +42,11 @@
 
 ## Code Rules (NON-NEGOTIABLE)
 
-- Follow `/context/rules.md` strictly
-- Production-ready code only (no TODOs, no stubs)
-- Test logic before deploying (run through happy path + edge cases mentally)
-- Audit logging required for all data mutations (see context/rules.md § Audit Logging)
+- Follow `/context/rules.md` strictly (JavaScript format, Git workflow, validation, deployment checklist)
+- Write production-ready code only (no TODOs, no stubs, no pseudo-code)
+- Test logic before submitting (run through happy path + edge cases mentally)
 - Never hardcode secrets, API keys, or credentials
-- Minimize token usage in code (variable names, function names, comments)
+- Minimize token usage: short variable names, concise comments (only explain WHY, not WHAT)
 
 ## Anti-Patterns (FORBIDDEN)
 
