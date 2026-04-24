@@ -247,7 +247,9 @@ async function logAudit(entityType, entityId, action, label, metadata = {}) {
       entity_id:   String(entityId),
       action,
       label:       label || null,
-      metadata:    Object.keys(metadata).length ? metadata : null
+      metadata:    Object.keys(metadata).length ? metadata : null,
+      company:     u.company || null,
+      service_line: u.service_line || null
     })
   }).catch(() => {}); // silently swallow network errors on audit writes
 }
