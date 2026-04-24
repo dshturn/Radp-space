@@ -92,7 +92,7 @@ async function loadEquipment(preserveState = false) {
   document.getElementById('equipmentList').innerHTML = topLevel.length
     ? Object.entries(eqGroups).sort(([a],[b]) => a.localeCompare(b)).map(([type, items]) => {
         const cardsHtml = items.map(i => equipItemCard(i, i.name || 'Equipment', docsByItem[i.id] || [], subsByParent[i.id] || [], docsByItem, subsByParent)).join('');
-        const _t = new Date(); _t.setHours(0,0,0,0);
+        const _t = todayUTC();
         const _i30 = new Date(_t); _i30.setDate(_t.getDate() + 30);
         let [_exp, _expir, _ok, _missing, _review] = [0, 0, 0, 0, 0];
         items.forEach(i => {
