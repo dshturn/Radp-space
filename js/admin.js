@@ -101,7 +101,7 @@ async function saveEditUser() {
 
   const res = await fetch(`${SUPABASE_URL}/rest/v1/user_profiles?id=eq.${id}`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}`, Prefer: 'return=minimal' },
+    headers: { ...getHeaders(), Prefer: 'return=minimal' },
     body: JSON.stringify({ full_name, email, company, service_line, role })
   });
   if (!res.ok) { showToast('Save failed: ' + res.status, 'error'); return; }
