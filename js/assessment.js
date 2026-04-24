@@ -273,12 +273,12 @@ async function openEquipmentSelector() {
 async function addSelectedEquipment() {
   const checked = [...document.querySelectorAll('#equipSelectorList input:checked')].map(c => c.value);
   if (!checked.length) { showToast('Select at least one item', 'warn'); return; }
-  for (const itemId of checked) {
-    await fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment`, {
+  await Promise.all(checked.map(itemId =>
+    fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment`, {
       method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal' },
       body: JSON.stringify({ assessment_id: currentAssessmentId, equipment_item_id: parseInt(itemId) })
-    });
-  }
+    })
+  ));
   document.getElementById('asEquipModal').classList.remove('open');
   loadSelectedEquipment(currentAssessmentId);
 }
