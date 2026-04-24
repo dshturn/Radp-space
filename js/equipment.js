@@ -159,7 +159,7 @@ async function loadEquipment(preserveState = false) {
   }
 
   // ── Mini dashboard: equipment + docs stats ──
-  const today = new Date(); today.setHours(0,0,0,0);
+  const today = todayUTC();
   const in30  = new Date(today); in30.setDate(in30.getDate() + 30);
   let totalDocs = 0, expiredDocs = 0, expiringDocs = 0;
   docs.forEach(d => {
