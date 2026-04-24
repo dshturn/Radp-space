@@ -195,10 +195,10 @@ async function loadEquipment(preserveState = false) {
 
 function equipItemCard(item, name, docs, subs = [], docsByItem = {}, subsByParent = {}) {
 
-  const _today = new Date(); _today.setHours(0,0,0,0);
+  const _today = todayUTC();
   const _in30  = new Date(_today); _in30.setDate(_in30.getDate() + 30);
-  const isExp     = d => d.expiry_date && new Date(d.expiry_date) < _today;
-  const isExpiring = d => { if (!d.expiry_date) return false; const e = new Date(d.expiry_date); return e >= _today && e <= _in30; };
+  const isExp     = d => d.expiry_date && parseUTC(d.expiry_date) < _today;
+  const isExpiring = d => { if (!d.expiry_date) return false; const e = parseUTC(d.expiry_date); return e >= _today && e <= _in30; };
   const mkBadge   = (exp, expir) => exp > 0
     ? `<span class="sbadge sbadge-expired">⚠ ${exp} EXPIRED</span>`
     : expir > 0
