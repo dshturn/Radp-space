@@ -1,0 +1,98 @@
+# RADP — Readiness Assessment Digital Platform
+# Supabase Free + Vercel Deploy + PWA
+
+## Tech Stack
+- Vanilla JS (ES2022), no frameworks
+- Supabase Free (Auth + PostgreSQL + REST API + Storage + Realtime)
+- PDF.js for document viewing (lazy loaded)
+- PWA with Service Worker
+- Deploy: Vercel
+- Dark theme with navy/amber palette
+
+## Architecture
+- **Router**: `js/core/app.js` with lazy page loading
+- **API**: `js/core/api.js` wrapper with caching + offline queue
+- **State**: `js/core/state.js` with localStorage persistence
+- **UI**: `js/core/ui.js` with toast/modal helpers
+- **Realtime**: `js/core/realtime.js` for WebSocket subscriptions
+- **Pages**: Each page loads on demand (`pages/*.html` + `js/pages/*.js`)
+- **Styles**: `styles.css` with CSS variables (dark theme)
+
+## Supabase Schema
+- **user_profiles**: users with role (contractor|operations|assessor|admin) and status
+- **contractors**: contractor company info
+- **equipment_items**: equipment with template, serial number, documents
+- **documents**: equipment documents with expiry tracking
+- **personnel**: staff with certifications
+- **personnel_documents**: staff documents with expiry tracking
+- **assessments**: readiness assessments linking personnel/equipment/sites
+- **operation_sites**: job sites with personnel/equipment assignments
+- **notifications**: real-time notifications (WebSocket via Realtime)
+- **audit_log**: all data changes tracked
+
+## Security
+- RLS policies enforce user_id isolation
+- Anon key (public) only works with RLS protection
+- No Edge Functions (Free plan) — validation via RLS + Database Functions
+- Password validation: Supabase Auth handles; client validates min 8 chars + uppercase + number
+
+## Key Functions
+- `showPage(name)` - route to page with lazy loading
+- `apiGet/Post/Patch/Delete(table, data, options)` - Supabase REST with caching
+- `showToast(msg, type)` - info|success|warn|error notifications
+- `openModal/closeModal(id)` - modal dialogs
+- `startRealtime()/stopRealtime()` - WebSocket subscriptions
+- `queueOperation(table, action, data)` - offline-first queue
+- `debounce(fn, delay)` - for search input throttling
+
+## Database Views
+- `v_documents_with_status` - documents with calculated status badge
+- `v_personnel_documents_with_status` - personnel docs with status
+
+## Color System
+- `--bg`: #0f172a (darkest)
+- `--surface`: #1e293b (cards)
+- `--accent`: #f59e0b (orange, actions)
+- `--good`: #6ee7b7 (valid/green)
+- `--warn`: #fbbf24 (expiring/yellow)
+- `--bad`: #fda4af (expired/red)
+- `--info`: #93c5fd (blue)
+
+## Patterns to Follow
+1. **Document Status**: Use `get_document_status()` function for expired/expiring/valid
+2. **Error Handling**: All fetch calls in `apiGet/Post/Patch/Delete` show toast on error
+3. **Offline**: Call `queueOperation()` instead of `apiPost()` if offline
+4. **Caching**: `apiGet()` caches 1min by default; call `clearCache(table)` after mutations
+5. **Realtime**: Subscribe in `startRealtime()`; unsubscribe in `stopRealtime()`
+6. **Pagination**: Use ?limit=N&offset=M in SELECT
+7. **Filtering**: Use filters array: `{ column, operator: 'eq|lt|gt|like', value }`
+
+## GitHub Actions Workflow
+- Auto-test migrations on push to main
+- Auto-apply migrations if tests pass
+- Auto-deploy to Vercel
+
+**Secrets needed:**
+- SUPABASE_PROJECT_REF: fslleuedqlxpjnerruzt
+- SUPABASE_ACCESS_TOKEN: from `supabase access-token`
+- SUPABASE_DB_PASSWORD: database password
+- VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID
+
+## Rules (NON-NEGOTIABLE)
+- ❌ No external libraries (jQuery, React, Vue, Angular)
+- ❌ No inline styles (use CSS variables instead)
+- ❌ No hardcoded delays (use debounce/throttle)
+- ❌ No console.log in production (use showToast for user feedback)
+- ❌ No direct DOM mutation without caching DOM refs
+- ✅ All errors shown as toast notifications
+- ✅ All network calls handle offline gracefully
+- ✅ All API queries respect RLS policies
+- ✅ All timestamps in YYYY-MM-DD format
+- ✅ All IDs are bigint (PostgreSQL identity)
+
+## Maintenance
+- Migrations in `supabase/migrations/` — numbered by timestamp
+- Update `.cursorrules` when architecture changes
+- Keep core files (`js/core/*.js`) minimal
+- Move complex logic to Database Functions
+- Test offline queue with DevTools Network throttling
