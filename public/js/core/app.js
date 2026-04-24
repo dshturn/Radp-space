@@ -75,6 +75,16 @@ async function showPage(name, replace = false) {
       stopRealtime();
     }
 
+    // Call page-specific init function
+    const initFn = window[`${name}Init`];
+    if (typeof initFn === 'function') {
+      try {
+        await initFn();
+      } catch (err) {
+        console.warn(`Page init error for ${name}:`, err);
+      }
+    }
+
     // Update URL
     const paths = {
       login: '/',
