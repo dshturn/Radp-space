@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RADP</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛢</text></svg>">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta name="theme-color" content="#1e293b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="RADP">
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co; default-src 'self';">
+  <link rel="apple-touch-icon" href="/icon.svg">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<nav id="mainNav" aria-label="Main navigation">
+  <div class="nav-links">
+    <a href="/contractor" onclick="showPage('contractor');return false;" id="navContractor"><span aria-hidden="true">📋</span> Contractor</a>
+    <a href="/assessment" onclick="showPage('assessment');return false;" id="navAssessment"><span aria-hidden="true">📄</span> Assessments</a>
+    <a href="/operations" onclick="showPage('operations');return false;" id="navOperations"><span aria-hidden="true">🏗</span> Operations</a>
+    <a href="/users" onclick="showPage('users');return false;" id="navUsers"><span aria-hidden="true">👥</span> Users</a>
+  </div>
+  <div class="nav-right">
+    <span class="nav-user" id="navUser"></span>
+    <button class="notif-bell" id="notifBell" onclick="toggleNotifPanel()" aria-label="Notifications" aria-expanded="false">
+      🔔
+      <span class="notif-badge" id="notifBadge" hidden>0</span>
+    </button>
+    <div class="notif-panel" id="notifPanel" hidden aria-label="Notifications panel">
+      <div class="notif-panel-header">
+        <span>Notifications</span>
+        <button class="notif-mark-read" onclick="markAllNotifsRead()">Mark all read</button>
+      </div>
+      <div id="notifList"><div class="notif-empty">No notifications</div></div>
+    </div>
+    <button class="nav-logout" onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<main id="main-content">
+<!-- ══════════════════ LOGIN (entry point) ══════════════════ -->
+<div id="login-page" class="page">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <h1>RADP</h1>
+      <p class="auth-subtitle">Readiness Assessment Digital Platform</p>
+      <form onsubmit="login();return false;">
+        <label class="auth-label" for="loginEmail">Email</label>
+        <input type="email" id="loginEmail" placeholder="you@company.com" autocomplete="email">
+        <label class="auth-label" for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
+        <button type="submit" class="btn-main">Login</button>
+      </form>
+      <div id="loginMsg" class="auth-msg" role="alert"></div>
+      <button class="auth-link" onclick="openRolePicker()">New user? Register here</button>
+      <button class="btn-install" id="installBtn" onclick="installApp()">⬇ Install as App</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ REGISTER ══════════════════ -->
+<div id="register-page" class="page">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <h1>RADP Registration</h1>
+      <p class="auth-subtitle" id="regRoleSubtitle">Create your contractor account</p>
+      <form onsubmit="register();return false;">
+        <label class="auth-label" for="regFullName">Full Name</label>
+        <input type="text" id="regFullName" placeholder="John Smith" autocomplete="name">
+        <label class="auth-label" for="regEmail" id="regEmailLabel">Email</label>
+        <input type="email" id="regEmail" placeholder="you@company.com" autocomplete="email">
+        <label class="auth-label" for="regPassword">Password</label>
+        <input type="password" id="regPassword" placeholder="Min 6 characters" autocomplete="new-password">
+        <div id="regCompanyWrap">
+          <label class="auth-label" for="regCompany">Company</label>
+          <select id="regCompany" onchange="onCompanyChange(this)"><option value="">Select company...</option></select>
+          <div id="newCompanyWrap">
+            <div class="row-gap-sm">
+              <input type="text" id="newCompanyName" placeholder="Enter company name" class="mb-0">
+              <button type="button" onclick="addNewCompany()" class="btn-success" style="white-space:nowrap;flex-shrink:0;padding:10px 14px;font-size:13px;">Add</button>
+            </div>
+            <div id="newCompanyMsg" class="form-hint"></div>
+          </div>
+        </div>
+        <label class="auth-label" for="regServiceLine" id="regServiceLineLabel">Service Line</label>
+        <select id="regServiceLine" onchange="onServiceLineChange(this)"><option value="">Select service line...</option></select>
+        <div id="newServiceLineWrap" style="display:none;">
+          <div class="row-gap-sm">
+            <input type="text" id="newServiceLineName" placeholder="Enter service line name" class="mb-0">
+            <button type="button" onclick="addNewServiceLine()" class="btn-success" style="white-space:nowrap;flex-shrink:0;padding:10px 14px;font-size:13px;">Add</button>
+          </div>
+          <div id="newServiceLineMsg" class="form-hint"></div>
+        </div>
+        <button type="submit" class="btn-main">Create Account</button>
+      </form>
+      <div id="registerMsg" class="auth-msg" role="alert"></div>
+      <button class="auth-link" onclick="showPage('login')">Already have an account? Login</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ CONTRACTOR ══════════════════ -->
+<div id="contractor-page" class="page">
+  <div class="container">
+    <div class="welcome">
+      <h2 id="welcomeMsg">Welcome</h2>
+      <p id="companyInfo"></p>
+    </div>
+    <div class="mini-dash" id="miniDash">
+      <div class="dash-tile info" style="animation-delay:0ms">
+        <div class="dash-val" id="dashEquip">—</div>
+        <div class="dash-lbl">Equipment</div>
+        <div class="dash-sub" id="dashEquipSub"></div>
+      </div>
+      <div class="dash-tile info" style="animation-delay:60ms">
+        <div class="dash-val" id="dashDocs">—</div>
+        <div class="dash-lbl">Documents</div>
+        <div class="dash-sub" id="dashDocsSub"></div>
+      </div>
+      <div class="dash-tile info" style="animation-delay:120ms">
+        <div class="dash-val" id="dashPersonnel">—</div>
+        <div class="dash-lbl">Personnel</div>
+        <div class="dash-sub" id="dashPersonnelSub"></div>
+      </div>
+      <div class="dash-tile info" style="animation-delay:180ms">
+        <div class="dash-val" id="dashAssessments">—</div>
+        <div class="dash-lbl">Assessments</div>
+        <div class="dash-sub" id="dashAssessmentsSub"></div>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="showContractorTab('personnel', this)">Personnel</button>
+      <button class="tab" onclick="showContractorTab('equipment', this)">Equipment</button>
+    </div>
+    <div id="ct-personnel" class="ct-section active">
+      <div class="section-row">
+        <button class="add-btn mb-0" onclick="openAddPersonnel()">+ Add Personnel</button>
+        <button class="btn-ghost btn-sm" onclick="exportPersonnelCsv()" aria-label="Export personnel to CSV">↓ CSV</button>
+        <button id="persBulkToggleBtn" class="btn-ghost btn-sm" onclick="togglePersBulkMode()">Select</button>
+        <label for="personnelSearch" class="sr-only">Search personnel</label>
+        <input type="text" id="personnelSearch" class="search-input" placeholder="Search personnel…">
+      </div>
+      <div id="persBulkBar" style="display:none;" class="bulk-bar">
+        <span id="persBulkCount" class="bulk-count">0 selected</span>
+        <button class="btn-danger btn-sm" onclick="bulkDeletePersonnel()">Delete Selected</button>
+      </div>
+      <div id="personnelList"><div class="skel-card"><div class="skeleton skel-line medium"></div><div class="skeleton skel-line short"></div></div></div>
+      <div id="personnelPagination"></div>
+    </div>
+    <div id="ct-equipment" class="ct-section">
+      <div class="section-row">
+        <button class="add-btn mb-0" onclick="openAddEquipment()">+ Add Equipment</button>
+        <button class="btn-ghost btn-sm" onclick="exportEquipmentCsv()" aria-label="Export equipment to CSV">↓ CSV</button>
+        <button id="equipBulkToggleBtn" class="btn-ghost btn-sm" onclick="toggleEquipBulkMode()">Select</button>
+        <label for="equipmentSearch" class="sr-only">Search equipment</label>
+        <input type="text" id="equipmentSearch" class="search-input" placeholder="Search equipment…">
+      </div>
+      <div id="equipBulkBar" style="display:none;" class="bulk-bar">
+        <span id="equipBulkCount" class="bulk-count">0 selected</span>
+        <button class="btn-danger btn-sm" onclick="bulkDeleteEquipment()">Delete Selected</button>
+      </div>
+      <div id="equipmentList"><div class="skel-card"><div class="skeleton skel-line medium"></div><div class="skeleton skel-line full"></div><div class="skeleton skel-line short"></div></div></div>
+      <div id="equipmentPagination"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ ASSESSMENT ══════════════════ -->
+<div id="assessment-page" class="page">
+  <div class="container">
+    <div id="listView" class="as-view active">
+      <div class="row-between" style="margin-bottom:16px;">
+        <div class="section-label">My Assessments</div>
+        <button class="btn-success" onclick="showCreate()">+ New Assessment</button>
+      </div>
+      <div id="assessmentList"><div class="skel-card"><div class="skeleton skel-line medium"></div><div class="skeleton skel-line short"></div></div><div class="skel-card"><div class="skeleton skel-line full"></div><div class="skeleton skel-line short"></div></div></div>
+      <div id="assessmentPagination"></div>
+    </div>
+    <div id="createView" class="as-view">
+      <div class="app-card">
+        <h2>New Assessment</h2>
+        <label for="requestId">SharePoint Request ID</label>
+        <input type="text" id="requestId" placeholder="e.g. 176">
+        <label for="fieldWellSelect">Field / Well</label>
+        <select id="fieldWellSelect" onchange="onFieldWellChange(this)"></select>
+        <div id="fieldWellNewWrap" style="display:none;">
+          <input type="text" id="fieldWellNew" placeholder="e.g. MANIFA/MNIF-123" autocomplete="off">
+        </div>
+        <label for="typeOfJob">Type of Job</label>
+        <select id="typeOfJob" style="margin-bottom:14px;" onchange="onTypeOfJobChange(this)"><option value="">Select type of job...</option></select>
+        <div id="typeOfJobCustomWrap" style="display:none;">
+          <input type="text" id="typeOfJobCustom" placeholder="Enter custom type of job" autocomplete="off">
+        </div>
+        <label for="objective">Objective (optional)</label>
+        <textarea id="objective" placeholder="Short summary of the job objective"></textarea>
+        <button class="btn-primary" onclick="createAssessment()">Create Assessment</button>
+        <button class="btn-ghost" style="margin-left:8px;" onclick="showList()">Cancel</button>
+      </div>
+    </div>
+    <div id="detailView" class="as-view">
+      <div style="margin-bottom:16px;">
+        <button class="btn-ghost-sm" onclick="showList()">← Back</button>
+      </div>
+      <div class="app-card" id="assessmentInfo"></div>
+      <div class="tabs" id="detailTabs">
+        <button class="tab active" onclick="showDetailTab('personnel', this)">Personnel</button>
+        <button class="tab" onclick="showDetailTab('equipment', this)">Equipment</button>
+      </div>
+      <div id="personnelTab">
+        <div class="row-between mb-sm">
+          <div class="section-label">Selected Personnel</div>
+          <button class="btn-primary" onclick="openPersonnelSelector()">+ Add Personnel</button>
+        </div>
+        <div id="selectedPersonnel"></div>
+      </div>
+      <div id="equipmentTab" style="display:none;">
+        <div class="row-between mb-sm">
+          <div class="section-label">Selected Equipment</div>
+          <button class="btn-primary" onclick="openEquipmentSelector()">+ Add Equipment</button>
+        </div>
+        <div id="selectedEquipment"></div>
+      </div>
+      <div class="lor-section">
+        <button class="lor-btn" onclick="generateLoR()">📄 Generate LoR</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ OPERATIONS ══════════════════ -->
+<div id="operations-page" class="page">
+  <div class="container">
+
+    <!-- List view: site grid -->
+    <div id="opsListView" class="ops-view active">
+      <div class="row-between mb-sm">
+        <div class="section-label">Operation Sites</div>
+        <button class="btn-success" onclick="openCreateSite()">+ New Site</button>
+      </div>
+      <div id="opsGrid" class="ops-grid"></div>
+      <div id="sitesPagination"></div>
+    </div>
+
+    <!-- Detail view: single site -->
+    <div id="opsDetailView" class="ops-view">
+      <div style="margin-bottom:16px;">
+        <button class="btn-ghost-sm" onclick="showOpsList()">← Back to Sites</button>
+      </div>
+      <div class="ops-detail-header">
+        <div class="ops-detail-title-wrap">
+          <div id="opsSiteTitle" class="ops-detail-title"></div>
+        </div>
+        <div class="ops-detail-actions">
+          <button id="opsEditBtn" class="btn-edit" aria-label="Rename site">✏ Rename</button>
+          <button class="btn-ghost btn-sm" onclick="printSiteSummary()">Print Summary</button>
+          <button id="opsArchiveBtn" class="btn-delete" aria-label="Archive site">Archive</button>
+        </div>
+      </div>
+      <!-- Stats bar -->
+      <div class="ops-stats-bar">
+        <div class="ops-stat">
+          <div class="ops-stat-val info" id="opsStatPers">—</div>
+          <div class="ops-stat-lbl">Personnel</div>
+        </div>
+        <div class="ops-stat">
+          <div class="ops-stat-val info" id="opsStatEquip">—</div>
+          <div class="ops-stat-lbl">Equipment</div>
+        </div>
+        <div class="ops-stat">
+          <div class="ops-stat-val info" id="opsStatExpiry">—</div>
+          <div class="ops-stat-lbl">Next Expiry</div>
+        </div>
+      </div>
+      <!-- Tabs -->
+      <div class="tabs" id="opsDetailTabs">
+        <button class="tab active" onclick="showOpsDetailTab('personnel', this)">Personnel</button>
+        <button class="tab" onclick="showOpsDetailTab('equipment', this)">Equipment</button>
+      </div>
+      <!-- Personnel tab -->
+      <div id="opsPersTab">
+        <div class="row-between mb-sm">
+          <div class="section-label">Assigned Personnel</div>
+          <button class="btn-primary" onclick="openSitePersonnelSelector()">+ Add Personnel</button>
+        </div>
+        <div id="opsSitePersonnel"></div>
+      </div>
+      <!-- Equipment tab -->
+      <div id="opsEquipTab" style="display:none;">
+        <div class="row-between mb-sm">
+          <div class="section-label">Assigned Equipment</div>
+          <button class="btn-primary" onclick="openSiteEquipmentSelector()">+ Add Equipment</button>
+        </div>
+        <div id="opsSiteEquipment"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════ USERS ══════════════════ -->
+<div id="users-page" class="page">
+  <div class="container">
+    <div class="page-header-row" style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+      <h2 style="margin:0;">Users</h2>
+      <div style="display:flex;gap:8px;flex:1;flex-wrap:wrap;">
+        <select id="usersRoleFilter" onchange="loadUsers()" style="padding:6px 10px;font-size:13px;border-radius:6px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-1);">
+          <option value="">All roles</option>
+          <option value="contractor">Contractor</option>
+          <option value="operations">Operations</option>
+          <option value="assessor">Assessor</option>
+          <option value="admin">Admin</option>
+        </select>
+        <input type="text" id="usersSearch" placeholder="Search name / email…" oninput="loadUsers()" style="flex:1;min-width:160px;padding:6px 10px;font-size:13px;border-radius:6px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-1);">
+      </div>
+    </div>
+
+    <div id="pendingSection">
+      <div class="section-title" style="color:var(--warn);">⚠ Pending Approval</div>
+      <div id="pendingList"></div>
+    </div>
+
+    <div style="margin-top:20px;">
+      <div class="section-title">Active Users</div>
+      <div id="approvedList"></div>
+    </div>
+
+    <div id="rejectedSection" style="display:none;margin-top:16px;">
+      <div class="section-title" style="color:var(--bad);">Rejected</div>
+      <div id="rejectedList"></div>
+    </div>
+
+    <div style="margin-top:28px;">
+      <div class="section-title">Audit Log</div>
+      <div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+        <select id="auditEntityFilter" onchange="loadAuditLog()" style="padding:6px 10px;font-size:13px;border-radius:6px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-1);">
+          <option value="">All types</option>
+          <option value="personnel">Personnel</option>
+          <option value="equipment">Equipment</option>
+          <option value="document">Documents</option>
+          <option value="assessment">Assessments</option>
+          <option value="site">Sites</option>
+          <option value="user">Users</option>
+        </select>
+        <input type="date" id="auditDateFrom" onchange="loadAuditLog()" style="padding:6px 10px;font-size:13px;border-radius:6px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-1);">
+        <input type="date" id="auditDateTo"   onchange="loadAuditLog()" style="padding:6px 10px;font-size:13px;border-radius:6px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-1);">
+      </div>
+      <div id="auditLogList"></div>
+      <div id="auditLogPagination"></div>
+    </div>
+  </div>
+</div>
+</main>
+
+<!-- Document Viewer Modal -->
+<div id="docViewerModal" class="dv-wrap" role="dialog" aria-modal="true" aria-labelledby="docViewerTitle">
+  <div id="docViewerBox" class="dv-box">
+    <div class="dv-resize" data-dir="n"></div>
+    <div class="dv-resize" data-dir="s"></div>
+    <div class="dv-resize" data-dir="w"></div>
+    <div class="dv-resize" data-dir="e"></div>
+    <div class="dv-resize" data-dir="nw"></div>
+    <div class="dv-resize" data-dir="ne"></div>
+    <div class="dv-resize" data-dir="sw"></div>
+    <div class="dv-resize" data-dir="se"></div>
+    <div id="docViewerHeader" class="dv-header">
+      <span id="docViewerTitle" class="dv-title"></span>
+      <div class="dv-controls">
+        <button id="docZoomOut" onclick="zoomPdf(-0.2)" class="dv-btn" style="display:none;" aria-label="Zoom out">−</button>
+        <span id="docZoomLevel" class="dv-zoom-label" style="display:none;" aria-live="polite"></span>
+        <button id="docZoomIn" onclick="zoomPdf(0.2)" class="dv-btn" style="display:none;" aria-label="Zoom in">+</button>
+        <a id="docViewerDownload" href="#" download class="dv-btn-download">↓ Download</a>
+        <button onclick="closeDocViewer()" class="dv-btn dv-btn-close">✕ Close</button>
+      </div>
+    </div>
+    <div id="docViewerBody" class="dv-body"></div>
+  </div>
+</div>
+
+<!-- Registration: Role Picker Modal -->
+<div class="modal" id="rolePickerModal" role="dialog" aria-modal="true" aria-labelledby="rolePickerTitle">
+  <div class="modal-box">
+    <h3 id="rolePickerTitle">I am a…</h3>
+    <p class="form-hint" style="margin:-4px 0 12px;">Select your role to continue</p>
+    <button class="btn-main" style="margin:6px 0;" onclick="pickRegistrationRole('contractor')">Contractor (service company)</button>
+    <button class="btn-main" style="margin:6px 0;" onclick="pickRegistrationRole('operations')">Operations (Aramco)</button>
+    <button class="btn-main" style="margin:6px 0;" onclick="pickRegistrationRole('assessor')">Assessor (Aramco)</button>
+    <div class="modal-btns" style="margin-top:8px;">
+      <button class="btn-cancel" onclick="closeModal('rolePickerModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Admin: Edit User Modal -->
+<div class="modal" id="adminEditModal" role="dialog" aria-modal="true" aria-labelledby="adminEditTitle">
+  <div class="modal-box">
+    <h3 id="adminEditTitle">Edit User</h3>
+    <label for="editFullName">Full Name</label>
+    <input type="text" id="editFullName" placeholder="Full name" autocomplete="off">
+    <label for="editEmail">Email</label>
+    <input type="email" id="editEmail" placeholder="Email" autocomplete="off">
+    <label for="editCompany">Service Company</label>
+    <select id="editCompany"></select>
+    <label for="editServiceLine">Service Line</label>
+    <select id="editServiceLine"></select>
+    <label for="editRole">Role</label>
+    <select id="editRole">
+      <option value="contractor">Contractor (full access)</option>
+      <option value="operations">Operations (operations tab only)</option>
+      <option value="assessor">Assessor (assessments tab only)</option>
+      <option value="admin">Admin (all access)</option>
+    </select>
+    <input type="hidden" id="editUserId">
+    <div class="modal-btns" style="margin-top:4px;">
+      <button class="btn-cancel" onclick="closeModal('adminEditModal')">Cancel</button>
+      <button class="btn-save" onclick="saveEditUser()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Contractor: Add Equipment Modal -->
+<div class="modal" id="ctEquipModal" role="dialog" aria-modal="true" aria-labelledby="ctEquipTitle">
+  <div class="modal-box">
+    <h3 id="ctEquipTitle">Add Equipment</h3>
+    <label for="equipSelect">Equipment Type</label>
+    <select id="equipSelect" onchange="onEquipSelectChange(this)"></select>
+    <div id="newEquipNameWrap" style="display:none;">
+      <label for="equipName">New Equipment Name</label>
+      <input type="text" id="equipName" placeholder="Enter equipment name" autocomplete="off">
+    </div>
+    <label for="equipSerial">Serial Number</label>
+    <input type="text" id="equipSerial" placeholder="Serial number" autocomplete="off">
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('ctEquipModal')">Cancel</button>
+      <button class="btn-save" onclick="addEquipment()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Reassign Equipment Modal -->
+<div class="modal" id="reassignModal" role="dialog" aria-modal="true" aria-labelledby="reassignTitle">
+  <div class="modal-box">
+    <h3 id="reassignTitle">Change Assignment</h3>
+    <div class="col-gap-sm">
+      <div class="reassign-option">
+        <input type="radio" name="reassignType" id="reassignStandalone" value="standalone" onchange="onReassignTypeChange(this)" checked>
+        <label for="reassignStandalone">Make standalone (top-level equipment)</label>
+      </div>
+      <div class="reassign-option">
+        <input type="radio" name="reassignType" id="reassignChild" value="child" onchange="onReassignTypeChange(this)">
+        <label for="reassignChild">Make sub-component of:</label>
+      </div>
+    </div>
+    <div id="reassignParentWrap" style="display:none;margin-top:10px;">
+      <input type="text" id="reassignSearch" placeholder="Search equipment…" oninput="filterReassignList(this.value)" autocomplete="off" style="margin-bottom:8px;">
+      <div id="reassignList"></div>
+    </div>
+    <div class="modal-btns" style="margin-top:16px;">
+      <button class="btn-cancel" onclick="closeModal('reassignModal')">Cancel</button>
+      <button class="btn-save" onclick="saveReassign()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Sub-component Modal -->
+<div class="modal" id="ctSubModal" role="dialog" aria-modal="true" aria-labelledby="ctSubModalTitle">
+  <div class="modal-box">
+    <h3 id="ctSubModalTitle">Add Sub-component</h3>
+    <label for="subEquipSelect">Component Type</label>
+    <select id="subEquipSelect" onchange="onSubEquipSelectChange(this)"></select>
+    <div id="newSubNameWrap" style="display:none;">
+      <label for="subEquipName">New Component Name</label>
+      <input type="text" id="subEquipName" placeholder="e.g. Gauge, Valve" autocomplete="off">
+    </div>
+    <label for="subEquipSerial">Serial Number</label>
+    <input type="text" id="subEquipSerial" placeholder="Serial number" autocomplete="off">
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('ctSubModal')">Cancel</button>
+      <button class="btn-save" onclick="addSubComponent()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Document Modal -->
+<div class="modal" id="addDocModal" role="dialog" aria-modal="true" aria-labelledby="addDocTitle">
+  <div class="modal-box">
+    <h3 id="addDocTitle">Add Document</h3>
+    <label for="docTypeSelect">Document Type</label>
+    <select id="docTypeSelect" onchange="onDocTypeChange(this)" style="margin-bottom:12px;">
+      <option value="">Select type...</option>
+      <option>Maintenance</option>
+      <option>COC</option>
+      <option>MPI</option>
+      <option>HT</option>
+      <option>Visual</option>
+      <option>Load Test</option>
+      <option value="__new__">+ New document type...</option>
+    </select>
+    <input type="text" id="docTypeCustom" placeholder="Enter document type name" style="display:none;margin-bottom:12px;">
+    <label for="docIssueDate">Issue Date</label>
+    <input type="date" id="docIssueDate" style="margin-bottom:12px;">
+    <label for="docExpiryDate">Expiry Date</label>
+    <input type="date" id="docExpiryDate" style="margin-bottom:8px;">
+    <label class="row-gap-sm" style="margin-bottom:12px;cursor:pointer;">
+      <input type="checkbox" id="docNoExpiry" onchange="document.getElementById('docExpiryDate').disabled=this.checked;if(this.checked)document.getElementById('docExpiryDate').value='';" style="width:auto;margin:0;flex-shrink:0;">
+      Not Applicable / No Expiry Date
+    </label>
+    <label for="docFileInput">Attachment <span style="color:var(--bad);">*</span></label>
+    <button type="button" id="docFileBtn" onclick="document.getElementById('docFileInput').click()" style="background:var(--surface);border:1px dashed var(--border);color:var(--text-2);padding:8px 14px;border-radius:8px;cursor:pointer;font-size:13px;width:100%;margin-bottom:4px;transition:border-color 0.2s,color 0.2s;">📎 Choose file</button>
+    <div id="docFileName" class="form-hint" style="margin-bottom:12px;"></div>
+    <input type="file" id="docFileInput" accept=".pdf,.jpg,.jpeg,.png" onchange="document.getElementById('docFileName').textContent = this.files[0]?.name || ''">
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('addDocModal')">Cancel</button>
+      <button class="btn-save" onclick="saveDocument()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Contractor: Add Personnel Modal -->
+<div class="modal" id="ctPersModal" role="dialog" aria-modal="true" aria-labelledby="ctPersTitle">
+  <div class="modal-box">
+    <h3 id="ctPersTitle">Add Personnel</h3>
+    <label for="persName">Full Name</label>
+    <input type="text" id="persName" placeholder="Full name" autocomplete="off">
+    <label for="persPositionSelect">Position / Role</label>
+    <select id="persPositionSelect" onchange="onPersPositionChange(this)"></select>
+    <div id="newPersPositionWrap" style="display:none;">
+      <label for="persPositionNew">New Position Name</label>
+      <input type="text" id="persPositionNew" placeholder="Enter position name" autocomplete="off">
+    </div>
+    <label for="persNationalId">ID (IQAMA / NATIONAL)</label>
+    <input type="text" id="persNationalId" placeholder="10-digit ID number" maxlength="10" pattern="\d{10}" autocomplete="off" inputmode="numeric">
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('ctPersModal')">Cancel</button>
+      <button class="btn-save" onclick="addPersonnel()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Personnel: Add Document Modal -->
+<div class="modal" id="addPersDocModal" role="dialog" aria-modal="true" aria-labelledby="addPersDocTitle">
+  <div class="modal-box">
+    <h3 id="addPersDocTitle">Add Document</h3>
+    <div id="persDocTypeName" style="font-size:14px;font-weight:bold;color:var(--accent);margin-bottom:14px;"></div>
+    <div id="persDocCustomSelectWrap" style="display:none;">
+      <label for="persDocCustomTypeSelect">Document Type <span style="color:var(--bad);">*</span></label>
+      <select id="persDocCustomTypeSelect" onchange="onPersDocCustomTypeChange(this)" style="margin-bottom:12px;">
+        <option value="">Select type...</option>
+      </select>
+    </div>
+    <div id="persDocCustomNameWrap" style="display:none;">
+      <label for="persDocCustomName" id="persDocCustomNameLabel">Document Name <span style="color:var(--bad);">*</span></label>
+      <input type="text" id="persDocCustomName" placeholder="e.g. Offshore Survival Certificate" style="margin-bottom:12px;">
+    </div>
+    <div id="persDocIssueDateWrap">
+      <label for="persDocIssueDate">Issue Date</label>
+      <input type="date" id="persDocIssueDate" style="margin-bottom:12px;">
+    </div>
+    <div id="persDocAutoExpiryNote" class="form-hint" style="display:none;margin-bottom:12px;">ℹ Expiry auto-calculated: 2 years from issue date</div>
+    <div id="persDocYearsExpWrap" style="display:none;">
+      <label for="persDocYearsExp">Years of Experience in O&G</label>
+      <input type="number" id="persDocYearsExp" placeholder="e.g. 5" min="0" max="60" style="margin-bottom:12px;">
+    </div>
+    <div id="persDocExpiryDateWrap">
+      <label for="persDocExpiryDate">Expiry Date</label>
+      <input type="date" id="persDocExpiryDate" style="margin-bottom:12px;">
+    </div>
+    <label id="persDocFileLabel" for="persDocFileInput">Attachment <span id="persDocFileRequired" style="color:var(--bad);">*</span></label>
+    <button type="button" id="persDocFileBtn" onclick="document.getElementById('persDocFileInput').click()" style="background:var(--surface);border:1px dashed var(--border);color:var(--text-2);padding:8px 14px;border-radius:8px;cursor:pointer;font-size:13px;width:100%;margin-bottom:4px;transition:border-color 0.2s,color 0.2s;">📎 Choose file</button>
+    <div id="persDocFileName" class="form-hint" style="margin-bottom:12px;"></div>
+    <input type="file" id="persDocFileInput" accept=".pdf,.jpg,.jpeg,.png" onchange="document.getElementById('persDocFileName').textContent = this.files[0]?.name || ''">
+    <input type="hidden" id="persDocPersonId">
+    <input type="hidden" id="persDocIsMandatory">
+    <input type="hidden" id="persDocEditId">
+    <input type="hidden" id="persDocIsCustom" value="false">
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('addPersDocModal')">Cancel</button>
+      <button class="btn-save" onclick="savePersDocument()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Assessment: Equipment Selector Modal -->
+<div id="asEquipModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="asEquipTitle">
+  <div class="modal-scroll">
+    <h3 id="asEquipTitle" style="color:var(--accent);margin-bottom:12px;">Select Equipment</h3>
+    <label for="equipSelectorSearch" class="sr-only">Search equipment</label>
+    <input type="text" id="equipSelectorSearch" name="equipSelectorSearch" placeholder="Search…" oninput="filterCheckboxList('equipSelectorList',this.value)" style="margin-bottom:12px;padding:8px 12px;font-size:13px;">
+    <div id="equipSelectorList"></div>
+    <div class="row-gap-sm" style="margin-top:16px;">
+      <button class="btn-primary" onclick="addSelectedEquipment()">Add Selected</button>
+      <button class="btn-ghost" onclick="document.getElementById('asEquipModal').classList.remove('open')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Assessment: Personnel Selector Modal -->
+<div id="asPersModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="asPersTitle">
+  <div class="modal-scroll">
+    <h3 id="asPersTitle" style="color:var(--accent);margin-bottom:12px;">Select Personnel</h3>
+    <label for="persSelectorSearch" class="sr-only">Search personnel</label>
+    <input type="text" id="persSelectorSearch" name="persSelectorSearch" placeholder="Search…" oninput="filterCheckboxList('persSelectorList',this.value)" style="margin-bottom:12px;padding:8px 12px;font-size:13px;">
+    <div id="persSelectorList"></div>
+    <div class="row-gap-sm" style="margin-top:16px;">
+      <button class="btn-primary" onclick="addSelectedPersonnel()">Add Selected</button>
+      <button class="btn-ghost" onclick="document.getElementById('asPersModal').classList.remove('open')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Operations: Create Site Modal -->
+<div class="modal" id="opsCreateModal" role="dialog" aria-modal="true" aria-labelledby="opsCreateTitle">
+  <div class="modal-box">
+    <h3 id="opsCreateTitle">New Operation Site</h3>
+    <label for="newSiteTitle">Site Name</label>
+    <input type="text" id="newSiteTitle" placeholder="e.g. MANIFA / MF-432" autocomplete="off">
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('opsCreateModal')">Cancel</button>
+      <button class="btn-save" onclick="createSite()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- Operations: Edit Site Modal -->
+<div class="modal" id="opsEditModal" role="dialog" aria-modal="true" aria-labelledby="opsEditTitle">
+  <div class="modal-box">
+    <h3 id="opsEditTitle">Rename Site</h3>
+    <label for="editSiteTitle">Site Name</label>
+    <input type="text" id="editSiteTitle" placeholder="Site name" autocomplete="off">
+    <input type="hidden" id="editSiteId">
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('opsEditModal')">Cancel</button>
+      <button class="btn-save" onclick="saveEditSite()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Operations: Assign Personnel Modal -->
+<div id="opsPersModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="opsPersTitle">
+  <div class="modal-scroll">
+    <h3 id="opsPersTitle" style="color:var(--accent);margin-bottom:12px;">Assign Personnel</h3>
+    <p style="font-size:12px;color:var(--text-3);margin-bottom:12px;">Only personnel that have passed an assessment (status: Approved) are shown.</p>
+    <label for="opsPersSelSearch" class="sr-only">Search personnel</label>
+    <input type="text" id="opsPersSelSearch" placeholder="Search…" oninput="filterCheckboxList('opsPersSelList',this.value)" style="margin-bottom:12px;padding:8px 12px;font-size:13px;">
+    <div id="opsPersSelList"></div>
+    <div class="row-gap-sm" style="margin-top:16px;">
+      <button class="btn-primary" onclick="addSelectedSitePersonnel()">Add Selected</button>
+      <button class="btn-ghost" onclick="closeModal('opsPersModal')">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- Operations: Assign Equipment Modal -->
+<div id="opsEquipModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="opsEquipTitle">
+  <div class="modal-scroll">
+    <h3 id="opsEquipTitle" style="color:var(--accent);margin-bottom:12px;">Assign Equipment</h3>
+    <p style="font-size:12px;color:var(--text-3);margin-bottom:12px;">Only equipment that has passed an assessment (status: Approved) is shown.</p>
+    <label for="opsEquipSelSearch" class="sr-only">Search equipment</label>
+    <input type="text" id="opsEquipSelSearch" placeholder="Search…" oninput="filterCheckboxList('opsEquipSelList',this.value)" style="margin-bottom:12px;padding:8px 12px;font-size:13px;">
+    <div id="opsEquipSelList"></div>
+    <div class="row-gap-sm" style="margin-top:16px;">
+      <button class="btn-primary" onclick="addSelectedSiteEquipment()">Add Selected</button>
+      <button class="btn-ghost" onclick="closeModal('opsEquipModal')">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Dialog Modal -->
+<div class="modal" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmModalHeading" aria-describedby="confirmMsgText">
+  <div class="modal-box">
+    <h3 id="confirmModalHeading" class="sr-only">Confirm Action</h3>
+    <div id="confirmMsgText" style="margin-bottom:20px;font-size:14px;line-height:1.5;"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" id="confirmCancel">Cancel</button>
+      <button class="btn-danger" id="confirmOk">Confirm</button>
+    </div>
+  </div>
+</div>
+<div id="toastContainer" aria-live="polite" aria-atomic="false"></div>
+
+<script>
+window.SUPABASE_URL = 'https://fslleuedqlxpjnerruzt.supabase.co';
+window.SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzbGxldWVkcWx4cGpuZXJydXp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5OTMxMTksImV4cCI6MjA5MDU2OTExOX0.H1narO5BF5uF2KwlKtKvioz3mun2ecxb1Lg_xVDLdt4';
+</script>
+
+<!-- Supabase Client for Realtime -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- PDF.js (lazy loaded when needed) -->
+<!-- <script src="/pdf.min.js" defer></script> -->
+
+<!-- Core Foundation -->
+<script src="/js/core/state.js" defer></script>
+<script src="/js/core/ui.js" defer></script>
+<script src="/js/core/api.js" defer></script>
+<script src="/js/core/realtime.js" defer></script>
+
+<!-- Existing pages (for backwards compatibility during transition) -->
+<script src="/js/shared.js" defer></script>
+<script src="/js/auth.js" defer></script>
+<script src="/js/equipment.js" defer></script>
+<script src="/js/personnel.js" defer></script>
+<script src="/js/assessment.js" defer></script>
+<script src="/js/operations.js" defer></script>
+<script src="/js/admin.js" defer></script>
+
+<!-- New Router (loads pages on demand) -->
+<script src="/js/core/app.js" defer></script>
+</body>
+</html>
