@@ -188,3 +188,9 @@ async function _renderAuditLog() {
       <button class="pag-btn" onclick="_auditPage=Math.min(${totalPages-1},_auditPage+1);_renderAuditLog()" ${_auditPage>=totalPages-1?'disabled':''}>Next →</button>
     </div>`;
 }
+
+// Page initialization - called when admin page is shown
+async function adminInit() {
+  await loadUsers();
+  await loadAuditLog();
+}
