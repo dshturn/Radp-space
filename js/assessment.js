@@ -410,11 +410,13 @@ function getExpiryStyle(dateStr) {
 
 async function generateLoR() {
   const h = getHeaders(), u = getUser();
-  const aRes       = await fetch(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${currentAssessmentId}`, { headers: h });
+  const [aRes, eRes, pRes] = await Promise.all([
+    fetch(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${currentAssessmentId}`, { headers: h }),
+    fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment?assessment_id=eq.${currentAssessmentId}&select=*,equipment_items(id,serial_number,model,name,parent_id,equipment_templates(name),documents(*,document_types(document_name)))`, { headers: h }),
+    fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?assessment_id=eq.${currentAssessmentId}&select=*,personnel(*)`, { headers: h })
+  ]);
   const assessment = (await aRes.json())[0];
-  const eRes       = await fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment?assessment_id=eq.${currentAssessmentId}&select=*,equipment_items(id,serial_number,model,name,parent_id,equipment_templates(name),documents(*,document_types(document_name)))`, { headers: h });
   const equipment  = await eRes.json();
-  const pRes       = await fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?assessment_id=eq.${currentAssessmentId}&select=*,personnel(*)`, { headers: h });
   const personnel  = await pRes.json();
 
   // ── Fetch sub-components and sub-sub-components for selected root equipment ──
