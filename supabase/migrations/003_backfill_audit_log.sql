@@ -1,5 +1,5 @@
 -- Backfill audit log for existing records in database
--- This creates audit entries for all personnel, equipment, assessments, and operations records
+-- This creates audit entries for all personnel, equipment, assessments, operations, and document records
 
 -- Personnel: log all existing personnel records
 insert into audit_log (actor_id, entity_type, entity_id, action, label, company, service_line, created_at)
@@ -14,22 +14,22 @@ select
   p.created_at
 from personnel p
 left join user_profiles up on p.contractor_id = up.id
-on conflict do nothing;
+where not exists (select 1 from audit_log where entity_type = 'personnel' and entity_id = p.id::text);
 
--- Equipment: log all existing equipment records
+-- Equipment items: log all existing equipment
 insert into audit_log (actor_id, entity_type, entity_id, action, label, company, service_line, created_at)
 select
   up.id as actor_id,
   'equipment' as entity_type,
-  e.id::text as entity_id,
+  ei.id::text as entity_id,
   'created' as action,
-  e.equipment_name as label,
+  ei.name as label,
   up.company,
   up.service_line,
-  e.created_at
-from equipment e
-left join user_profiles up on e.contractor_id = up.id
-on conflict do nothing;
+  ei.created_at
+from equipment_items ei
+left join user_profiles up on ei.contractor_id = up.id
+where not exists (select 1 from audit_log where entity_type = 'equipment' and entity_id = ei.id::text);
 
 -- Assessments: log all existing assessment records
 insert into audit_log (actor_id, entity_type, entity_id, action, label, company, service_line, created_at)
@@ -45,20 +45,35 @@ select
 from assessments a
 left join personnel p on a.personnel_id = p.id
 left join user_profiles up on p.contractor_id = up.id
-on conflict do nothing;
+where not exists (select 1 from audit_log where entity_type = 'assessment' and entity_id = a.id::text);
 
--- Operations: log all existing operation sites
+-- Operation sites: log all existing operation sites
 insert into audit_log (actor_id, entity_type, entity_id, action, label, company, service_line, created_at)
 select
   up.id as actor_id,
   'operations' as entity_type,
-  o.id::text as entity_id,
+  os.id::text as entity_id,
   'created' as action,
-  o.site_name as label,
+  os.site_name as label,
   up.company,
   up.service_line,
-  o.created_at
-from operations_sites o
-left join user_profiles up on o.created_by = up.id
-on conflict do nothing;
+  os.created_at
+from operation_sites os
+left join user_profiles up on os.created_by = up.id
+where not exists (select 1 from audit_log where entity_type = 'operations' and entity_id = os.id::text);
+
+-- Documents: log all existing documents
+insert into audit_log (actor_id, entity_type, entity_id, action, label, company, service_line, created_at)
+select
+  up.id as actor_id,
+  'document' as entity_type,
+  d.id::text as entity_id,
+  'created' as action,
+  d.document_name as label,
+  up.company,
+  up.service_line,
+  d.created_at
+from documents d
+left join user_profiles up on d.uploaded_by = up.id
+where not exists (select 1 from audit_log where entity_type = 'document' and entity_id = d.id::text);
 
