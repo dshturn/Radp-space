@@ -2,6 +2,7 @@
 
 let supabaseClient = null;
 let channels = new Map();
+let notificationsSubscribed = false;
 
 function initRealtime() {
   if (supabaseClient || typeof supabase === 'undefined') return;
