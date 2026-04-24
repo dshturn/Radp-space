@@ -1,237 +1,177 @@
 # Development Rules
 
-Code style, git, database, and testing conventions.
+Code style, git, database, and quality standards.
 
 ## JavaScript
 
-**Format**:
+Format:
 - 2 spaces indentation
 - camelCase for functions/vars, UPPER_CASE for constants
 - Single quotes, semicolons required
-- Private vars prefix with `_` (e.g., `_equipPage`)
+- Comments explain why, not what
 
-**Comments**: Only explain *why*, not *what*. Well-named functions are self-documenting.
+Naming:
+- _private (underscore prefix for private state)
+- onEventName for event handlers
+- loadX for data fetch, showX for UI, addX for create
 
-```javascript
-// Why: UTC boundaries match server batch processing.
-// Timezone-aware dates cause 1-day offsets in scheduled jobs.
-function daysUntilExpiry(certDate) {
+Section headers:
+// ═══════════════════ ASSESSMENT ═══════════════════
+
+## Data Validation
+
+Client-side (UX feedback only):
+- Form: required fields, email format, date sanity
+- File upload: type check (PDF, JPG only), size < 10MB
+- Never trust client validation for security
+
+Server-side (enforced at DB):
+- RLS policies (who can see what)
+- Check constraints (status in ('draft', 'submitted', 'approved', 'rejected'))
+- Foreign key constraints (crew must exist, certs must exist)
+- Triggers (auto-set updated_at timestamp)
+
+Expiry Validation:
+// Use UTC midnight to match server batch jobs
+function expiryStatus(certDate) {
   const today = new Date();
   today.setUTCHours(0, 0, 0, 0);
   const cert = new Date(certDate);
   cert.setUTCHours(0, 0, 0, 0);
-  return Math.round((cert - today) / 86400000);
+  const days = Math.round((cert - today) / 86400000);
+  
+  if (days <= 0) return 'expired';
+  if (days <= 30) return 'warning';
+  return 'valid';
 }
-```
-
-**Section headers**:
-```javascript
-// ═══════════════════ ASSESSMENT ═══════════════════
-```
-
-## HTML / CSS
-
-- Semantic tags (`<main>`, `<nav>`, `<section>`)
-- ARIA labels for accessibility (`aria-label`, `aria-expanded`)
-- Form labels with `for` attribute
-- Dark theme only, navy + amber palette
-- No framework; semantic BEM-ish naming (`.app-card`, `.is-active`)
 
 ## Git Workflow
 
-### Commits
-
-Type + description (50 chars max):
-```
+Commits (atomic):
 [feature] Add CSV bulk import for personnel
-[fix] Personnel expiry timezone bug
-[refactor] Extract assessment validation to utils
+[fix] Expiry calculation timezone bug
+[refactor] Extract audit logging to shared.js
 [docs] Update README
-```
 
-Atomic commits: one feature per commit.
+Branches: main (production) | feature/name | hotfix/name
 
-### Branches
+Before pushing:
+- Test in browser (F12 console)
+- Run supabase db lint
+- Rebase on latest main
 
-- `main` — production (always deployable)
-- `feature/description` — feature work
-- `hotfix/description` — urgent prod fixes
-
-**Before pushing**:
-- Test in browser (F12 console for errors)
-- Run `supabase db lint`
-- Rebase on latest `main`
-
-### Pull Requests
-
-Checklist:
-- [ ] Code reviewed
-- [ ] Tested (happy path + edge cases)
+Pre-deployment:
 - [ ] No console errors
-- [ ] Audit log entries added (if data-relevant)
+- [ ] All 3 roles tested (contractor, assessor, admin)
+- [ ] Mobile responsive
+- [ ] Audit log entries created
+- [ ] Offline mode works (read-only cached data)
 
-## Database
+## API Calls
 
-### Migrations
+Always use apiFetch() wrapper:
 
-Files in `/supabase/migrations/` numbered sequentially.
-
-```sql
--- 008_add_equipment_condition.sql
--- Track condition (operational/maintenance/decommissioned)
--- Allows filtering equipment by availability in assessments.
-
-alter table equipment_items 
-  add column if not exists condition text default 'operational';
-```
-
-**Rules**:
-- Idempotent (`if not exists`, `if exists`)
-- Never drop columns/tables in prod
-- Test locally: `supabase db push`
-
-### Schema
-
-- Tables: `plural_snake_case` (equipment_items)
-- Primary keys: `id bigint ... generated always as identity`
-- Foreign keys: `{table}_id` → `{table}.id`
-- Timestamps: `created_at`, `updated_at`
-- Statuses: text, not enum (easier to extend)
-- RLS policies required on all user-facing tables
-
-### Data Integrity
-
-- Every user action = audit log entry
-- Soft deletes only (use `dismissed` flag)
-- Immutable: `audit_log`, `notifications` (no update/delete)
-- Check constraints on status fields
-
-## Frontend
-
-### Forms
-
-Validate on submit, not real-time:
-
-```javascript
-function addPersonnel() {
-  const name = document.getElementById('name').value.trim();
-  if (!name) {
-    showToast('Name required', 'error');
-    return;
-  }
-  // Submit...
-}
-```
-
-### API Calls
-
-Always use `apiFetch()` wrapper:
-
-```javascript
-const data = await apiFetch(url, {
-  method: 'GET',
-  headers: getHeaders()
-});
-
+const data = await apiFetch(url, { headers: getHeaders() });
 if (!data) {
-  if (response.status === 401) {
-    // Token expired, re-login
-    localStorage.removeItem('radp_token');
-    showPage('login');
+  if (response.status === 401) { 
+    localStorage.removeItem('radp_token'); 
+    showPage('login'); 
   }
   return;
 }
-```
 
-### Audit Logging
+Headers:
+function getHeaders() {
+  const token = localStorage.getItem('radp_token');
+  return {
+    'Authorization': `Bearer ${token}`,
+    'apikey': SUPABASE_ANON_KEY,
+    'Content-Type': 'application/json'
+  };
+}
 
-Every data-changing action must log:
+## Audit Logging
 
-```javascript
+Every data mutation must log:
+
 async function approveAssessment(assessmentId) {
-  await apiFetch(`${SUPABASE_URL}/rest/v1/assessments/${assessmentId}`, {
+  // 1. Make change
+  await apiFetch(`/rest/v1/assessments/${assessmentId}`, {
     method: 'PATCH',
     body: JSON.stringify({ status: 'approved' })
   });
   
+  // 2. Log action (immutable)
   await logAudit({
     entity_type: 'assessment',
     entity_id: String(assessmentId),
     action: 'approved',
-    label: `Assessment ${assessmentId} approved`
+    label: `Assessment ${assessmentId} approved by ${user.email}`,
+    metadata: { status_before: 'submitted', status_after: 'approved' }
   });
 }
-```
-
-### Accessibility
-
-- Every interactive element must have a label (visible or ARIA)
-- Form inputs: `<label for="id">` + `<input id="id">`
-- Buttons: text content or `aria-label`
-- Color is not the only status indicator (use badges + text)
-
-## Testing
-
-**Manual checklist**:
-- [ ] Happy path works
-- [ ] Edge cases (empty state, 0 items, slow network)
-- [ ] Form validation shows errors
-- [ ] Mobile responsive
-- [ ] Offline mode works
-- [ ] All roles tested (contractor, assessor, ops, admin)
-- [ ] Audit log entries created
-- [ ] No console errors (F12)
-
-**Browser support**: Chrome 90+, Safari 14+, Firefox 88+
 
 ## Performance
 
-**Targets**:
-- API response: < 500ms
-- Page transition: < 300ms
-- Page load: < 2 sec
+Targets:
+- API call: < 500ms
+- Page load: < 2s
+- Field lookup (3G): < 2 min
 - JS module: < 50KB each
 - CSS: < 100KB
+
+Optimization:
 - Pagination: 25 items/page
+- Lazy-load modals (don't render until opened)
+- Cache stable data (templates, service lines, crew rosters)
+- Index database on: contractor_id, service_line, status, created_at
 
-**Techniques**:
-- Lazy-load modals and off-screen content
-- Index common queries (contractor_id, service_line)
-- Cache stable data (templates, service lines)
+## Database Migrations
 
-## Security Checklist
+Location: /supabase/migrations/NNN_feature.sql
+
+Rules:
+- Idempotent (if not exists, if exists)
+- Test locally: supabase db push
+- Never drop columns/tables in production
+- Use soft-delete (add dismissed flag)
+
+Example:
+-- 008_add_equipment_condition.sql
+-- Track equipment condition for availability filtering.
+
+alter table equipment_items 
+  add column if not exists condition text default 'operational'
+  check (condition in ('operational', 'maintenance', 'decommissioned'));
+
+create index if not exists idx_equipment_condition 
+  on equipment_items(condition);
+
+## Accessibility
+
+- Form labels: <label for="id">Name</label><input id="id">
+- Buttons: text content or aria-label
+- Color + text: never color alone for status (use badges)
+- ARIA: aria-expanded, role="alert", etc.
+
+## Security
 
 Before deploying:
 - [ ] No hardcoded secrets
 - [ ] RLS policies tested for all roles
 - [ ] File uploads validated (type + size)
-- [ ] HTTPS enforced
-- [ ] No sensitive data in audit log
-- [ ] Tokens in localStorage (not URL)
+- [ ] Tokens in localStorage (XSS mitigated by CSP)
+- [ ] No PII in audit log (except actor email)
 
-## Deployment
+## Anti-Patterns
 
-**Pre-deployment**:
-- [ ] Tested locally
-- [ ] No console errors
-- [ ] Audit logging works
-- [ ] All 3 roles tested
-- [ ] Mobile responsive
-- [ ] Performance < 500ms API, < 2s page load
-
-**Process**:
-1. Create PR with changes
-2. Code review + testing
-3. Merge to `main`
-4. Vercel auto-deploys (~1 min)
-5. Smoke test in prod
-
-## Tools
-
-- Node.js 18+ (Supabase CLI)
-- Git
-- Modern browser (Chrome/Safari for testing)
+🚫 Rewriting full files (use Edit tool)
+🚫 Explaining what code does (names should be clear)
+🚫 Features beyond task scope
+🚫 Long comments (only explain WHY non-obvious behavior)
+🚫 New abstractions for 1–2 use cases
+🚫 Ignoring existing code patterns
 
 ---
 
-**Last updated**: 2026-04-24
+Owner: Tech Lead | Last updated: 2026-04-24
