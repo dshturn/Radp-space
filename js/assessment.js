@@ -507,3 +507,7 @@ async function generateLoR() {
   window.open(blobUrl, '_blank');
   setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
 }
+// Page initialization
+async function assessmentInit() {
+  await loadAssessment();
+}

@@ -608,3 +608,8 @@ async function bulkDeletePersonnel() {
     loadPersonnel();
   }
 }
+// Page initialization
+async function contractorInit() {
+  await loadPersonnel();
+  if (typeof loadEquipment === "function") await loadEquipment();
+}
