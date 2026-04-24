@@ -38,23 +38,6 @@ const pageModules = {
   admin: () => import('../pages/admin.js')
 };
 
-async function loadPageHtml(name) {
-  if (pageHtmlCache.has(name)) return pageHtmlCache.get(name);
-
-  try {
-    const res = await fetch(`pages/${name}.html`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const html = await res.text();
-    pageHtmlCache.set(name, html);
-    return html;
-  } catch (err) {
-    console.error(`Failed to load page ${name}:`, err);
-    return `<div class="empty">⚠️ Failed to load page. Check console.</div>`;
-  }
-}
-
-let currentPage = null;
-
 async function showPage(name, replace = false) {
   try {
     const isInitial = currentPage === null;
@@ -63,18 +46,19 @@ async function showPage(name, replace = false) {
 
     currentPage = name;
 
-    // Load and render HTML
-    const app = document.getElementById('app');
-    const html = await loadPageHtml(name);
-    app.innerHTML = html;
+    // Hide all pages and show the current one
+    document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+    const pageEl = document.getElementById(`${name}-page`);
+    if (!pageEl) throw new Error(`Page #${name}-page not found`);
+    pageEl.style.display = '';
 
-    // Add animation
-    app.classList.remove('entering', 'slide-in-right', 'slide-in-left');
-    app.classList.add(animClass);
+    // Add animation class
+    pageEl.classList.remove('entering', 'slide-in-right', 'slide-in-left');
+    pageEl.classList.add(animClass);
 
     // Remove animation class after completion
-    const removeAnim = () => app.classList.remove(animClass);
-    app.addEventListener('animationend', removeAnim, { once: true });
+    const removeAnim = () => pageEl.classList.remove(animClass);
+    pageEl.addEventListener('animationend', removeAnim, { once: true });
 
     // Lazy load JS module
     const moduleLoader = pageModules[name];
