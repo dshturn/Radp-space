@@ -6,7 +6,8 @@ const PAGE_ORDER = {
   contractor: 2,
   assessment: 3,
   operations: 4,
-  admin: 5
+  admin: 5,
+  audit: 6
 };
 
 const ROLE_LANDING = {
@@ -17,13 +18,13 @@ const ROLE_LANDING = {
 };
 
 const ROLE_NAV = {
-  contractor: new Set(['contractor', 'assessment', 'operations']),
-  operations: new Set(['operations']),
-  assessor: new Set(['assessment']),
-  admin: new Set(['contractor', 'assessment', 'operations', 'admin'])
+  contractor: new Set(['contractor', 'assessment', 'operations', 'audit']),
+  operations: new Set(['operations', 'audit']),
+  assessor: new Set(['assessment', 'audit']),
+  admin: new Set(['contractor', 'assessment', 'operations', 'admin', 'audit'])
 };
 
-const NAV_PAGES = new Set(['contractor', 'assessment', 'operations', 'admin']);
+const NAV_PAGES = new Set(['contractor', 'assessment', 'operations', 'admin', 'audit']);
 
 // Page HTML cache
 const pageHtmlCache = new Map();
