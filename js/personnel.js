@@ -188,7 +188,7 @@ async function loadPersonnel(preserveState = false) {
 }
 
 function personnelCard(p, docs) {
-  const today = new Date(); today.setHours(0,0,0,0);
+  const today = todayUTC();
   const in30  = new Date(today); in30.setDate(in30.getDate() + 30);
   const docMap = {};
   docs.forEach(d => { docMap[d.doc_type_name] = d; });
