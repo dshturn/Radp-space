@@ -163,12 +163,12 @@ async function register() {
   // Contractor picks their company; operations/assessor are always Aramco.
   const company = isContractor ? document.getElementById('regCompany').value : 'Aramco';
 
-  if (!fullName || !email || !password || !company || !choice
-      || company === '__new__' || choice === '__new__') {
+  // Validate: contractors must have both company and service_line; Aramco users can proceed with just company
+  const needsServiceLine = !choice || choice === '__new__';
+  if (!fullName || !email || !password || !company || company === '__new__' || (isContractor && needsServiceLine)) {
     msg.className = 'auth-msg error';
     msg.textContent = company === '__new__' ? 'Please finish adding your company first.'
-                    : choice === '__new__'  ? (isContractor ? 'Please finish adding your service line first.'
-                                                            : 'Please finish adding your department first.')
+                    : needsServiceLine && isContractor ? 'Please finish adding your service line first.'
                     :                         'Please fill all fields.';
     return;
   }
