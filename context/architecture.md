@@ -163,10 +163,10 @@ Simplicity: No AI per-request; pre-computed checklists only
 
 ## Bottlenecks
 
-1. Assessment.js: 31KB file (hard to debug); should split into 3–4 modules
-2. AI token burn: ~50 tokens per assessment generation (pre-computation needed)
+1. Assessment.js: 31KB file (hard to debug); should split into 3–4 modules (see context/tasks.md P1)
+2. AI token burn: ~50 tokens per assessment generation (pre-computation needed) (see context/tasks.md P0)
 3. N+1 queries: Some lists fetch one-by-one instead of batch
 
 ---
 
-Owner: Tech Lead | Last updated: 2026-04-24
+Owner: Tech Lead | Last updated: 2026-04-24 | Reference: context/rules.md (coding standards), context/project.md (business metrics)
