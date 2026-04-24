@@ -38,6 +38,8 @@ const pageModules = {
   admin: () => import('../pages/admin.js')
 };
 
+let currentPage = null;
+
 async function showPage(name, replace = false) {
   try {
     const isInitial = currentPage === null;
