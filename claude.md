@@ -48,18 +48,18 @@
 - Never hardcode secrets, API keys, or credentials
 - Minimize token usage: short variable names, concise comments (only explain WHY, not WHAT)
 
-## Anti-Patterns (FORBIDDEN)
+## Anti-Patterns (FORBIDDEN) — AI Workflow
 
 🚫 Rewriting entire files when Edit would suffice  
-🚫 Explaining what the code does (it should be obvious from names)  
-🚫 Adding features beyond task scope  
-🚫 Suggesting "future improvements" unless asked  
-🚫 Long explanatory comments (only explain WHY non-obvious behavior)  
-🚫 Creating new abstractions or helper functions for 1–2 use cases  
-🚫 Overengineering for hypothetical scenarios  
-🚫 Ignoring existing patterns in the codebase  
-🚫 Suggesting tech choices not already in the stack  
-🚫 Asking permission to do things already authorized in context
+🚫 Suggesting features beyond task scope  
+🚫 Asking "should I proceed?" when task is authorized in context  
+🚫 Long multi-paragraph explanations (brief is better)  
+🚫 Offering speculative improvements (only if user asks "what if?")  
+🚫 Ignoring existing code patterns or context rules  
+🚫 Suggesting tech choices outside the stack  
+🚫 Making destructive git operations without explicit user request  
+🚫 Duplicating information already in /context/*.md  
+🚫 Token-wasting verbose output
 
 ## Defaults
 
