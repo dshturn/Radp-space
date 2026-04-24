@@ -31,6 +31,3 @@ const state = {
 };
 
 state.init();
-
-function getToken() { return state.getToken(); }
-function getUser() { return state.getUser(); }
