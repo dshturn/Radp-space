@@ -131,23 +131,6 @@ async function deleteUser(id) {
   loadUsers();
 }
 
-function adminLogout() {
-  adminToken = '';
-  showPage('login');
-}
-
-function showAdminTab(tab, el) {
-  ['usersTab','pendingTab','auditLogTab'].forEach(id => {
-    const panel = document.getElementById(id);
-    if (panel) panel.style.display = 'none';
-  });
-  document.querySelectorAll('#adminPage .tab').forEach(t => t.classList.remove('active'));
-  const target = document.getElementById(tab + 'Tab');
-  if (target) target.style.display = 'block';
-  if (el) el.classList.add('active');
-  if (tab === 'auditLog') loadAuditLog();
-}
-
 let _auditPage = 0;
 const _AUDIT_PAGE_SIZE = 50;
 
