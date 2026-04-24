@@ -1,49 +1,4 @@
 // ═══════════════════ OPERATIONS ═══════════════════
-//
-// Required Supabase tables — run once in the SQL editor:
-// ───────────────────────────────────────────────────────
-//
-// create table operation_sites (
-//   id            bigint primary key generated always as identity,
-//   contractor_id uuid   not null,
-//   title         text   not null,
-//   status        text   not null default 'active',
-//   created_at    timestamptz default now()
-// );
-// alter table operation_sites enable row level security;
-// create policy "contractor manages own sites"
-//   on operation_sites using (contractor_id = auth.uid())
-//   with check (contractor_id = auth.uid());
-//
-// create table operation_site_personnel (
-//   id           bigint primary key generated always as identity,
-//   site_id      bigint references operation_sites(id) on delete cascade,
-//   personnel_id bigint references personnel(id)       on delete cascade,
-//   assigned_at  timestamptz default now(),
-//   unique(site_id, personnel_id)
-// );
-// alter table operation_site_personnel enable row level security;
-// create policy "contractor manages site personnel"
-//   on operation_site_personnel
-//   using (exists (
-//     select 1 from operation_sites
-//     where id = site_id and contractor_id = auth.uid()
-//   ));
-//
-// create table operation_site_equipment (
-//   id                bigint primary key generated always as identity,
-//   site_id           bigint references operation_sites(id)    on delete cascade,
-//   equipment_item_id bigint references equipment_items(id)    on delete cascade,
-//   assigned_at       timestamptz default now(),
-//   unique(site_id, equipment_item_id)
-// );
-// alter table operation_site_equipment enable row level security;
-// create policy "contractor manages site equipment"
-//   on operation_site_equipment
-//   using (exists (
-//     select 1 from operation_sites
-//     where id = site_id and contractor_id = auth.uid()
-//   ));
 
 let currentSiteId = null;
 let _sitesPage = 0;
