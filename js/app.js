@@ -185,9 +185,7 @@ if (isStandalone && document.documentElement.requestFullscreen) {
 // ═══════════════════ INIT ═══════════════════
 
 const _path = window.location.pathname;
-if (_path.includes('admin')) {
-  showPage('admin-login', true);
-} else if (getToken()) {
+if (getToken()) {
   const _role    = roleOf(getUser());
   const _allowed = ROLE_NAV[_role] || ROLE_NAV.contractor;
   const _landing = ROLE_LANDING[_role] || 'contractor';
@@ -196,6 +194,7 @@ if (_path.includes('admin')) {
   if      (_path.includes('assessment') && _allowed.has('assessment')) _target = 'assessment';
   else if (_path.includes('operations') && _allowed.has('operations')) _target = 'operations';
   else if (_path.includes('contractor') && _allowed.has('contractor')) _target = 'contractor';
+  else if (_path.includes('users') && _allowed.has('users'))           _target = 'users';
   else                                                                 _target = _landing;
   showPage(_target, true);
 } else {
