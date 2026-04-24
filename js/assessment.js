@@ -442,7 +442,7 @@ async function generateLoR() {
   const kidsByParent = {};
   [...childItems, ...grandItems].forEach(c => { (kidsByParent[c.parent_id] = kidsByParent[c.parent_id] || []).push(c); });
 
-  const today = new Date(); today.setHours(0,0,0,0);
+  const today = todayUTC();
   const todayStr = today.toLocaleDateString('en-GB');
   const allExpiries = [];
 
