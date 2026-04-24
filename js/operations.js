@@ -53,9 +53,9 @@ const _SITES_PAGE_SIZE = 25;
 
 function daysUntil(dateStr) {
   if (!dateStr) return null;
-  const today  = new Date(); today.setHours(0,0,0,0);
-  const target = new Date(dateStr); target.setHours(0,0,0,0);
-  return Math.round((target - today) / 86400000);
+  const today  = todayUTC();
+  const target = parseUTC(dateStr);
+  return target ? Math.round((target - today) / 86400000) : null;
 }
 
 function expiryStatusClass(days) {
