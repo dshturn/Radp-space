@@ -85,9 +85,8 @@
 ## Git Behavior
 
 - Assume user has permission to commit/push
+- Follow context/rules.md § Git Workflow (atomic commits, branches, rebasing, pre-deployment checks)
 - Never use `--force` or `--no-verify` unless explicitly requested
-- Always rebase before pushing (not merge)
-- Commit message format: `[type] description` (see context/rules.md)
 - If PR or merge needed: use Bash `gh` CLI, not manual steps
 
 ## Error Handling
