@@ -78,6 +78,7 @@ function startRealtime() {
 
 function stopRealtime() {
   unsubscribeAll();
+  notificationsSubscribed = false;
 }
 
 // Update notification badge
