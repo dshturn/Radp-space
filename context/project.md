@@ -150,8 +150,12 @@ Audit Log (immutable, forever)
 - ✅ Personnel + cert upload + expiry tracking
 - ✅ Equipment hierarchy + templates
 - ✅ Assessment submission → approval
-- ✅ Audit logging
-- ✅ PWA (offline read)
+- ✅ Audit logging (role-based access, 522+ backfilled entries, company/service_line filtering)
+  - All events logged: personnel creation, cert upload, assessment approval/rejection, document upload
+  - Non-admins see only their company's events; admins see all
+  - Standalone Audit Log tab visible to all approved users
+  - Pagination (50 entries/page) + filtering by entity type and date range
+- ✅ PWA (offline read, manifest.json)
 
 **Phase 2 (4–6 weeks)**:
 - Reduce AI token burn (~50 tokens/assessment)
