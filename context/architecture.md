@@ -155,10 +155,10 @@ Current state:
 
 ## Constraints
 
-Connectivity: Field crews on 2G/3G; API must complete in 500ms
+Connectivity: Field crews on 2G/3G; API must complete in 500ms (see context/rules.md § Performance)
 Offline: App must work for read-only lookups without internet
 Expiry: Cert dates from PDFs (variable formats; manual entry fallback)
-Audit: Every action logged; no deletion (soft-delete only)
+Audit: Every action logged (see context/rules.md § Audit Logging); no deletion (soft-delete only)
 Simplicity: No AI per-request; pre-computed checklists only
 
 ## Bottlenecks
