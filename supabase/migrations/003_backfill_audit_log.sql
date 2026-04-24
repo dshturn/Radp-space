@@ -62,18 +62,3 @@ from operations_sites o
 left join user_profiles up on o.created_by = up.id
 on conflict do nothing;
 
--- Documents: log all existing documents (if table exists)
-insert into audit_log (actor_id, entity_type, entity_id, action, label, company, service_line, created_at)
-select
-  up.id as actor_id,
-  'document' as entity_type,
-  d.id::text as entity_id,
-  'created' as action,
-  d.document_name as label,
-  up.company,
-  up.service_line,
-  d.created_at
-from documents d
-left join user_profiles up on d.uploaded_by = up.id
-where table_exists('documents')
-on conflict do nothing;
