@@ -1,111 +1,61 @@
 # RADP — Readiness Assessment Digital Platform
 
-A compliance-focused platform for pre-mobilization audits and equipment readiness assessment in oil & gas operations. Designed for contractor companies and Aramco internal teams to standardize, digitize, and track certification, equipment status, and personnel qualification for well intervention jobs.
+Pre-mobilization audit platform for oil & gas well intervention contractors. Tracks equipment certifications, personnel qualifications, and assessment approvals with immutable audit trail.
 
-## Overview
+## What It Does
 
-RADP addresses a critical gap in traditional paper-based audit workflows:
+- **Equipment tracking**: Slickline, coiled tubing, pumping units with certification expiry dates
+- **Personnel qualifications**: Operator certs, medicals, safety certifications with automatic expiry alerts
+- **Pre-mob audits**: Contractor submits equipment + personnel roster → Aramco assessor approves/rejects
+- **Compliance record**: Every action logged with timestamp for regulatory audits
+- **Mobile readiness**: Field supervisors check expiry status on tablets/phones (PWA, works offline)
 
-- **Compliance**: Immutable audit logs of all actions (uploads, approvals, deletions)
-- **Readiness visibility**: Real-time equipment and personnel status against certification expiry dates
-- **Mobile-first**: Field supervisors assess readiness from site on tablets and phones
-- **Offline capable**: PWA architecture supports low-connectivity environments
+## For Contractors
 
-## For Users
+1. Register crew and equipment
+2. Upload certifications (PDF, JPG)
+3. Submit pre-mob assessment
+4. Track approval status
 
-### Contractor Companies
-- Register team members and equipment
-- Upload and manage certifications (with expiry tracking)
-- Submit pre-mobilization assessments
-- Track assessment approval status
-- Export data for regulatory filing
+## For Aramco (Assessor/Operations)
 
-### Aramco (Operations & Assessment)
-- Approve/reject contractor assessments
-- Monitor compliance across all contractors
-- Review equipment and personnel qualifications
-- Track audit history for regulatory audits
+1. Review submitted assessments
+2. Check equipment and personnel qualifications
+3. Approve or request corrections
+4. View audit history
 
 ## Quick Start
 
-1. Visit the app at the deployment URL
-2. **New user?** Click "Register" and select your role (Contractor / Operations / Assessor)
-3. **Contractor**: Add personnel → add equipment → create assessment
-4. **Assessor/Operations**: Review submitted assessments and approve/reject
-
-See [/context/tasks.md](/context/tasks.md) for current development priorities.
-
-## Architecture
-
-Single-page application (SPA) with:
-- **Frontend**: Vanilla JavaScript, no build step (rapid iteration)
-- **Backend**: Supabase (PostgreSQL, Auth, REST API)
-- **Storage**: Supabase Storage for documents and certifications
-- **Deployment**: Vercel (automatic rewrites for SPA routing)
-
-Full architecture details in [/context/architecture.md](/context/architecture.md).
-
-## Core Features
-
-### Equipment Management
-- Hierarchical equipment items (parent/child components)
-- Service-line-specific equipment templates
-- Batch export and dismissal
-- Sub-component tracking (e.g., slickline → head, cable, stripper)
-
-### Personnel & Certifications
-- Personnel registration with company and service line
-- Document uploads (PDFs, images) with expiry tracking
-- Auto-calculated expiry status (overdue, within 30 days, valid)
-- Bulk selection and CSV export
-
-### Pre-Mobilization Assessments
-- Service-line-specific assessment checklists
-- Field/well context
-- Equipment and personnel verification
-- Contractor → Assessor workflow (draft → submitted → approved/rejected)
-
-### Operations Management
-- Site creation and site-based resource assignment
-- Personnel roster per site with expiry visibility
-- Equipment manifest per site
-- Status rollup by expiry criticality
-
-### Compliance & Audit
-- Immutable audit log (who did what, when)
-- Row-level security (contractors see own data, admins see all)
-- Notification system for status changes
-- Admin dashboard for system oversight
-
-## Development
-
-See [/context/rules.md](/context/rules.md) for coding standards and conventions.
-
-**Tech**:
-- Node.js (for Supabase migrations and future tooling)
-- Supabase CLI for local development
-- No frontend build step (vanilla JS)
-
-**Running locally**:
-```bash
-supabase start
-# Server runs at http://localhost:54321
-# Open index.html in a browser or use a local HTTP server
+```
+Login → Register (select your role) → Add personnel/equipment → Submit assessment
 ```
 
-## Roadmap
+## Tech Stack
 
-High-priority items:
-- Token optimization in AI-driven workflows
-- Architecture review for scalability
-- Mobile UX refinement for field conditions
+- **Frontend**: Vanilla JavaScript, no build step
+- **Backend**: Supabase (PostgreSQL, Auth, REST API)
+- **Deployment**: Vercel (SPA routing)
+- **Storage**: Supabase (documents, PDFs)
 
-See [/context/tasks.md](/context/tasks.md) for full roadmap.
+## Documentation
 
-## License
+- [Project Context](context/project.md) — Business objectives, use cases, success metrics
+- [Architecture](context/architecture.md) — System design, data models, API endpoints
+- [Development Rules](context/rules.md) — Code style, git workflow, testing
+- [Roadmap](context/tasks.md) — Current tasks, priorities, blockers
 
-Internal Aramco project. Do not distribute outside organization.
+## Local Development
+
+```bash
+supabase start          # Start local database (port 54321)
+python -m http.server   # Serve app
+# Open http://localhost:8000
+```
+
+## Deployment
+
+Push to `main` → Vercel auto-deploys in ~1 min → test in production
 
 ---
 
-**Questions?** Check [/context/project.md](/context/project.md) for business context or [/context/architecture.md](/context/architecture.md) for technical details.
+Internal Aramco project. See [context/project.md](context/project.md) for roadmap.
