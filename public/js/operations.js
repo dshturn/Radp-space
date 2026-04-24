@@ -540,3 +540,8 @@ async function printSiteSummary() {
   window.open(url, '_blank');
   setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
+
+// Page initialization
+async function operationsInit() {
+  await loadOperations();
+}
