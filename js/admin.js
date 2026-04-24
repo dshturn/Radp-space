@@ -1,37 +1,6 @@
 // ═══════════════════ ADMIN ═══════════════════
 
-let adminToken = '';
 const _adminUserMap = new Map();
-
-async function adminLogin() {
-  const email    = document.getElementById('adminEmail').value;
-  const password = document.getElementById('adminPassword').value;
-  const msg      = document.getElementById('adminLoginMsg');
-  msg.className  = 'auth-msg';
-  const res  = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY },
-    body: JSON.stringify({ email, password })
-  });
-  const data = await res.json();
-  if (!data.access_token) {
-    msg.className = 'auth-msg error';
-    msg.textContent = 'Invalid credentials';
-    return;
-  }
-  const profileRes = await fetch(`${SUPABASE_URL}/rest/v1/user_profiles?id=eq.${data.user.id}&select=status`, {
-    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${data.access_token}` }
-  });
-  const profiles = await profileRes.json();
-  if (!profiles[0] || profiles[0].status !== 'admin') {
-    msg.className = 'auth-msg error';
-    msg.textContent = 'Access denied. Admin privileges required.';
-    return;
-  }
-  adminToken = data.access_token;
-  showPage('admin-dashboard');
-  loadUsers();
-}
 
 async function loadUsers() {
   const res   = await fetch(`${SUPABASE_URL}/rest/v1/user_profiles?select=*&order=created_at.desc`, {
