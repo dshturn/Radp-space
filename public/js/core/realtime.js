@@ -5,8 +5,9 @@ let channels = new Map();
 
 function initRealtime() {
   if (supabaseClient || typeof supabase === 'undefined') return;
+  if (!window.SUPABASE_CONFIG) return;
 
-  supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  supabaseClient = supabase.createClient(window.SUPABASE_CONFIG.url, window.SUPABASE_CONFIG.key);
 }
 
 function subscribeToNotifications(contractorId, callback) {
