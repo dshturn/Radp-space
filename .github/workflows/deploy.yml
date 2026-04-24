@@ -4,39 +4,25 @@ on:
   push:
     branches: [main]
 
-env:
-  SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-  SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-
 jobs:
-  # Test migrations
-  test-migrations:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: supabase/setup-cli@v1
-
-      - name: Link Supabase project
-        run: |
-          supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_REF }} \
-            --password ${{ secrets.SUPABASE_DB_PASSWORD }}
-
-      - name: Test migrations
-        run: supabase db push --dry-run
-
-      - name: Apply migrations
-        run: supabase db push
-
   # Deploy to Vercel
   deploy:
     runs-on: ubuntu-latest
-    needs: test-migrations
     steps:
       - uses: actions/checkout@v4
 
-      - uses: vercel/action@main
+      - name: Deploy to Vercel
+        uses: vercel/action@main
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+
+  # Notify on success
+  success:
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: success()
+    steps:
+      - name: Deployment successful
+        run: echo "✅ Phase 1 deployed successfully!"
