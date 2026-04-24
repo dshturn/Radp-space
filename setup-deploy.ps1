@@ -48,25 +48,33 @@ Write-Host "NOW DO THIS IN YOUR BROWSER:" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "1. Go to: https://github.com/dshturn/Radp-space/settings/secrets/actions" -ForegroundColor Yellow
 Write-Host ""
-Write-Host "2. Click 'New repository secret' and add these 6 secrets:" -ForegroundColor Yellow
+Write-Host "2. For EACH secret below, click 'New repository secret':" -ForegroundColor Yellow
 Write-Host ""
-Write-Host "   Name: SUPABASE_PROJECT_REF" -ForegroundColor White
+Write-Host "   SECRET 1" -ForegroundColor White
+Write-Host "   Name: SUPABASE_PROJECT_REF" -ForegroundColor Cyan
 Write-Host "   Value: fslleuedqlxpjnerruzt" -ForegroundColor Gray
 Write-Host ""
-Write-Host "   Name: SUPABASE_ACCESS_TOKEN" -ForegroundColor White
-Write-Host "   Value: (run this in terminal: supabase access-token)" -ForegroundColor Gray
+Write-Host "   SECRET 2" -ForegroundColor White
+Write-Host "   Name: SUPABASE_ACCESS_TOKEN" -ForegroundColor Cyan
+Write-Host "   Value: (run: supabase access-token)" -ForegroundColor Gray
 Write-Host ""
-Write-Host "   Name: SUPABASE_DB_PASSWORD" -ForegroundColor White
+Write-Host "   SECRET 3" -ForegroundColor White
+Write-Host "   Name: SUPABASE_DB_PASSWORD" -ForegroundColor Cyan
 Write-Host "   Value: (your database password)" -ForegroundColor Gray
 Write-Host ""
-Write-Host "   Name: VERCEL_TOKEN" -ForegroundColor White
+Write-Host "   SECRET 4" -ForegroundColor White
+Write-Host "   Name: VERCEL_TOKEN" -ForegroundColor Cyan
 Write-Host "   Value: (from https://vercel.com/account/tokens)" -ForegroundColor Gray
 Write-Host ""
-Write-Host "   Name: VERCEL_ORG_ID" -ForegroundColor White
+Write-Host "   SECRET 5" -ForegroundColor White
+Write-Host "   Name: VERCEL_ORG_ID" -ForegroundColor Cyan
 Write-Host "   Value: (from https://vercel.com/settings)" -ForegroundColor Gray
 Write-Host ""
-Write-Host "   Name: VERCEL_PROJECT_ID" -ForegroundColor White
+Write-Host "   SECRET 6" -ForegroundColor White
+Write-Host "   Name: VERCEL_PROJECT_ID" -ForegroundColor Cyan
 Write-Host "   Value: (from your Vercel project settings)" -ForegroundColor Gray
+Write-Host ""
+Write-Host "   ⚠️  IMPORTANT: Name field can ONLY have letters, numbers, underscores (_)" -ForegroundColor Yellow
 Write-Host ""
 Write-Host "3. GitHub Actions will auto-run!" -ForegroundColor Yellow
 Write-Host ""
