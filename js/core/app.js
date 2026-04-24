@@ -6,7 +6,7 @@ const PAGE_ORDER = {
   contractor: 2,
   assessment: 3,
   operations: 4,
-  admin: 5
+  admin: 5,\\n  audit: 6
 };
 
 const ROLE_LANDING = {

@@ -194,3 +194,8 @@ async function adminInit() {
   await loadUsers();
   await loadAuditLog();
 }
+
+// Audit page initialization
+async function auditInit() {
+  await loadAuditLog();
+}
