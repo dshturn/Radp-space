@@ -149,6 +149,13 @@ async function _renderAuditLog() {
   if (dateFrom)     url += `&created_at=gte.${encodeURIComponent(dateFrom)}T00:00:00Z`;
   if (dateTo)       url += `&created_at=lte.${encodeURIComponent(dateTo)}T23:59:59Z`;
 
+  const user = state.getUser();
+  const role = state.roleOf();
+  if (role !== 'admin' && user) {
+    if (user.company) url += `&company=eq.${encodeURIComponent(user.company)}`;
+    if (user.service_line) url += `&service_line=eq.${encodeURIComponent(user.service_line)}`;
+  }
+
   const res = await fetch(url, { headers: { ...getHeaders(), Prefer: 'count=exact' } });
   if (!res.ok) { showToast('Failed to load audit log', 'error'); return; }
   const rows = await res.json();
