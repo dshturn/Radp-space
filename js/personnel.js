@@ -103,7 +103,7 @@ async function loadPersonnel(preserveState = false) {
     });
     list.innerHTML = Object.entries(persGroups).sort(([a],[b]) => a.localeCompare(b)).map(([pos, persons]) => {
       const cardsHtml = persons.map(p => personnelCard(p, docsByPerson[p.id] || [])).join('');
-      const _t = new Date(); _t.setHours(0,0,0,0);
+      const _t = todayUTC();
       const _i30 = new Date(_t); _i30.setDate(_t.getDate() + 30);
       let [_exp, _expir, _ok, _missing, _review] = [0, 0, 0, 0, 0];
       persons.forEach(p => {
