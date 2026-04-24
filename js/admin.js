@@ -70,7 +70,7 @@ async function openEditUser(userId) {
   document.getElementById('editFullName').value  = u.full_name  || '';
   document.getElementById('editEmail').value     = u.email      || '';
 
-  const h = { apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}` };
+  const h = getHeaders();
   const [companies, serviceLines] = await Promise.all([
     fetch(`${SUPABASE_URL}/rest/v1/companies?select=name&order=name`, { headers: h }).then(r => r.json()),
     fetch(`${SUPABASE_URL}/rest/v1/service_lines?select=name&order=name`, { headers: h }).then(r => r.json())
