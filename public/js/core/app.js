@@ -112,7 +112,8 @@ function updateNav(activePage) {
     contractor: 'navContractor',
     assessment: 'navAssessment',
     operations: 'navOperations',
-    admin: 'navUsers'
+    admin: 'navUsers',
+    audit: 'navAudit'
   };
 
   // Update active state
