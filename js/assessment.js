@@ -381,12 +381,12 @@ async function openPersonnelSelector() {
 async function addSelectedPersonnel() {
   const checked = [...document.querySelectorAll('#persSelectorList input:checked')].map(c => c.value);
   if (!checked.length) { showToast('Select at least one person', 'warn'); return; }
-  for (const persId of checked) {
-    await fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel`, {
+  await Promise.all(checked.map(persId =>
+    fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel`, {
       method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal' },
       body: JSON.stringify({ assessment_id: currentAssessmentId, personnel_id: parseInt(persId) })
-    });
-  }
+    })
+  ));
   document.getElementById('asPersModal').classList.remove('open');
   loadSelectedPersonnel(currentAssessmentId);
 }
