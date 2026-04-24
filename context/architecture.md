@@ -1,348 +1,240 @@
 # Architecture: RADP
 
-## High-Level Overview
+## System Diagram
 
 ```
-┌─────────────────┐         ┌──────────────────┐         ┌───────────────┐
-│  Web Browser    │◄──────►│  Vercel (Edge)   │◄──────►│  Supabase     │
-│  (SPA App)      │         │  (Rewrites)      │         │  (DB + Auth)  │
-│                 │         │                  │         │               │
-│  vanilla JS     │         │  index.html      │         │  PostgreSQL   │
-│  CSS            │         │  assets          │         │  Storage      │
-│  HTML5          │         │                  │         │  REST API     │
-└─────────────────┘         └──────────────────┘         └───────────────┘
-        │                                                       │
-        │                                                       │
-        └──────────────── PWA (offline cache) ────────────────┘
+Browser (vanilla JS)
+        ↓ HTTPS
+    Vercel (SPA routing + CSP headers)
+        ↓
+    Supabase (PostgreSQL + Auth + Storage)
+        ↓
+    Local cache (service worker, offline read)
 ```
 
-**Stack**:
-- **Frontend**: Vanilla JavaScript (no build, no framework)
-- **Backend**: Supabase (managed PostgreSQL + Auth + Storage + REST API)
-- **Deployment**: Vercel (SPA routing, edge headers for CSP)
-- **Storage**: Supabase Storage (documents, PDFs, images)
+## Frontend (index.html + JS modules)
 
-## Frontend Architecture
-
-### Pages (Single-Page App)
-
-```
-app.js (routing logic)
-├── login-page (login + admin-login)
-├── register-page (role-picker → registration form)
-├── contractor-page (dashboard + personnel + equipment tabs)
-├── assessment-page (list view + create/edit view)
-├── operations-page (sites + site detail + personnel/equipment tabs)
-└── admin-dashboard (future: KPI dashboard, user management)
-```
+Single-page app. No build step, no framework.
 
 ### Modules
 
-| Module | Purpose | Key Exports |
-|--------|---------|-------------|
-| `app.js` | Routing, page switching, session management | `showPage()`, `login()`, `register()`, `logout()` |
-| `auth.js` | Supabase auth, token management, user state | `login()`, `register()`, `logout()`, `getUser()`, `getHeaders()` |
-| `shared.js` | API client, utilities, modal/toast helpers | `apiFetch()`, `openModal()`, `showToast()`, `logAudit()` |
-| `personnel.js` | Personnel CRUD, cert upload, expiry UI | `loadPersonnel()`, `openAddPersonnel()`, `uploadCert()` |
-| `equipment.js` | Equipment templates + items, hierarchical tree | `loadEquipment()`, `openAddEquipment()`, `addEquipmentComponent()` |
-| `assessment.js` | Assessment workflow (create, edit, submit, review) | `loadAssessments()`, `showCreate()`, `submitAssessment()` |
-| `operations.js` | Site CRUD, site personnel/equipment assignment | `loadOperations()`, `createSite()`, `assignPersonnel()` |
-| `admin.js` | User management, service lines, audit log viewer | `loadAuditLog()`, `manageUsers()` (under construction) |
+| File | Purpose |
+|------|---------|
+| `app.js` | Routing (8 pages), session, role-based nav |
+| `auth.js` | Login/register, JWT management |
+| `shared.js` | API calls, modals, toast notifications, audit logging |
+| `personnel.js` | Crew CRUD, doc upload, expiry badges |
+| `equipment.js` | Equipment items, hierarchy (parent/child), templates |
+| `assessment.js` | Submit/review pre-mob assessments |
+| `operations.js` | Job sites, crew/equipment assignment |
+| `admin.js` | User management, audit log search |
 
-### State Management
+### Pages
 
-**Session storage** (browser memory):
+- `login` → register → `contractor` (dashboard) or `assessment` (assessor) or `operations` (ops manager)
+- All state in session storage (`radp_token`, `radp_user`)
+- Pagination: 25 items/page
+
+### Key Functions
+
 ```javascript
-localStorage.radp_token       // JWT from Supabase Auth
-localStorage.radp_user        // User object (id, email, role, company, service_line)
-sessionStorage.radp_reg_role  // Temporary: role picker selection during registration
+// Navigation
+showPage('contractor')           // switch page with animation
+PAGE_ORDER, PAGE_URLS            // routing tables
+
+// API
+apiFetch(url, options)           // wrapper with JWT + error handling
+getHeaders()                     // adds Authorization + apikey
+
+// UI
+openModal('id'), closeModal()    // modal lifecycle
+showToast(msg, type)             // success/error notifications
+logAudit(...)                    // log action to audit_log table
 ```
 
-**Page-level globals**:
-```javascript
-let currentPage = null;
-let currentAssessmentId = null;
-let currentSiteId = null;
-```
+### Offline (Service Worker)
 
-**Pagination state**:
-```javascript
-let _assessPage = 0, _equipPage = 0, _sitesPage = 0;
-const _PAGE_SIZE = 25;
-```
+Cache policy:
+- Static assets: cache on first load
+- API responses: cache on fetch (read-only, no write while offline)
+- Fallback: show cached data if network fails
 
-### UI Components
+## Backend: Supabase
 
-All built with vanilla HTML/CSS:
-- Modals (`.modal`)
-- Toasts (`.toast`)
-- Cards (`.app-card`, `.sub-card`)
-- Forms (validation on submit, no real-time validation)
-- Badges (status indicators: `.badge-ok`, `.badge-warn`, `.badge-bad`)
-- Tabs (simple class-based switching)
+PostgreSQL database with Row-Level Security (RLS) enforced at DB layer.
 
-### Styling
+### Tables
 
-**CSS architecture**:
-- `styles.css` (~1400 lines): all styling
-- **Dark theme only** (navy + amber for alerts)
-- **Responsive**: grid-based layout, CSS media queries
-- **No CSS framework**: utility classes + semantic BEM-ish naming
+**Auth**:
+- `auth.users` — email, password (Supabase managed)
+- `user_profiles` — role (contractor/assessor/operations/admin), company, service_line, status
 
-**Key classes**:
-- `.container`, `.section`, `.row`, `.col`
-- `.btn-main`, `.btn-ghost`, `.btn-danger` (buttons)
-- `.badge-ok`, `.badge-warn`, `.badge-bad` (status)
-- `.dash-tile` (dashboard cards)
-- `.app-card`, `.sub-card` (hierarchical lists)
+**Data**:
+- `companies` — contractor companies + Aramco
+- `service_lines` — slickline, coiled tubing, pumping, etc. (flagged: is_aramco)
+- `personnel` — crew members (company_id, service_line)
+- `personnel_documents` — cert uploads (file_path, type, expiry_date)
+- `equipment_templates` — service-line-specific templates (slickline, CT, pump)
+- `equipment_items` — actual gear instances (parent_id for hierarchy)
+- `assessments` — pre-mob requests (status: draft/submitted/approved/rejected)
+- `operation_sites` — job sites (crew + equipment assigned here)
+- `operation_site_personnel` — crew roster per site
+- `operation_site_equipment` — equipment manifest per site
 
-### Offline Support (PWA)
+**Compliance**:
+- `audit_log` — immutable (every action logged)
+- `notifications` — status change alerts
 
-**Service Worker** (`sw.js`):
-- Caches static assets (index.html, styles.css, js files)
-- Caches API responses for read operations
-- Falls back to cached data on network failure
-- No sync queue (assessments cannot be submitted offline)
-
-**Manifest** (`manifest.json`):
-- App name: "RADP"
-- Start URL: `/`
-- Display: fullscreen (for field use)
-- Icons: SVG maskable icon
-
-## Backend Architecture
-
-### Supabase Tables
-
-#### Core Auth
-- `auth.users` (managed by Supabase; email, password)
-- `user_profiles` (custom extensions: role, company, service_line, status)
-
-#### Core Data
-- `companies` (contractor companies + 'Aramco')
-- `service_lines` (slickline, coiled tubing, pumping, etc.; flagged as is_aramco for role-based visibility)
-- `personnel` (people, with company_id and service_line; includes expiry tracking fields)
-- `personnel_documents` (certs: file_path, document_type, expiry_date)
-- `equipment_templates` (service_line-specific templates)
-- `equipment_items` (actual equipment instances with parent_id for hierarchy)
-- `assessments` (pre-mobilization assessments with status: draft/submitted/approved/rejected)
-- `operation_sites` (job sites; personnel and equipment are assigned to sites)
-- `operation_site_personnel` (assignment junction table)
-- `operation_site_equipment` (assignment junction table)
-
-#### Compliance
-- `audit_log` (immutable record of all actions)
-- `notifications` (alert system for status changes)
-
-#### Aramco-specific
-- `aramco_departments` (for Aramco operations/assessor users)
-- `aramco_service_lines` (filtered list for Aramco registration)
-
-### Authentication & Authorization
-
-**Supabase Auth** (email/password):
-```javascript
-// Frontend
-const { user, session } = await supabase.auth.signUp({ email, password });
-// Returns JWT in session.access_token
-
-// API calls
-headers: {
-  'Authorization': 'Bearer ' + token,
-  'apikey': SUPABASE_ANON_KEY  // for REST API
-}
-```
-
-**Row-Level Security (RLS)**:
-```sql
--- Contractor sees only own data
-create policy "contractor owns data"
-  on personnel using (contractor_id = auth.uid());
-
--- Admin sees all data
-create policy "admin sees all"
-  on personnel using (
-    exists (select 1 from user_profiles where id = auth.uid() and role = 'admin')
-  );
-```
-
-### Data Flow: Assessment Submission
+### API Endpoints (REST)
 
 ```
-1. Contractor fills form (equipment, personnel, checklist items)
-   ↓
-2. Frontend validates locally, generates checklist
-   ↓
-3. POST /rest/v1/assessments with full payload
-   → Supabase: inserts row, validates RLS, returns id
-   ↓
-4. Frontend logs audit event: { action: 'submitted', entity_id: assessment.id }
-   → Supabase: inserts audit_log row
-   ↓
-5. Notification triggered: assessor@aramco.com receives email
-   → (Future: Supabase Function webhook)
-   ↓
-6. Assessor reviews in app, clicks "Approve" or "Request Changes"
-   → PATCH /rest/v1/assessments/{id} { status: 'approved' }
-   ↓
-7. Audit log recorded again
-   ↓
-8. Contractor sees status change in assessment list (polls every 30s)
-```
+GET    /rest/v1/personnel?contractor_id=eq.{id}
+POST   /rest/v1/personnel { name, company_id, ... }
+PATCH  /rest/v1/personnel/{id} { name, ... }
+DELETE /rest/v1/personnel/{id}  → soft-delete (dismissed flag)
 
-### Supabase Functions
-
-**Directory**: `/supabase/functions/`
-
-- `check-expiries` (scheduled): runs daily, marks personnel/equipment expiring within 30 days
-- (Future) `send-notifications`: webhook on assessment status change
-
-### Database Migrations
-
-**Location**: `/supabase/migrations/`
-
-Schema evolution tracked with numbered files:
-- `001_audit_log.sql` — audit logging table + RLS
-- `002_notifications.sql` — notification system
-- `003_user_roles.sql` — add role field
-- `004_aramco_username.sql` — Aramco-specific fields
-- `005_aramco_service_lines.sql` — service line filtering
-- `006_aramco_departments.sql` — departments for Aramco users
-- `007_personnel_doc_types.sql` — document type classification
-
-### API Endpoints (Supabase REST)
-
-All endpoints follow RESTful conventions:
-
-```
-GET    /rest/v1/personnel
-POST   /rest/v1/personnel
-GET    /rest/v1/personnel/{id}
-PATCH  /rest/v1/personnel/{id}
-DELETE /rest/v1/personnel/{id}
-
-GET    /rest/v1/equipment_items
+GET    /rest/v1/equipment_items?parent_id=is.null
 POST   /rest/v1/equipment_items
 PATCH  /rest/v1/equipment_items/{id}
 
-GET    /rest/v1/assessments
-POST   /rest/v1/assessments
-PATCH  /rest/v1/assessments/{id}
+GET    /rest/v1/assessments?contractor_id=eq.{id}
+POST   /rest/v1/assessments { equipment_roster, personnel_roster, ... }
+PATCH  /rest/v1/assessments/{id} { status: 'approved' }
 
-GET    /rest/v1/audit_log
+GET    /rest/v1/audit_log?entity_type=eq.assessment&created_at=gte.{date}
 ```
 
 **Headers**:
 ```
-Authorization: Bearer {JWT_TOKEN}
-apikey: {SUPABASE_ANON_KEY}
-Content-Type: application/json
+Authorization: Bearer {JWT}
+apikey: {ANON_KEY}
 Prefer: count=exact  (for pagination total)
+```
+
+### Data Flow: Assessment
+
+```
+1. Contractor fills form (select equipment, select crew, confirm checklist)
+2. Frontend validates, POSTs to /assessments
+3. Supabase RLS: check contractor_id = auth.uid() → allow
+4. Row inserted, returns assessment.id
+5. Frontend: POST to /audit_log { action: 'submitted', entity_id: assessment.id }
+6. Notification: email assessor@aramco.com (via Supabase Function, future)
+7. Assessor reviews in app, PATCHes { status: 'approved' }
+8. Audit log: { action: 'approved', actor_id: assessor_id }
+9. Contractor sees status change (polls every 30s)
+```
+
+### Row-Level Security
+
+```sql
+-- Contractors see own data
+select contractor_id = auth.uid()
+
+-- Admins see all
+select exists (
+  select 1 from user_profiles 
+  where id = auth.uid() and role = 'admin'
+)
+
+-- Assessors see submitted assessments (read-only)
+select status = 'submitted'
 ```
 
 ### File Storage
 
-**Path structure**:
+Path structure:
 ```
-contractors/{contractor_id}/personnel/{personnel_id}/{document_uuid}.pdf
-contractors/{contractor_id}/equipment/{equipment_id}/{file_uuid}.jpg
+contractors/{contractor_id}/personnel/{personnel_id}/{doc_uuid}.pdf
+contractors/{contractor_id}/equipment/{equipment_id}/{doc_uuid}.jpg
 ```
 
-**Signed URLs** (10-min expiry):
+Signed URLs (10-min expiry):
 ```javascript
-const { data: { publicUrl } } = await supabase.storage
+const { publicUrl } = supabase.storage
   .from('documents')
   .getPublicUrl(path, { download: true });
 ```
 
 ## Deployment
 
-### Vercel Configuration (`vercel.json`)
+### Vercel Config
 
-**Rewrites** (SPA routing):
-```
-/contractor → /index.html
-/assessment → /index.html
-/operations → /index.html
-... etc
+**SPA rewrites**:
+```json
+{ "source": "/contractor", "destination": "/index.html" }
+{ "source": "/assessment", "destination": "/index.html" }
 ```
 
-**Headers** (CSP, security):
+**CSP headers** (security):
 ```
-Content-Security-Policy:
-  - default-src 'self'
-  - script-src 'self' 'unsafe-inline'  (inline app code)
-  - connect-src 'self' https://*.supabase.co wss://*.supabase.co
-  - img-src 'self' data: blob: https://*.supabase.co
-  - style-src 'self' 'unsafe-inline' https://fonts.googleapis.com
-  - font-src 'self' https://fonts.gstatic.com
+default-src 'self'
+script-src 'self' 'unsafe-inline'  (inline app code)
+connect-src 'self' https://*.supabase.co
+img-src 'self' data: blob:
 ```
 
-### Deployment Flow
-
-1. Push to `main` branch
-2. Vercel detects, builds (no build step needed, just deploys index.html + assets)
-3. Static assets cached globally on Vercel Edge Network
-4. All API requests proxy to Supabase
+**Flow**:
+1. Push to `main`
+2. Vercel deploys in ~1 min
+3. Assets cached globally on edge network
+4. API calls routed to Supabase
 
 ### Local Development
 
 ```bash
-# Start Supabase locally
 supabase start
+# PostgreSQL + Auth + Storage on localhost:54321
 
-# Runs PostgreSQL + Auth + Storage locally
-# API endpoint: http://localhost:54321
-# Docs: http://localhost:54321/docs (Swagger UI)
-
-# Open app
 python -m http.server 8000
-# Visit http://localhost:8000
+# App on localhost:8000
 ```
+
+**Test**: http://localhost:8000 (with local Supabase backend)
 
 ## Security
 
-### Authentication
-- Email/password via Supabase Auth (bcrypt hashing, managed)
-- JWT tokens (10-min access, refresh token for auto-renewal)
-- Tokens stored in `localStorage` (XSS risk mitigated by CSP)
+### Auth
+- Email/password via Supabase (bcrypt, managed)
+- JWT tokens (10 min access, refresh token)
+- Tokens in localStorage (XSS mitigated by CSP)
 
 ### Authorization
-- Row-level security on all tables (enforced at DB layer)
-- Frontend checks user role before showing UI; backend enforces at API
+- RLS on all tables (enforced at DB, not app)
+- Frontend role check (UX); backend enforces (security)
+- Admin role required for system-level actions
 
-### Data Protection
-- All API traffic over HTTPS
-- CSP prevents inline scripts (except app JS)
-- No sensitive data in localStorage except JWT
+### Data
+- HTTPS enforced
+- CSP prevents inline script injection
+- No hardcoded secrets (env vars only)
 - Audit log immutable (no delete, no update)
+- PII: encrypted at rest by Supabase
 
-### Compliance
-- PII: email, name stored in user_profiles (encrypted at rest by Supabase)
-- Documents: PDFs stored in private Supabase Storage bucket, signed URLs only
-- Audit trail: all user actions logged with timestamp, actor, metadata
+## Performance Targets
 
-## Scaling Considerations
+- API response: < 500ms (field users on 3G)
+- Page load: < 2 sec
+- Page transition: < 300ms
+- JS module: < 50KB each (app.js at limit)
 
-### Current Bottlenecks
-- **Token usage**: AI-driven assessment generation consumes ~50 tokens/assessment (can be optimized)
-- **Code organization**: JS modules are large (assessment.js ~31KB); monolithic structure limits parallel development
-- **Pagination**: all lists use offset-limit; may be slow at high offsets (switch to keyset pagination if needed)
+### Optimization Done
+- Pagination: 25 items/page
+- Lazy-load modals
+- Service worker cache (offline read)
 
-### High-Traffic Scenario
-- Supabase scales horizontally (managed service)
-- Vercel edge caching handles static assets
-- API rate limiting: none currently (add if abuse detected)
-- Database: indexed on common queries (contractor_id, service_line, status)
+### Still Needed
+- Break assessment.js into smaller files
+- Add database indexes on contractor_id, service_line
+- Reduce AI token usage (pre-compute checklists)
 
-### Optimization Opportunities
-1. **Code splitting**: Break JS modules into smaller chunks, lazy-load pages
-2. **API optimization**: GraphQL instead of REST (future); reduce N+1 queries
-3. **Caching**: Add Redis layer for high-frequency reads (expiry status, templates)
-4. **Assessment**: Pre-compute checklist items instead of AI generation
+## Bottlenecks
+
+1. **AI token burn**: ~50 tokens/assessment (needs pre-computation)
+2. **Code size**: assessment.js is 31KB (needs modularization)
+3. **N+1 queries**: some lists fetch one-by-one (use batch queries)
 
 ---
 
-**Last updated**: 2026-04-24  
-**Key decision makers**: Tech Lead, Aramco Ops  
-**Next review**: When scaling or adding new major feature
+**Owner**: Tech Lead  
+**Last updated**: 2026-04-24
