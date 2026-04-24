@@ -303,47 +303,41 @@
   </div>
 </div>
 
-<!-- ══════════════════ ADMIN LOGIN ══════════════════ -->
-<div id="admin-login-page" class="page">
-  <div class="auth-wrap">
-    <div class="auth-card">
-      <h1>Admin Login</h1>
-      <p class="auth-subtitle">RADP Admin Panel</p>
-      <form onsubmit="adminLogin();return false;">
-        <label class="auth-label" for="adminEmail">Email</label>
-        <input type="email" id="adminEmail" placeholder="Admin email" autocomplete="email">
-        <label class="auth-label" for="adminPassword">Password</label>
-        <input type="password" id="adminPassword" placeholder="Password" autocomplete="current-password">
-        <button type="submit" class="btn-main">Login</button>
-      </form>
-      <div id="adminLoginMsg" class="auth-msg" role="alert"></div>
-      <button class="auth-back-link" onclick="showPage('login')">← Back to Login</button>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════ ADMIN DASHBOARD ══════════════════ -->
-<div id="admin-dashboard-page" class="page">
-  <div class="admin-header">
-    <h1>RADP Admin Panel</h1>
-    <button class="nav-logout" onclick="adminLogout()">Logout</button>
-  </div>
+<!-- ══════════════════ USERS ══════════════════ -->
+<div id="users-page" class="page">
   <div class="container">
-    <div class="tab-bar" id="adminPage">
-      <button class="tab active" onclick="showAdminTab('users', this)">Users</button>
-      <button class="tab" onclick="showAdminTab('pending', this)">Pending</button>
-      <button class="tab" onclick="showAdminTab('auditLog', this)">Audit Log</button>
+    <div class="page-header-row" style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+      <h2 style="margin:0;">Users</h2>
+      <div style="display:flex;gap:8px;flex:1;flex-wrap:wrap;">
+        <select id="usersRoleFilter" onchange="loadUsers()" style="padding:6px 10px;font-size:13px;border-radius:6px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-1);">
+          <option value="">All roles</option>
+          <option value="contractor">Contractor</option>
+          <option value="operations">Operations</option>
+          <option value="assessor">Assessor</option>
+          <option value="admin">Admin</option>
+        </select>
+        <input type="text" id="usersSearch" placeholder="Search name / email…" oninput="loadUsers()" style="flex:1;min-width:160px;padding:6px 10px;font-size:13px;border-radius:6px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-1);">
+      </div>
     </div>
-    <div id="usersTab">
-      <div class="section-title">Approved Users</div>
-      <div id="approvedList"></div>
-    </div>
-    <div id="pendingTab" style="display:none;">
-      <div class="section-title">Pending Approval</div>
+
+    <div id="pendingSection">
+      <div class="section-title" style="color:var(--warn);">⚠ Pending Approval</div>
       <div id="pendingList"></div>
     </div>
-    <div id="auditLogTab" style="display:none;">
-      <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+
+    <div style="margin-top:20px;">
+      <div class="section-title">Active Users</div>
+      <div id="approvedList"></div>
+    </div>
+
+    <div id="rejectedSection" style="display:none;margin-top:16px;">
+      <div class="section-title" style="color:var(--bad);">Rejected</div>
+      <div id="rejectedList"></div>
+    </div>
+
+    <div style="margin-top:28px;">
+      <div class="section-title">Audit Log</div>
+      <div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
         <select id="auditEntityFilter" onchange="loadAuditLog()" style="padding:6px 10px;font-size:13px;border-radius:6px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-1);">
           <option value="">All types</option>
           <option value="personnel">Personnel</option>
