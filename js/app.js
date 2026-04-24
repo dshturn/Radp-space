@@ -84,12 +84,12 @@ function showPage(name, replace = false) {
   nav.style.display = NAV_PAGES.has(name) ? 'flex' : 'none';
   if (NAV_PAGES.has(name)) {
     document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
-    const navMap = { contractor: 'navContractor', assessment: 'navAssessment', operations: 'navOperations' };
+    const navMap = { contractor: 'navContractor', assessment: 'navAssessment', operations: 'navOperations', users: 'navUsers' };
     document.getElementById(navMap[name])?.classList.add('active');
     const u = getUser();
     document.getElementById('navUser').textContent = u.email || '';
 
-    // Role-based tab visibility: operations users see only Operations, assessors only Assessments.
+    // Role-based tab visibility: operations users see only Operations, assessors only Assessments, admin sees all.
     const allowed = ROLE_NAV[roleOf(u)] || ROLE_NAV.contractor;
     Object.entries(navMap).forEach(([page, linkId]) => {
       const link = document.getElementById(linkId);
@@ -98,7 +98,7 @@ function showPage(name, replace = false) {
 
     if (name === 'contractor') {
       document.getElementById('welcomeMsg').textContent  = `Welcome, ${u.full_name || 'Contractor'}`;
-      document.getElementById('companyInfo').textContent = `${u.company || ''} · ${u.service_line || ''}`;
+      document.getElementById('companyInfo').textContent = u.role === 'admin' ? 'Admin' : `${u.company || ''} · ${u.service_line || ''}`;
     }
   }
 
