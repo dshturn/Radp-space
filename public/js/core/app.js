@@ -93,7 +93,8 @@ async function showPage(name, replace = false) {
       contractor: '/contractor',
       assessment: '/assessment',
       operations: '/operations',
-      admin: '/admin'
+      admin: '/admin',
+      audit: '/audit'
     };
 
     replace
