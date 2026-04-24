@@ -123,15 +123,10 @@ async function deleteUser(id) {
   if (!await showConfirm('Delete this user?')) return;
   const _delRes = await fetch(`${SUPABASE_URL}/rest/v1/user_profiles?id=eq.${id}`, {
     method: 'DELETE',
-    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}`, Prefer: 'return=minimal' }
+    headers: { ...getHeaders(), Prefer: 'return=minimal' }
   });
   if (_delRes.ok) {
-    // Audit log using admin token (logAudit() uses contractor JWT, doesn't apply here)
-    fetch(`${SUPABASE_URL}/rest/v1/audit_log`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}`, Prefer: 'return=minimal' },
-      body: JSON.stringify({ actor_id: null, entity_type: 'user', entity_id: String(id), action: 'deleted', label: 'User account deleted' })
-    }).catch(() => {});
+    logAudit('user', id, 'deleted', 'User account deleted');
   }
   loadUsers();
 }
