@@ -63,10 +63,12 @@ function unsubscribeAll() {
 function startRealtime() {
   const user = state.getUser();
   if (!user?.id) return;
+  if (notificationsSubscribed) return;
 
   initRealtime();
   if (!supabaseClient) return;
 
+  notificationsSubscribed = true;
   // Subscribe to notifications
   subscribeToNotifications(user.id, (notification) => {
     showToast(notification.entity_label || 'New notification', 'info');
