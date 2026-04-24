@@ -144,13 +144,14 @@ Fallback on network fail:
 
 ## Performance Targets
 
-| Metric | Target | Current |
-|--------|--------|---------|
-| API response | < 500ms | ~200ms (3G) |
-| Page load | < 2s | ~1.5s |
-| Page transition | < 300ms | ~200ms |
-| Field lookup (3G) | < 2 min | ~1–2 min (cached) |
-| JS modules | < 50KB each | app.js 9KB, assessment.js 31KB |
+See context/rules.md § Performance for targets and optimization techniques.
+
+Current state:
+- API response: ~200ms (3G)
+- Page load: ~1.5s
+- Page transition: ~200ms
+- Field lookup (3G): ~1–2 min (cached)
+- JS modules: app.js 9KB, assessment.js 31KB (at limit)
 
 ## Constraints
 
