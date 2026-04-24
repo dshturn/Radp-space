@@ -19,11 +19,11 @@ async function adminLogin() {
     msg.textContent = 'Invalid credentials';
     return;
   }
-  const profileRes = await fetch(`${SUPABASE_URL}/rest/v1/user_profiles?id=eq.${data.user.id}&select=role`, {
+  const profileRes = await fetch(`${SUPABASE_URL}/rest/v1/user_profiles?id=eq.${data.user.id}&select=status`, {
     headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${data.access_token}` }
   });
   const profiles = await profileRes.json();
-  if (!profiles[0] || profiles[0].role !== 'admin') {
+  if (!profiles[0] || profiles[0].status !== 'admin') {
     msg.className = 'auth-msg error';
     msg.textContent = 'Access denied. Admin privileges required.';
     return;
