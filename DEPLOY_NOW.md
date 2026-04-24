@@ -37,16 +37,33 @@ Scroll down → Copy both IDs
 
 1. Go to: https://github.com/dshturn/Radp-space/settings/secrets/actions
 
-2. Click **"New repository secret"** for each:
+2. Click **"New repository secret"** for EACH secret below:
 
-```
-SUPABASE_PROJECT_REF = fslleuedqlxpjnerruzt
-SUPABASE_ACCESS_TOKEN = <paste from step 2a>
-SUPABASE_DB_PASSWORD = <your database password>
-VERCEL_TOKEN = <paste from step 2b>
-VERCEL_ORG_ID = <paste from step 2c>
-VERCEL_PROJECT_ID = <paste from step 2c>
-```
+**Secret 1:**
+- Name: `SUPABASE_PROJECT_REF`
+- Value: `fslleuedqlxpjnerruzt`
+
+**Secret 2:**
+- Name: `SUPABASE_ACCESS_TOKEN`
+- Value: (paste from step 2a)
+
+**Secret 3:**
+- Name: `SUPABASE_DB_PASSWORD`
+- Value: (your database password)
+
+**Secret 4:**
+- Name: `VERCEL_TOKEN`
+- Value: (paste from step 2b)
+
+**Secret 5:**
+- Name: `VERCEL_ORG_ID`
+- Value: (paste from step 2c)
+
+**Secret 6:**
+- Name: `VERCEL_PROJECT_ID`
+- Value: (paste from step 2c)
+
+**Important:** Name field can ONLY contain: letters, numbers, underscores (_)
 
 ---
 
