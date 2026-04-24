@@ -149,8 +149,7 @@ async function _renderAuditLog() {
   if (dateFrom)     url += `&created_at=gte.${encodeURIComponent(dateFrom)}T00:00:00Z`;
   if (dateTo)       url += `&created_at=lte.${encodeURIComponent(dateTo)}T23:59:59Z`;
 
-  const adminH = { apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}`, 'Content-Type': 'application/json' };
-  const res = await fetch(url, { headers: { ...adminH, Prefer: 'count=exact' } });
+  const res = await fetch(url, { headers: { ...getHeaders(), Prefer: 'count=exact' } });
   if (!res.ok) { showToast('Failed to load audit log', 'error'); return; }
   const rows = await res.json();
   const total = parseInt(res.headers.get('Content-Range')?.split('/')[1] || '0', 10);
