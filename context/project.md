@@ -114,7 +114,16 @@ Assessment (pre-mob request)
   └─ Status: draft → submitted → approved/rejected
 
 Audit Log (immutable, forever)
-  └─ Every action: actor, entity, timestamp, metadata
+  ├─ actor_id (user who performed action)
+  ├─ entity_type (personnel, equipment, assessment, operations, document, user)
+  ├─ entity_id (reference to affected record)
+  ├─ action (created, uploaded, approved, rejected, deleted, assigned)
+  ├─ label (human-readable: "John Smith — Medical Report")
+  ├─ metadata (optional snapshot of key fields at time of action)
+  ├─ company (captured from user profile for role-based filtering)
+  ├─ service_line (captured from user profile for role-based filtering)
+  ├─ created_at (ISO timestamp)
+  └─ Access Control: Admins see all 522+ entries; non-admins see only their company+service_line
 
 ## Success Metrics
 
