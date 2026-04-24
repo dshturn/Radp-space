@@ -713,6 +713,19 @@ window.SUPABASE_CONFIG = {
   url: 'https://fslleuedqlxpjnerruzt.supabase.co',
   key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzbGxldWVkcWx4cGpuZXJydXp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5OTMxMTksImV4cCI6MjA5MDU2OTExOX0.H1narO5BF5uF2KwlKtKvioz3mun2ecxb1Lg_xVDLdt4'
 };
+
+const CT_ORDER = { personnel: 0, equipment: 1 };
+function showContractorTab(tab, el) {
+  const current = document.querySelector('#contractor-page .ct-section.active')?.id?.replace('ct-', '') || 'equipment';
+  const goingRight = CT_ORDER[tab] > CT_ORDER[current];
+  const animClass = goingRight ? 'slide-in-right' : 'slide-in-left';
+  document.querySelectorAll('#contractor-page .tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('#contractor-page .ct-section').forEach(s => s.classList.remove('active', 'slide-in-right', 'slide-in-left'));
+  el.classList.add('active');
+  const section = document.getElementById('ct-' + tab);
+  section.classList.add('active', animClass);
+  section.addEventListener('animationend', () => section.classList.remove(animClass), { once: true });
+}
 </script>
 
 <!-- Supabase Client for Realtime -->
