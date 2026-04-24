@@ -3,15 +3,37 @@
 const _adminUserMap = new Map();
 
 async function loadUsers() {
-  const res   = await fetch(`${SUPABASE_URL}/rest/v1/user_profiles?select=*&order=created_at.desc`, {
-    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}` }
-  });
-  const users   = await res.json();
+  let url = `${SUPABASE_URL}/rest/v1/user_profiles?select=*&order=status.asc,created_at.desc`;
+  const roleFilter = document.getElementById('usersRoleFilter')?.value;
+  if (roleFilter) url += `&role=eq.${encodeURIComponent(roleFilter)}`;
+
+  const rows = await apiFetch(url, { headers: getHeaders() });
+  if (!rows) return;
+
+  const q = (document.getElementById('usersSearch')?.value || '').toLowerCase();
+  const users = q ? rows.filter(u =>
+    (u.full_name || '').toLowerCase().includes(q) ||
+    (u.email || '').toLowerCase().includes(q) ||
+    (u.company || '').toLowerCase().includes(q)
+  ) : rows;
+
   const pending  = users.filter(u => u.status === 'pending');
   const approved = users.filter(u => u.status === 'approved');
-  document.getElementById('pendingList').innerHTML  = pending.length  ? pending.map(adminUserCard).join('')  : '<div class="empty">No pending users</div>';
-  document.getElementById('approvedList').innerHTML = approved.length ? approved.map(adminUserCard).join('') : '<div class="empty">No approved users</div>';
-  document.querySelectorAll('.admin-card').forEach((el, i) => { el.style.animationDelay = `${i * 50}ms`; });
+  const rejected = users.filter(u => u.status === 'rejected');
+
+  const pendingSection = document.getElementById('pendingSection');
+  if (pendingSection) pendingSection.style.display = pending.length ? '' : 'none';
+
+  document.getElementById('pendingList').innerHTML = pending.length ? pending.map(adminUserCard).join('') : '';
+  document.getElementById('approvedList').innerHTML = approved.length
+    ? approved.map(adminUserCard).join('')
+    : '<div class="empty">No active users</div>';
+
+  const rejectedSection = document.getElementById('rejectedSection');
+  if (rejectedSection) rejectedSection.style.display = rejected.length ? '' : 'none';
+  document.getElementById('rejectedList').innerHTML = rejected.length ? rejected.map(adminUserCard).join('') : '';
+
+  document.querySelectorAll('.admin-card').forEach((el, i) => { el.style.animationDelay = `${i * 40}ms`; });
 }
 
 function adminUserCard(u) {
