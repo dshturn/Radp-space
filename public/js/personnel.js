@@ -608,3 +608,9 @@ async function bulkDeletePersonnel() {
     loadPersonnel();
   }
 }
+
+// Page initialization - load both personnel and equipment for contractor page
+async function contractorInit() {
+  await loadPersonnel();
+  if (typeof loadEquipment === 'function') await loadEquipment();
+}
