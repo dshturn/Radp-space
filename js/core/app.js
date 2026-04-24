@@ -62,16 +62,7 @@ async function showPage(name, replace = false) {
     const removeAnim = () => pageEl.classList.remove(animClass);
     pageEl.addEventListener('animationend', removeAnim, { once: true });
 
-    // Lazy load JS module
-    const moduleLoader = pageModules[name];
-    if (moduleLoader) {
-      try {
-        const module = await moduleLoader();
-        if (module.init) await module.init();
-      } catch (err) {
-        console.warn(`No JS module for ${name}:`, err);
-      }
-    }
+    // JS module loading disabled (pages are embedded; modules not needed yet)
 
     // Update navigation
     const nav = document.getElementById('mainNav');
