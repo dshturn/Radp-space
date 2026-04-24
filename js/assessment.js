@@ -401,7 +401,7 @@ async function removePersonnel(id, fromSelector) {
 // ─── LoR ───
 function getExpiryStyle(dateStr) {
   if (!dateStr || dateStr === '—' || dateStr === '-') return '';
-  const expiry = new Date(dateStr), today = new Date(); today.setHours(0,0,0,0);
+  const expiry = parseUTC(dateStr), today = todayUTC();
   const in14 = new Date(today); in14.setDate(in14.getDate() + 14);
   if (expiry < today)  return 'background:#ffcccc;font-weight:bold;';
   if (expiry <= in14)  return 'background:#fff3cc;font-weight:bold;';
