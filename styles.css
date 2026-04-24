@@ -315,7 +315,7 @@ input[type="file"] { display: none; }
 }
 
 /* Skeleton */
-.skeleton { background: linear-gradient(90deg,var(--surface) 25%,#2a3a50 50%,var(--surface) 75%); background-size: 500px 100%; animation: shimmer 1.5s ease infinite; border-radius: 8px; }
+.skeleton { background: linear-gradient(90deg,var(--surface) 25%,var(--skeleton-stop) 50%,var(--surface) 75%); background-size: 500px 100%; animation: shimmer 1.5s ease infinite; border-radius: 8px; }
 .skel-card { background: var(--surface); border-radius: 10px; padding: 16px; margin-bottom: 12px; }
 .skel-line { height: 14px; margin-bottom: 10px; }
 .skel-line.short  { width: 40%; }
