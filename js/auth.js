@@ -176,7 +176,7 @@ async function register() {
   // Contractor's pick lives in service_line; Aramco pick lives in aramco_department.
   const profile = isContractor
     ? { email, full_name: fullName, company, service_line: choice, role }
-    : { email, full_name: fullName, company, aramco_department: choice, role };
+    : { email, full_name: fullName, company, ...(choice ? { aramco_department: choice } : {}), role };
 
   const res  = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
     method: 'POST',
