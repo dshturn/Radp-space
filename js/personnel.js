@@ -619,6 +619,43 @@ async function bulkDeletePersonnel() {
     loadPersonnel();
   }
 }
+
+// Admin: Edit personnel record
+async function openEditPersonnel(persId) {
+  const h = getHeaders();
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${persId}&select=*`, { headers: h });
+  if (!res.ok) { showToast('Failed to load personnel', 'error'); return; }
+  const [pers] = await res.json();
+  if (!pers) { showToast('Personnel not found', 'error'); return; }
+  document.getElementById('editPersId').value = pers.id;
+  document.getElementById('editPersName').value = pers.full_name || '';
+  document.getElementById('editPersPosition').value = pers.position || '';
+  document.getElementById('editPersNationalId').value = pers.national_id || '';
+  document.getElementById('editPersYearsExperience').value = pers.years_experience || '';
+  document.getElementById('editPersAssessed').checked = pers.assessed || false;
+  openModal('editPersModal');
+}
+
+async function saveEditPersonnel() {
+  const h = getHeaders();
+  const id = parseInt(document.getElementById('editPersId').value);
+  const full_name = document.getElementById('editPersName').value.trim();
+  const position = document.getElementById('editPersPosition').value.trim();
+  const national_id = document.getElementById('editPersNationalId').value.trim();
+  const years_experience = parseInt(document.getElementById('editPersYearsExperience').value) || null;
+  const assessed = document.getElementById('editPersAssessed').checked;
+  if (!full_name) { showToast('Name is required', 'warn'); return; }
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: { ...h, Prefer: 'return=minimal' },
+    body: JSON.stringify({ full_name, position, national_id, years_experience, assessed })
+  });
+  if (!res.ok) { showToast('Save failed: ' + res.status, 'error'); return; }
+  logAudit('personnel', String(id), 'updated', full_name);
+  closeModal('editPersModal');
+  loadPersonnel();
+}
+
 // Page initialization
 async function contractorInit() {
   await loadPersonnel();
