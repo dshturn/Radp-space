@@ -107,10 +107,10 @@ function showPage(name, replace = false) {
     : history.pushState({ page: name }, '', PAGE_URLS[name]);
 
   if (name === 'contractor') { loadEquipment(); loadPersonnel(); loadDashAssessments(); }
-  if (name === 'assessment') { loadAssessments(); }
-  if (name === 'operations') { loadOperations(); }
+  if (name === 'assessment') { assessmentInit?.(); loadAssessments(); }
+  if (name === 'operations') { operationsInit?.(); loadOperations(); }
   if (name === 'admin')      { adminInit(); }
-  if (name === 'audit')      { loadAuditLog(); }
+  if (name === 'audit')      { auditInit?.(); loadAuditLog(); }
   if (name === 'register')   { configureRegisterForm(); loadRegisterOptions(); }
 }
 
