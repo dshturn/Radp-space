@@ -1,5 +1,7 @@
 {
   "buildCommand": null,
+  "outputDirectory": ".",
+  "public": true,
   "rewrites": [
     { "source": "/contractor",       "destination": "/index.html" },
     { "source": "/assessment",       "destination": "/index.html" },
