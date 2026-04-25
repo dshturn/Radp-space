@@ -43,6 +43,14 @@ async function loadEquipment(preserveState = false) {
   const items = await res.json();
   const totalCount = parseInt(res.headers.get('Content-Range')?.split('/')[1] || '0', 10);
 
+  // For admin: load company names for all contractors
+  if (isAdmin && items.length > 0) {
+    const contractorIds = [...new Set(items.map(i => i.contractor_id))].join(',');
+    const contractors = await apiFetch(`${SUPABASE_URL}/rest/v1/user_profiles?id=in.(${contractorIds})&select=id,company`, { headers: h }) || [];
+    const companyMap = Object.fromEntries(contractors.map(c => [c.id, c.company]));
+    items.forEach(i => { if (!i.contractor_id_obj) i.contractor_id_obj = {}; i.contractor_id_obj.company = companyMap[i.contractor_id]; });
+  }
+
   // Fetch sub-components for the current page's items
   const rootIds = items.map(i => i.id).join(',');
   let allSubs = [];
