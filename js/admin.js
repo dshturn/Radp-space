@@ -170,6 +170,7 @@ async function _renderAuditLog() {
       <tbody>
         ${rows.map(r => {
           const isDoc = r.entity_type === 'document' && r.metadata && r.metadata.file_url;
+          if (r.entity_type === 'document') console.log('Doc:', r.entity_id, 'metadata:', r.metadata, 'isDoc:', isDoc);
           const labelHtml = isDoc
             ? `<a href="javascript:void(0)" onclick="openDoc('${r.metadata.file_url}')" style="color:var(--accent);cursor:pointer;text-decoration:underline;">${esc(r.label || '—')}</a>`
             : esc(r.label || '—');
