@@ -1,4 +1,4 @@
-const CACHE = 'radp-v11';
+const CACHE = 'radp-v12';
 const PRECACHE = ['/', '/index.html', '/icon.svg', '/manifest.json'];
 
 self.addEventListener('install', e => {
