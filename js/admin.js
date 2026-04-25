@@ -161,9 +161,11 @@ async function _renderAuditLog() {
   console.log('Total audit log records:', total);
 
   const list = document.getElementById('auditLogList');
+  console.log('auditLogList element:', list);
   if (!rows.length) { list.innerHTML = '<div class="empty">No audit entries found</div>'; document.getElementById('auditLogPagination').innerHTML = ''; return; }
 
-  list.innerHTML = `
+  try {
+    const html = `
     <table style="width:100%;border-collapse:collapse;font-size:13px;">
       <thead>
         <tr style="border-bottom:1px solid var(--border);text-align:left;">
@@ -189,6 +191,12 @@ async function _renderAuditLog() {
         }).join('')}
       </tbody>
     </table>`;
+    console.log('Setting list.innerHTML, length:', html.length);
+    list.innerHTML = html;
+    console.log('List innerHTML set successfully');
+  } catch (e) {
+    console.error('Error rendering audit log:', e);
+  }
 
   const totalPages = Math.ceil(total / _AUDIT_PAGE_SIZE);
   const pagEl = document.getElementById('auditLogPagination');
