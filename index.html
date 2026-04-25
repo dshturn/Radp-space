@@ -476,6 +476,26 @@
   </div>
 </div>
 
+<!-- Admin: Edit Equipment Modal -->
+<div class="modal" id="editEquipModal" role="dialog" aria-modal="true" aria-labelledby="editEquipTitle">
+  <div class="modal-box">
+    <h3 id="editEquipTitle">Edit Equipment</h3>
+    <input type="hidden" id="editEquipId">
+    <label for="editEquipName">Equipment Name</label>
+    <input type="text" id="editEquipName" autocomplete="off">
+    <label for="editEquipSerial">Serial Number</label>
+    <input type="text" id="editEquipSerial" autocomplete="off">
+    <label style="display:flex;align-items:center;gap:8px;">
+      <input type="checkbox" id="editEquipAssessed">
+      <span>Assessed</span>
+    </label>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('editEquipModal')">Cancel</button>
+      <button class="btn-save" onclick="saveEditEquipment()">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- Add Sub-component Modal -->
 <div class="modal" id="ctSubModal" role="dialog" aria-modal="true" aria-labelledby="ctSubModalTitle">
   <div class="modal-box">
