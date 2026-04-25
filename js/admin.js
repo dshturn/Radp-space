@@ -149,10 +149,16 @@ async function _renderAuditLog() {
   if (dateFrom)     url += `&created_at=gte.${encodeURIComponent(dateFrom)}T00:00:00Z`;
   if (dateTo)       url += `&created_at=lte.${encodeURIComponent(dateTo)}T23:59:59Z`;
 
+  console.log('Loading audit log from:', url);
+  console.log('Current user:', getUser());
   const res = await fetch(url, { headers: { ...getHeaders(), Prefer: 'count=exact' } });
+  console.log('Audit log response status:', res.status);
   if (!res.ok) { showToast('Failed to load audit log', 'error'); return; }
   const rows = await res.json();
+  console.log('Audit log rows:', rows);
+  console.log('Audit log rows count:', rows?.length || 0);
   const total = parseInt(res.headers.get('Content-Range')?.split('/')[1] || '0', 10);
+  console.log('Total audit log records:', total);
 
   const list = document.getElementById('auditLogList');
   if (!rows.length) { list.innerHTML = '<div class="empty">No audit entries found</div>'; document.getElementById('auditLogPagination').innerHTML = ''; return; }
