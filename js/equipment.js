@@ -700,7 +700,7 @@ async function saveDocument() {
   });
 
   showToast('Document saved', 'success');
-  logAudit('document', _savedEquipDocId, 'uploaded', 'Equipment document');
+  logAudit('document', _savedEquipDocId, 'uploaded', 'Equipment document', { file_url: fileUrl });
   closeModal('addDocModal');
   loadEquipment(true);
 }
