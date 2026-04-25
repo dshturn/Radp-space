@@ -1,5 +1,5 @@
 {
-  "buildCommand": "echo 'Building RADP...'",
+  "buildCommand": null,
   "rewrites": [
     { "source": "/contractor",       "destination": "/index.html" },
     { "source": "/assessment",       "destination": "/index.html" },
