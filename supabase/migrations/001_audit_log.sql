@@ -18,7 +18,7 @@ create policy "admins read all audit_log"
   using (
     exists (
       select 1 from user_profiles
-      where id = auth.uid() and status = 'admin'
+      where id = auth.uid() and role = 'admin'
     )
   );
 
