@@ -169,11 +169,10 @@ async function _renderAuditLog() {
       </thead>
       <tbody>
         ${rows.map(r => {
-          const isDoc = r.entity_type === 'document' && r.metadata && r.metadata.file_url;
-          if (r.entity_type === 'document') console.log('Doc:', r.entity_id, 'metadata:', r.metadata, 'isDoc:', isDoc);
-          const labelHtml = isDoc
-            ? `<a href="javascript:void(0)" onclick="openDoc('${r.metadata.file_url}')" style="color:var(--accent);cursor:pointer;text-decoration:underline;">${esc(r.label || '—')}</a>`
-            : esc(r.label || '—');
+          let labelHtml = esc(r.label || '—');
+          if (r.entity_type === 'document' && r.metadata && r.metadata.file_url) {
+            labelHtml = `<a href="javascript:void(0)" onclick="openDoc('${r.metadata.file_url}')" style="color:var(--accent);cursor:pointer;text-decoration:underline;">${esc(r.label || '—')}</a>`;
+          }
           return `
           <tr style="border-bottom:1px solid var(--border);">
             <td style="padding:8px 10px;color:var(--text-3);white-space:nowrap;">${new Date(r.created_at).toLocaleString()}</td>
