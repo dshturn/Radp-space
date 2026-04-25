@@ -168,13 +168,19 @@ async function _renderAuditLog() {
         </tr>
       </thead>
       <tbody>
-        ${rows.map(r => `
+        ${rows.map(r => {
+          const isDoc = r.entity_type === 'document' && r.metadata?.file_url;
+          const labelHtml = isDoc
+            ? `<a href="javascript:void(0)" onclick="openDoc('${r.metadata.file_url}')" style="color:var(--accent);cursor:pointer;text-decoration:underline;">${esc(r.label || '—')}</a>`
+            : esc(r.label || '—');
+          return `
           <tr style="border-bottom:1px solid var(--border);">
             <td style="padding:8px 10px;color:var(--text-3);white-space:nowrap;">${new Date(r.created_at).toLocaleString()}</td>
             <td style="padding:8px 10px;"><span style="font-size:11px;padding:2px 6px;border-radius:4px;background:var(--surface-3,#334155);color:var(--text-2);">${esc(r.entity_type)}</span></td>
             <td style="padding:8px 10px;color:var(--text-1);">${esc(r.action)}</td>
-            <td style="padding:8px 10px;color:var(--text-2);">${esc(r.label || '—')}</td>
-          </tr>`).join('')}
+            <td style="padding:8px 10px;color:var(--text-2);">${labelHtml}</td>
+          </tr>`;
+        }).join('')}
       </tbody>
     </table>`;
 
