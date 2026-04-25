@@ -189,7 +189,7 @@ async function loadPersonnel(preserveState = false) {
   pTile.className  = 'dash-tile ' + (missingMandatory > 0 ? 'warn' : totalCount > 0 ? 'ok' : 'info');
 }
 
-function personnelCard(p, docs) {
+function personnelCard(p, docs, isAdmin = false) {
   const today = todayUTC();
   const in30  = new Date(today); in30.setDate(in30.getDate() + 30);
   const docMap = {};
