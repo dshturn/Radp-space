@@ -551,6 +551,30 @@
   </div>
 </div>
 
+<!-- Admin: Edit Personnel Modal -->
+<div class="modal" id="editPersModal" role="dialog" aria-modal="true" aria-labelledby="editPersTitle">
+  <div class="modal-box">
+    <h3 id="editPersTitle">Edit Personnel</h3>
+    <input type="hidden" id="editPersId">
+    <label for="editPersName">Full Name</label>
+    <input type="text" id="editPersName" autocomplete="off">
+    <label for="editPersPosition">Position</label>
+    <input type="text" id="editPersPosition" autocomplete="off">
+    <label for="editPersNationalId">ID (IQAMA / NATIONAL)</label>
+    <input type="text" id="editPersNationalId" maxlength="10" pattern="\d{10}" autocomplete="off" inputmode="numeric">
+    <label for="editPersYearsExperience">Years Experience</label>
+    <input type="number" id="editPersYearsExperience" min="0" autocomplete="off">
+    <label style="display:flex;align-items:center;gap:8px;">
+      <input type="checkbox" id="editPersAssessed">
+      <span>Assessed</span>
+    </label>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('editPersModal')">Cancel</button>
+      <button class="btn-save" onclick="saveEditPersonnel()">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- Personnel: Add Document Modal -->
 <div class="modal" id="addPersDocModal" role="dialog" aria-modal="true" aria-labelledby="addPersDocTitle">
   <div class="modal-box">
