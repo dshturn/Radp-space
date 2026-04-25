@@ -293,6 +293,7 @@ function personnelCard(p, docs, isAdmin = false) {
       <div class="card-clickable" onclick="toggleCard(this.closest('.app-card').querySelector('.btn-toggle'))">
         <div class="card-title">${safeName}</div>
         <div class="doc-name mt-xs">${esc(p.position || '')} · ID: ${esc(p.national_id || '—')}</div>
+        ${isAdmin && p.user_profiles?.company ? `<div class="doc-name mt-xs" style="color:var(--text-3);font-size:11px;">${esc(p.user_profiles.company)}</div>` : ''}
       </div>
       <div class="row-wrap">
         ${alertBadge}
