@@ -791,3 +791,35 @@ async function bulkDeleteEquipment() {
     loadEquipment();
   }
 }
+
+// Admin: Edit equipment record
+async function openEditEquipment(itemId) {
+  const h = getHeaders();
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/equipment_items?id=eq.${itemId}&select=*`, { headers: h });
+  if (!res.ok) { showToast('Failed to load equipment', 'error'); return; }
+  const [item] = await res.json();
+  if (!item) { showToast('Equipment not found', 'error'); return; }
+  document.getElementById('editEquipId').value = item.id;
+  document.getElementById('editEquipName').value = item.name || '';
+  document.getElementById('editEquipSerial').value = item.serial_number || '';
+  document.getElementById('editEquipAssessed').checked = item.assessed || false;
+  openModal('editEquipModal');
+}
+
+async function saveEditEquipment() {
+  const h = getHeaders();
+  const id = parseInt(document.getElementById('editEquipId').value);
+  const name = document.getElementById('editEquipName').value.trim();
+  const serial_number = document.getElementById('editEquipSerial').value.trim();
+  const assessed = document.getElementById('editEquipAssessed').checked;
+  if (!name) { showToast('Equipment name is required', 'warn'); return; }
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/equipment_items?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: { ...h, Prefer: 'return=minimal' },
+    body: JSON.stringify({ name, serial_number, assessed })
+  });
+  if (!res.ok) { showToast('Save failed: ' + res.status, 'error'); return; }
+  logAudit('equipment', String(id), 'updated', name);
+  closeModal('editEquipModal');
+  loadEquipment();
+}
