@@ -195,7 +195,7 @@ async function loadEquipment(preserveState = false) {
   dcSub.style.color = '';
 }
 
-function equipItemCard(item, name, docs, subs = [], docsByItem = {}, subsByParent = {}) {
+function equipItemCard(item, name, docs, subs = [], docsByItem = {}, subsByParent = {}, isAdmin = false) {
 
   const _today = todayUTC();
   const _in30  = new Date(_today); _in30.setDate(_in30.getDate() + 30);
