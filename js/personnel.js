@@ -83,6 +83,14 @@ async function loadPersonnel(preserveState = false) {
   const totalCount = parseInt(res.headers.get('Content-Range')?.split('/')[1] || '0', 10);
   if (!people) return;
 
+  // For admin: load company names for all contractors
+  if (isAdmin && people.length > 0) {
+    const contractorIds = [...new Set(people.map(p => p.contractor_id))].join(',');
+    const contractors = await apiFetch(`${SUPABASE_URL}/rest/v1/user_profiles?id=in.(${contractorIds})&select=id,company`, { headers: h }) || [];
+    const companyMap = Object.fromEntries(contractors.map(c => [c.id, c.company]));
+    people.forEach(p => { if (!p.contractor_id_obj) p.contractor_id_obj = {}; p.contractor_id_obj.company = companyMap[p.contractor_id]; });
+  }
+
   // Load all personnel docs in one shot
   const personIds = people.map(p => p.id).join(',');
   let persDocs = [];
