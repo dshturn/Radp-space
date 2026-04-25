@@ -195,7 +195,8 @@ if (getToken()) {
   if      (_path.includes('assessment') && _allowed.has('assessment')) _target = 'assessment';
   else if (_path.includes('operations') && _allowed.has('operations')) _target = 'operations';
   else if (_path.includes('contractor') && _allowed.has('contractor')) _target = 'contractor';
-  else if (_path.includes('users') && _allowed.has('users'))           _target = 'users';
+  else if (_path.includes('admin') && _allowed.has('admin'))           _target = 'admin';
+  else if (_path.includes('audit') && _allowed.has('audit'))           _target = 'audit';
   else                                                                 _target = _landing;
   showPage(_target, true);
 } else {
