@@ -661,3 +661,4 @@ async function contractorInit() {
   await loadPersonnel();
   if (typeof loadEquipment === "function") await loadEquipment();
 }
+// Deployed: Sat, Apr 25, 2026  7:42:45 PM
