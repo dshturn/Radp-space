@@ -482,7 +482,7 @@ async function savePersDocument() {
     }
   }
   showToast('Document saved', 'success');
-  logAudit('document', _savedDocId, editId ? 'updated' : 'uploaded', 'Personnel document');
+  logAudit('document', _savedDocId, editId ? 'updated' : 'uploaded', typeName, { file_url: fileUrl });
   closeModal('addPersDocModal');
   loadPersonnel();
 }
