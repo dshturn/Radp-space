@@ -5,7 +5,7 @@ const PAGE_URLS  = { login: '/', register: '/register', contractor: '/contractor
 const NAV_PAGES  = new Set(['contractor', 'assessment', 'operations', 'users']);
 
 // Role → landing page after login, and which nav tabs are visible
-const ROLE_LANDING = { contractor: 'contractor', operations: 'operations', assessor: 'assessment', admin: 'users' };
+const ROLE_LANDING = { contractor: 'contractor', operations: 'operations', assessor: 'assessment', admin: 'admin' };
 const ROLE_NAV     = {
   contractor: new Set(['contractor', 'assessment', 'operations']),
   operations: new Set(['operations']),
