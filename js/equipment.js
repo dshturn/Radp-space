@@ -378,7 +378,7 @@ function equipItemCard(item, name, docs, subs = [], docsByItem = {}, subsByParen
         <div class="card-title">${safeName}</div>
         <div class="card-meta">
           <div class="doc-name">S/N: ${safeSerial}</div>
-          ${isAdmin && item.user_profiles?.company ? `<div class="doc-name" style="color:var(--text-3);font-size:11px;">${esc(item.user_profiles.company)}</div>` : ''}
+          ${isAdmin && item.contractor_id?.company ? `<div class="doc-name" style="color:var(--text-3);font-size:11px;">${esc(item.contractor_id.company)}</div>` : ''}
           ${alertBadge}
         </div>
       </div>
