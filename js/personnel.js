@@ -73,7 +73,7 @@ async function loadPersonnel(preserveState = false) {
   const h = getHeaders();
   const from = _persPage * _PERS_PAGE_SIZE;
   const isAdmin = roleOf(getUser()) === 'admin';
-  const persSelect = isAdmin ? 'select=*,user_profiles!contractor_id(company)' : 'select=*';
+  const persSelect = isAdmin ? 'select=*,contractor_id(company)' : 'select=*';
   const res  = await fetch(
     `${SUPABASE_URL}/rest/v1/personnel?${persSelect}&order=created_at${_persSearch ? `&full_name=ilike.*${encodeURIComponent(_persSearch)}*` : ''}&offset=${from}&limit=${_PERS_PAGE_SIZE}`,
     { headers: { ...h, Prefer: 'count=exact' } }
