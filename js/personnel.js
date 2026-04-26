@@ -330,9 +330,11 @@ function _resetPersDocModal() {
   document.getElementById('persDocCustomTypeSelect').value = '';
 }
 
-function openAddPersDoc(personId, typeName, mandatory) {
+let _currentPersonName = '';
+function openAddPersDoc(personId, personName, typeName, mandatory) {
   const cfg = PERS_DOC_TYPES.find(t => t.name === typeName) || {};
   _resetPersDocModal();
+  _currentPersonName = personName;
   document.getElementById('persDocPersonId').value       = personId;
   document.getElementById('persDocIsMandatory').value    = mandatory;
   document.getElementById('persDocIsCustom').value       = 'false';
