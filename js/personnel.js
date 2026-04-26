@@ -312,7 +312,7 @@ function personnelCard(p, docs, isAdmin = false) {
     <div class="card-body"><div class="body-inner"><div class="body-content">
       ${docRows}
       ${customRows ? `<div class="custom-docs-section"><div class="custom-docs-label">Additional Documents</div>${customRows}</div>` : ''}
-      <button class="add-custom-doc-btn" onclick="openAddCustomPersDoc(${parseInt(p.id)}, '${p.full_name.replace(/'/g, "\\'")}')">+ Add Custom Document</button>
+      <button class="add-custom-doc-btn" onclick="openAddCustomPersDoc(${parseInt(p.id)}, this.dataset.name)" data-name="${esc(p.full_name)}">+ Add Custom Document</button>
     </div></div></div>
   </div>`;
 }
