@@ -115,8 +115,8 @@ async function handleLogin(event) {
 
     // Store credentials
     currentUser = user.full_name || email;
-    localStorage.setItem('assessor_token', authToken);
-    localStorage.setItem('assessor_user', currentUser);
+    StorageUtil.setItem('assessor_token', authToken);
+    StorageUtil.setItem('assessor_user', currentUser);
 
     msgEl.innerHTML = '<div class="success">Login successful! Loading module...</div>';
     setTimeout(() => {
