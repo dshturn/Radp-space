@@ -163,17 +163,52 @@ async function createAssessment() {
   showDetail(data[0].id);
 }
 
+async function loadSharePointContract(companyName) {
+  if (!companyName) return null;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/sharepoint-get-contractor`, {
+      method: 'POST',
+      headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contractorName: companyName })
+    });
+    if (!res.ok) return null;
+    const result = await res.json();
+    return result.success ? result.data : null;
+  } catch (err) {
+    console.error('SharePoint fetch error:', err);
+    return null;
+  }
+}
+
 async function loadAssessmentDetail(id) {
   const data = await apiFetch(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${id}`, { headers: getHeaders() });
   if (!data) return;
   const a = data[0];
   const validStatuses = new Set(['draft', 'approved', 'pending', 'rejected']);
   const safeStatus = validStatuses.has(a.status) ? a.status : 'draft';
+
+  // Load Aramco contract info if user is a contractor
+  const user = getUser();
+  let aramcoHtml = '';
+  if (user.role === 'contractor') {
+    const contract = await loadSharePointContract(user.company);
+    if (contract) {
+      const renewalText = contract.renewal_date ? `Renewal: ${contract.renewal_date}` : 'Renewal: N/A';
+      aramcoHtml = `
+        <div style="margin-top:16px;padding:12px;border-radius:6px;background:var(--bg-2);border-left:4px solid var(--accent);">
+          <h3 style="margin:0 0 8px 0;font-size:14px;font-weight:600;">🏢 Aramco Contract Info</h3>
+          <div class="detail-info">${esc(contract.contract_terms) || 'No contract details available'}</div>
+          <div class="detail-info">${esc(renewalText)}</div>
+          ${contract.sharepoint_id ? `<div class="detail-info"><a href="https://sharek.aramco.com.sa/orgs/30002972/30037952/" target="_blank" rel="noopener noreferrer">📄 View in SharePoint</a></div>` : ''}
+        </div>`;
+    }
+  }
+
   document.getElementById('assessmentInfo').innerHTML = `
     <h2 style="margin-bottom:12px;">${esc(a.field_well)}</h2>
     <div class="detail-info">Type: ${esc(a.type_of_job)}</div>
     <div class="detail-info">Objective: ${esc(a.objective) || '—'}</div>
-    <div class="detail-info" style="margin-bottom:0;">Date: ${esc(a.date_of_issue)} · Status: <span class="badge ${safeStatus}">${safeStatus}</span></div>`;
+    <div class="detail-info" style="margin-bottom:0;">Date: ${esc(a.date_of_issue)} · Status: <span class="badge ${safeStatus}">${safeStatus}</span></div>${aramcoHtml}`;
   loadSelectedEquipment(id);
   loadSelectedPersonnel(id);
 }
