@@ -2,11 +2,18 @@
 
 ## System Components
 
+RADP Core:
 Browser (SPA) ←HTTPS→ Vercel (Edge) ←HTTPS→ Supabase (DB)
   vanilla JS           routing + CSP        PostgreSQL
   PWA capable          headers              Auth + Storage
                                     ↓
                         Service Worker (offline cache)
+
+SharePoint Integration (Phase 3):
+SharePoint iframe ←HTTPS→ Supabase (API) — Assessors view LoR module
+  assessment.html      REST + Auth         Assessment data
+  script.js            JWT tokens          Personnel + Equipment + Docs
+                       Edge Functions      Document status (expiry-based)
 
 Frontend: index.html + 8 JS modules, no build step, no framework
 Backend: Supabase (managed PostgreSQL, Auth, REST API, File Storage)
