@@ -389,6 +389,9 @@ async function addSelectedSitePersonnel() {
       headers: { ...getHeaders(), Prefer: 'return=minimal' },
       body: JSON.stringify({ site_id: currentSiteId, personnel_id: id })
     });
+    const person = await apiFetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${id}&select=full_name`, { headers: getHeaders() });
+    const persLabel = person?.[0]?.full_name || 'Personnel';
+    logAudit('site', currentSiteId, 'added_personnel', persLabel);
   }
   closeModal('opsPersModal');
   loadSiteDetail(currentSiteId);
