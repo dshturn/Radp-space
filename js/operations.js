@@ -496,6 +496,7 @@ async function removeSiteEquipment(rowId, fromSelector = false) {
     method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' }
   });
   if (!r.ok) { showToast('Failed to remove', 'error'); return; }
+  logAudit('site', currentSiteId, 'removed_equipment', `Equipment entry ${rowId}`);
   if (fromSelector) { loadSiteDetail(currentSiteId); openSiteEquipmentSelector(); }
   else loadSiteDetail(currentSiteId);
 }
