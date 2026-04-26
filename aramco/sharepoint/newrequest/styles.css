@@ -1,0 +1,130 @@
+body {
+    font-family: 'Open Sans', sans-serif;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0;
+    border: 0px solid #dddddd;
+    border-radius: 10px;
+    text-align: center;
+    font-size: 15px;
+}
+
+.form-title {
+    margin: auto;
+    margin-top: 10px;
+    width: 90%;
+    text-align: center;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.form-group {
+    margin: 0px auto;
+    width: 90%;
+    text-align: left;
+}
+
+.form-group label {
+    width: 100%;
+    display: block;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    font-size: 15px;
+}
+
+.form-group input[type="text"], .form-group input[type="date"], .form-group select, .form-group input[type="file"] {
+    width: 100%;
+    height: auto;
+    padding: 10px;
+    border: 1px solid #cccccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-size: 15px;
+}
+
+.form-group input[type="checkbox"] {
+    margin: 0 5px 0 0;
+}
+
+.submit-button {
+    width: 100%;
+    height: auto;
+    padding: 10px;
+    background-color: #4CAF50;
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 5px 0;
+    display: block;
+    font-size: 15px;
+    margin-top: 10px;
+    margin-bottom: 0;
+}
+
+.submit-button:hover {
+    background-color: #3e8e41;
+}
+
+.custom-dialog {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    padding: 0;
+}
+
+.dialog-content {
+    padding: 20px;
+    text-align: center;
+    overflow: auto;
+}
+
+.dialog-title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.dialog-message {
+    font-size: 18px;
+    margin-bottom: 20px;
+}
+
+.dialog-action {
+    font-size: 18px;
+    margin-bottom: 20px;
+}
+
+.dialog-link {
+    text-decoration: none;
+    color: #007bff;
+}
+
+.dialog-link:hover {
+    color: #0056b3;
+}
+
+.dialog-buttons {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.dialog-button {
+    height: auto;
+    background-color: #4CAF50;
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 0 10px;
+    padding: 10px 20px;
+    font-size: 15px!important;
+}
+
+.dialog-button:hover {
+    background-color: #3e8e41!important;
+}

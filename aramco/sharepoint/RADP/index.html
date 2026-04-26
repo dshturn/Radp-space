@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>RADP Portal – Scale‑in Animation</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Inter – clean sans‑serif (Aramco) -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet">
+
+<!-- Font Awesome – user icon -->
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+/* ==============================================================
+   0️⃣  Design tokens (easy to tweak)
+   ============================================================== */
+:root{
+  --gradient-primary:linear-gradient(90deg,#2ecc71,#3498db);
+  --color-accent:#1abc9c;               /* teal – badge & hover */
+  --color-bg:#f5f7fa;
+  --color-surface:#fff;
+  --color-text:#212529;
+  --radius:8px;
+  --duration-medium:.25s;
+  --ease-out-back:cubic-bezier(.34,1.56,.64,1);
+}
+
+/* ==============================================================
+   1️⃣  Global reset & base styles
+   ============================================================== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'Inter',system-ui,sans-serif;
+          background:var(--color-bg);color:var(--color-text);
+          -webkit-font-smoothing:antialiased;
+          font-size:1.1rem;}
+a{color:var(--color-accent);text-decoration:none}
+a:hover,a:focus{text-decoration:underline}
+
+/* ==============================================================
+   2️⃣  Layout – wrapper & ribbon (gradient header)
+   ============================================================== */
+.wrapper{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+
+/* Ribbon – animated gradient */
+.aramco-ribbon{
+  background:var(--gradient-primary);
+  background-size:200% 200%;
+  animation:ribbonShift 8s linear infinite;
+  color:#fff;padding:.6rem 1rem;display:flex;flex-wrap:wrap;
+  align-items:center;gap:1rem;
+}
+@keyframes ribbonShift{
+  0%   {background-position:0% 50%}
+  50%  {background-position:100% 50%}
+  100% {background-position:0% 50%}
+}
+
+/* Tab header (buttons) */
+.tab-header{
+  display:flex;flex-wrap:wrap;gap:.5rem;flex:1;justify-content:center;
+}
+
+/* Pill‑style buttons */
+.tab-button{
+  background:transparent;border:2px solid rgba(255,255,255,.3);
+  color:#fff;padding:.4rem .9rem;border-radius:var(--radius);
+  font-weight:500;cursor:pointer;transition:
+    background var(--duration-medium) var(--ease-out-back),
+    transform var(--duration-medium) var(--ease-out-back);
+  font-size:1rem;
+}
+.tab-button:hover,.tab-button:focus-visible{
+  background:rgba(255,255,255,.1);
+  transform:scale(1.04);
+}
+
+/* Active button – dark‑blue gradient + teal glow */
+.tab-button.active{
+  background:linear-gradient(90deg,#1a237e,#283593);
+  color:#fff;border-color:#212529;
+  box-shadow:0 0 12px 4px rgba(26,188,156,.6);
+}
+
+/* Request‑count badge */
+.request-count{
+  background:var(--color-accent);
+  color:#212529;
+  border-radius:12px;
+  padding:0 .4rem;
+  font-size:.85rem;
+  margin-left:.4rem;
+  animation:pulse 2s infinite;
+}
+@keyframes pulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(26,188,156,.4)}
+  50%    {box-shadow:0 0 12px 6px rgba(26,188,156,.6)}
+}
+
+/* User info (right side) */
+.user-info{
+  display:flex;align-items:center;gap:.4rem;color:#fff;
+  margin-left:auto;transition:color var(--duration-medium) var(--ease-out-back);
+  font-size:1rem;
+}
+.user-info i{font-size:1.3rem}
+
+/* ==============================================================
+   3️⃣  Tab container – animated panels
+   ============================================================== */
+.tab-container{
+  flex:1;position:relative;overflow:hidden;
+  height:calc(100vh - 160px);  /* Adjusted for better spacing */
+}
+
+/* --------------------------------------------------------------
+   4️⃣  Scale‑in animation (the only one we keep)
+   -------------------------------------------------------------- */
+.tab-content{
+  position:absolute;inset:0;background:var(--color-surface);
+  opacity:0.5;transform:scale(.80);
+  visibility:hidden;
+  transition:opacity var(--duration-medium) var(--ease-out-back),
+              transform var(--duration-medium) var(--ease-out-back);
+  display:flex;flex-direction:column;
+  box-shadow:0 2px 8px rgba(0,0,0,.07);
+  font-size:1rem;
+  overflow:auto;  /* Added scrollable content */
+}
+.tab-content.active{
+  opacity:1;transform:scale(1);
+  visibility:visible;
+}
+
+/* Iframe – fade‑in (same as panel) */
+.tab-content iframe{
+  border:none;flex:1;width:100%;height:100%;
+}
+
+/* Workflow image styles */
+#workflow img{
+  width:100%;
+  height:auto;
+  max-height:90vh;  /* Added to control image height */
+  overflow:auto;  /* Added for scrolling */
+  cursor:pointer;  /* Added for better user experience */
+  object-fit:contain;  /* Added to maintain aspect ratio */
+}
+#workflow{
+  padding:1rem;  /* Added padding */
+}
+
+/* ==============================================================
+   5️⃣  Responsive tweaks
+   ============================================================== */
+@media(max-width:768px){
+  .aramco-ribbon{flex-direction:column;align-items:stretch}
+  .tab_header{justify-content:center}
+  .user-info{margin-left:0;justify-content:center}
+  .tab-button{font-size:.9rem;}
+  .tab-content{font-size:.9rem;}
+  #workflow img{
+    max-height:60vh;  /* Adjusted for mobile */
+  }
+}
+</style>
+</head>
+
+<body>
+<div class="wrapper">
+
+  <!-- ====================  Ribbon – top navigation bar  ==================== -->
+  <div class="aramco-ribbon">
+    <div class="tab-header" role="tablist">
+
+      <!-- ① NEW Dashboard tab – first -->
+      <button class="tab-button active"
+              role="tab"
+              aria-selected="true"
+              data-tab="Dashboard">
+        Dashboard
+      </button>
+
+      <!-- ② Existing Requests tab (was “Requests”) -->
+      <button class="tab-button"
+              role="tab"
+              aria-selected="false"
+              data-tab="Requests">
+        Requests <span class="request-count" id="request-count">0</span>
+      </button>
+
+      <!-- ③ New Request -->
+      <button class="tab-button"
+              role="tab"
+              aria-selected="false"
+              data-tab="NewRequest">
+        New Request
+      </button>
+
+      <!-- ④ Workflow -->
+      <button class="tab-button"
+              role="tab"
+              aria-selected="false"
+              data-tab="workflow">
+        Workflow
+      </button>
+
+      <!-- ⑤ Supporting Documents -->
+      <button class="tab-button"
+              role="tab"
+              aria-selected="false"
+              data-tab="documents">
+        Supporting Documents
+      </button>
+    </div>
+
+    <!-- User info (right side) -->
+    <div class="user-info">
+      <i class="fas fa-user-circle"></i>
+      <span id="username">Loading user…</span>
+    </div>
+  </div>
+
+  <!-- --------------------------------------------------------------
+       Tab container – animated panels
+       -------------------------------------------------------------- -->
+  <div class="tab-container">
+
+    <!-- ① Dashboard panel (default visible) -->
+    <section id="Dashboard" class="tab-content active"
+             role="tabpanel">
+      <iframe src="https://sharek.aramco.com.sa/modern/30037952/Pages/RADP/dashboard/dashboard.html"
+              loading="lazy"></iframe>
+    </section>
+
+    <!-- ② Requests panel -->
+    <section id="Requests" class="tab-content"
+             role="tabpanel">
+      <iframe src="https://sharek.aramco.com.sa/modern/30037952/Pages/RADP/requests/requests1.html"
+              loading="lazy"></iframe>
+    </section>
+
+    <!-- ③ New Request -->
+    <section id="NewRequest" class="tab-content"
+             role="tabpanel">
+      <iframe src="https://sharek.aramco.com.sa/modern/30037952/Pages/RADP/newrequest/newrequest.html"
+              loading="lazy"></iframe>
+    </section>
+
+    <!-- ④ Workflow diagram -->
+<section id="workflow" class="tab-content" role="tabpanel">
+  <a href="https://sharek.aramco.com.sa/modern/30037952/Pages/RADP/workflow/diagram.png"
+     target="_blank"
+     rel="noopener noreferrer"
+     class="workflow-link">
+    <img src="https://sharek.aramco.com.sa/modern/30037952/Pages/RADP/workflow/diagram.png"
+         alt="Workflow Diagram">
+  </a>
+</section>
+
+    <!-- ⑤ Supporting Documents -->
+    <section id="documents" class="tab-content"
+             role="tabpanel">
+      <iframe src="https://sharek.aramco.com.sa/modern/30037952/Pages/RADP/documents/documents.html"
+              loading="lazy"></iframe>
+    </section>
+
+  </div> <!-- /.tab-container -->
+
+</div> <!-- /.wrapper -->
+
+<script>
+/* ==============================================================
+   Tab handling – works for the scale‑in animation
+   ============================================================== */
+let currentIdx = 0;                 // index of the currently visible panel
+let tabButtons = [];                // collection of .tab-button elements
+let tabPanels  = [];                // collection of .tab-content sections
+
+function initTabs() {
+  tabButtons = Array.from(document.querySelectorAll('.tab-button[data-tab]'));
+  tabPanels  = Array.from(document.querySelectorAll('.tab-content'));
+
+  // ensure ARIA attributes are correct
+  tabButtons.forEach((b,i) => {
+    b.setAttribute('aria-controls', tabPanels[i].id);
+    b.setAttribute('aria-selected', i===0 ? 'true' : 'false');
+  });
+}
+
+/* Switch to a different tab */
+function switchTab(targetIdx) {
+  if (targetIdx === currentIdx) return;   // already active
+
+  // remove active state from old panel/button
+  tabPanels[currentIdx].classList.remove('active');
+  tabButtons[currentIdx].classList.remove('active');
+  tabButtons[currentIdx].setAttribute('aria-selected','false');
+
+  // add active state to new panel/button
+  tabPanels[targetIdx].classList.add('active');
+  tabButtons[targetIdx].classList.add('active');
+  tabButtons[targetIdx].setAttribute('aria-selected','true');
+
+  currentIdx = targetIdx;
+}
+
+/* Bind click listeners */
+function bindTabClicks() {
+  tabButtons.forEach((btn,i) => {
+    btn.addEventListener('click', () => switchTab(i));
+  });
+}
+
+/* --------------------------------------------------------------
+   Request‑count – fetch SharePoint‑like lists (unchanged)
+   -------------------------------------------------------------- */
+async function getActiveRequestsCount() {
+  const urls = [
+    "https://sharek.aramco.com.sa/modern/30037952/_api/web/lists/GetByTitle('ONWCOD Assessment Requests')/items",
+    "https://sharek.aramco.com.sa/modern/30037952/_api/web/lists/GetByTitle('OFFWCOD&WSD Assessment Requests')/items",
+    "https://sharek.aramco.com.sa/modern/30037952/_api/web/lists/GetByTitle('ONWSD Assessment Requests')/items",
+    "https://sharek.aramco.com.sa/modern/30037952/_api/web/lists/GetByTitle('SAOWCOD')/items",
+    "https://sharek.aramco.com.sa/modern/30037952/_api/web/lists/GetByTitle('SAGWCOD')/items"
+  ];
+  try {
+    let total = 0;
+    for (const base of urls) {
+      let next = `${base}?$top=100`;
+      while (next) {
+        const resp = await fetch(next, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json; odata=verbose' }
+        });
+        if (!resp.ok) break;
+        const data = await resp.json();
+        const items = data.d?.results ?? data.d?.value ?? [];
+        total += items.length;
+        next = data.d?.__next ?? null;
+      }
+    }
+    document.getElementById('request-count').textContent = total;
+  } catch (e) {
+    console.error('Request‑count error', e);
+  }
+}
+
+/* --------------------------------------------------------------
+   Current user – fetch from SharePoint (unchanged)
+   -------------------------------------------------------------- */
+async function getCurrentUser() {
+  const base = 'https://sharek.aramco.com.sa';
+  try {
+    const resp = await fetch(`${base}/_api/web/currentuser`, {
+      method: 'GET',
+      headers: { 'Accept': 'application/json; odata=verbose' }
+    });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const json = await resp.json();
+    const u = json?.d ?? {};
+    return { id: u.Id, title: u.Title, email: u.Email };
+  } catch (e) {
+    console.error('User fetch error', e);
+    return null;
+  }
+}
+
+/* --------------------------------------------------------------
+   Initialise everything
+   -------------------------------------------------------------- */
+document.addEventListener('DOMContentLoaded', async () => {
+  initTabs();
+  bindTabClicks();
+  getActiveRequestsCount();
+
+  const user = await getCurrentUser();
+  if (user?.title) document.getElementById('username').textContent = user.title;
+});
+</script>
+</body>
+</html>

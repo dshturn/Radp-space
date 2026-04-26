@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882">
+<head>
+    <title>Open Outlook with Attachment</title>
+
+<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:SeoBrowserTitle msdt:dt="string"></mso:SeoBrowserTitle>
+<mso:SeoKeywords msdt:dt="string"></mso:SeoKeywords>
+<mso:PublishingPageContent msdt:dt="string"></mso:PublishingPageContent>
+<mso:e1a5b98cdd71426dacb6e478c7a5882f msdt:dt="string"></mso:e1a5b98cdd71426dacb6e478c7a5882f>
+<mso:HeaderStyleDefinitions msdt:dt="string"></mso:HeaderStyleDefinitions>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor msdt:dt="string">Shturn, Dmitrii (NAWCOD)</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor>
+<mso:PublishingRollupImage msdt:dt="string"></mso:PublishingRollupImage>
+<mso:WebPage msdt:dt="string"></mso:WebPage>
+<mso:Order msdt:dt="string">18300.0000000000</mso:Order>
+<mso:TemplateUrl msdt:dt="string"></mso:TemplateUrl>
+<mso:Audience msdt:dt="string"></mso:Audience>
+<mso:ArticleByLine msdt:dt="string"></mso:ArticleByLine>
+<mso:PublishingImageCaption msdt:dt="string"></mso:PublishingImageCaption>
+<mso:PublishingContactEmail msdt:dt="string"></mso:PublishingContactEmail>
+<mso:TaskStatus msdt:dt="string"></mso:TaskStatus>
+<mso:PublishingIsFurlPage msdt:dt="string">0</mso:PublishingIsFurlPage>
+<mso:PublishingPageImage msdt:dt="string"></mso:PublishingPageImage>
+<mso:SummaryLinks msdt:dt="string"></mso:SummaryLinks>
+<mso:Ratings msdt:dt="string"></mso:Ratings>
+<mso:xd_ProgID msdt:dt="string"></mso:xd_ProgID>
+<mso:PublishingContactPicture msdt:dt="string"></mso:PublishingContactPicture>
+<mso:PublishingVariationGroupID msdt:dt="string"></mso:PublishingVariationGroupID>
+<mso:RobotsNoIndex msdt:dt="string">0</mso:RobotsNoIndex>
+<mso:SummaryLinks2 msdt:dt="string"></mso:SummaryLinks2>
+<mso:RedirectURL msdt:dt="string"></mso:RedirectURL>
+<mso:LikedBy msdt:dt="string"></mso:LikedBy>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author msdt:dt="string">Shturn, Dmitrii (NAWCOD)</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author>
+<mso:ContentTypeId msdt:dt="string">0x010100C568DB52D9D0A14D9B2FDCC96666E9F2007948130EC3DB064584E219954237AF39004C1F8B46085B4D22B1CDC3DE08CFFB9C00DA29A050FC603341A03D4353771A8D28</mso:ContentTypeId>
+<mso:PublishingContactName msdt:dt="string"></mso:PublishingContactName>
+<mso:PublishingVariationRelationshipLinkFieldID msdt:dt="string"></mso:PublishingVariationRelationshipLinkFieldID>
+<mso:SeoMetaDescription msdt:dt="string"></mso:SeoMetaDescription>
+<mso:RatedBy msdt:dt="string"></mso:RatedBy>
+<mso:_SourceUrl msdt:dt="string"></mso:_SourceUrl>
+<mso:_SharedFileIndex msdt:dt="string"></mso:_SharedFileIndex>
+<mso:Comments msdt:dt="string"></mso:Comments>
+<mso:PublishingPageLayout msdt:dt="string"></mso:PublishingPageLayout>
+<mso:TaxCatchAll msdt:dt="string"></mso:TaxCatchAll>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+</head>
+<body>
+<a href="mailto:user@example.com?subject=Email%20with%20Attachment&body=Please%20find%20the%20attached%20file.">Create Email</a>
+
+<script>
+  function createEmailWithAttachment() {
+    var email = "user@example.com";
+    var subject = "Email with Attachment";
+    var body = "Please find the attached file.";
+    var attachment = "C:\Users\shturndx\Downloads\SLB.pdf";
+
+    var mailtoLink = "ms-outlook:compose?to=" + email + "&subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body) + "&attachment=" + encodeURIComponent(attachment);
+
+    window.location.href = mailtoLink;
+  }
+</script>
+</body>
+</html>

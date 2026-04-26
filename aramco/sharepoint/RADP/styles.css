@@ -1,0 +1,306 @@
+/* ==============================================================
+   1️⃣  Root – colour palette & typography
+   ============================================================== */
+:root {
+  /* Primary palette – keep the deep navy for the page background */
+  --color-primary: #0b1b3b;          /* deep navy (fallback) */
+  --color-primary-light: #1e3a68;
+  --color-accent: #1abc9c;           /* teal accent – used for links & badge */
+  --color-bg: #f5f7fa;               /* light page background */
+  --color-text: #212529;
+  --color-muted: #6c757d;
+  --radius: 8px;
+  --transition: 0.25s ease;
+  --font-family: 'Inter', system-ui, sans-serif;
+
+  /* Gradient you supplied – used for the ribbon and the active tab */
+  --gradient-primary: linear-gradient(90deg, #2ecc71, #3498db);
+}
+
+/* ==============================================================
+   2️⃣  Global resets & helpers
+   ============================================================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+html,
+body {
+  height: 100%;
+  font-family: var(--font-family);
+  background: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+a {
+  color: var(--color-accent);
+  text-decoration: none;
+}
+a:hover,
+a:focus {
+  text-decoration: underline;
+}
+
+/* ==============================================================
+   3️⃣  Layout – wrapper & ribbon
+   ============================================================== */
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* --------------------------------------------------------------
+   Ribbon – the top navigation bar
+   -------------------------------------------------------------- */
+.aramco-ribbon {
+  /* Use the green‑to‑blue gradient you gave us */
+  background: var(--gradient-primary);
+  color: #fff;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center; /* Add this to center items horizontally */
+}
+
+/* Create a container for the buttons that will be centered */
+.aramco-ribbon .tab-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center; /* Center the buttons */
+  flex: 1; /* Take available space */
+}
+
+/* ==============================================================
+   4️⃣  Tab header (buttons)
+   ============================================================== */
+.tab-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+/* Pill‑style buttons */
+.tab-button {
+  background: transparent;
+  border: 2px solid rgba(255,255,255,.3);
+  color: #fff;
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius);
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+}
+
+/* Hover / focus – subtle lightening */
+.tab-button:hover,
+.tab-button:focus-visible {
+  background: rgba(255,255,255,.1);
+}
+
+/* --------------------------------------------------------------
+   ACTIVE BUTTON – dark‑blue animated gradient + brighter text + glow
+   -------------------------------------------------------------- */
+.tab-button.active {
+  /* 1️⃣ Dark‑blue gradient (you can tweak the colours if you like) */
+  background: linear-gradient(90deg, #1a237e, #283593);   /* deep‑blue → slightly lighter‑blue */
+  background-size: 200% 200%;               /* makes room for the animation */
+  animation: gradientShift 3s ease infinite;/* slide the gradient */
+
+  /* 2️⃣ Keep the white text for maximum contrast */
+  color: #fff;
+
+  /* 3️⃣ Border matches the start colour of the gradient */
+  border-color: #212529;
+
+  /* 4️⃣ Soft teal‑green glow (unchanged) */
+  box-shadow: 0 0 12px 4px rgba(26,188,156,.6);
+}
+
+/* --------------------------------------------------------------
+   Request‑count badge – solid teal with a pulse
+   -------------------------------------------------------------- */
+.request-count {
+  background: var(--color-accent);          /* solid teal */
+  color: #212529;
+  border-radius: 12px;
+  padding: 0 0.4rem;
+  font-size: 0.85rem;
+  margin-left: 0.4rem;
+  animation: pulse 2s infinite;
+}
+
+/* ==============================================================
+   5️⃣  User info (right side of ribbon)
+   ============================================================== */
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 500;
+  color: #fff;
+  margin-left: auto;
+}
+.user-info i {
+  font-size: 1.3rem;
+}
+
+/* ==============================================================
+   6️⃣  Tab container – sliding animation
+   ============================================================== */
+.tab-container {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+/* All panels sit on top of each other */
+.tab-content {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--color-bg);
+  transform: translateX(100%);          /* hidden to the right by default */
+  transition: transform var(--transition);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Visible panel */
+.tab-content.active {
+  transform: translateX(0);
+}
+
+/* Panel that slides out to the left (forward navigation) */
+.tab-content.prev {
+  transform: translateX(-100%);
+}
+
+/* Panel that slides out to the right (backward navigation) */
+.tab-content.next {
+  transform: translateX(100%);
+}
+
+/* --------------------------------------------------------------
+   Iframe styling – fade‑in on load
+   -------------------------------------------------------------- */
+.tab-content iframe {
+  border: none;
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  animation: fadeIn 0.6s forwards;
+}
+
+/* Soft inner‑shadow for depth */
+.tab-content::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 8px rgba(0,0,0,.07);
+}
+
+/* --------------------------------------------------------------
+   Metabrain wrapper – small inner‑shadow
+   -------------------------------------------------------------- */
+.metabrain-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.metabrain-intro {
+  flex: 0 0 auto;
+  padding: 10px;
+}
+.metabrain-iframe {
+  flex: 1 1 auto;
+  position: relative;
+  overflow: hidden;
+}
+.metabrain-iframe iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* --------------------------------------------------------------
+   Workflow diagram – subtle drop‑shadow
+   -------------------------------------------------------------- */
+.workflow-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 10px;
+}
+.workflow-wrapper img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: var(--radius);
+  box-shadow: 0 4px 12px rgba(0,0,0,.1);
+}
+
+/* ==============================================================
+   7️⃣  Keyframe animations
+   ============================================================== */
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(26,188,156,.4); }
+  50%      { box-shadow: 0 0 12px 6px rgba(26,188,156,.6); }
+}
+
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
+
+/* --------------------------------------------------------------
+   Utility class – hide a tab button but keep it in the DOM
+   -------------------------------------------------------------- */
+.hidden-tab {
+  display: none !important;   /* removes it from layout */
+}
+
+/* If you want screen‑readers to completely ignore the hidden tab,
+   the aria‑hidden attribute already does that, but the selector
+   below is a safety net. */
+.hidden-tab[aria-hidden="true"] {
+  /* nothing – the attribute itself tells assistive tech */
+}
+
+/* ==============================================================
+   8️⃣  Responsive tweaks
+   ============================================================== */
+@media (max-width: 768px) {
+  .aramco-ribbon {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .tab-header {
+    justify-content: center;
+  }
+  .user-info {
+    margin-left: 0;
+    justify-content: center;
+  }
+}
