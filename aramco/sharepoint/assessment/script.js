@@ -39,8 +39,8 @@ const StorageUtil = {
 // ═══════════════════════════════════════════════════════════════
 
 function initializePage() {
-  authToken = localStorage.getItem('assessor_token');
-  currentUser = localStorage.getItem('assessor_user');
+  authToken = StorageUtil.getItem('assessor_token');
+  currentUser = StorageUtil.getItem('assessor_user');
 
   if (authToken && currentUser) {
     showContentView();
