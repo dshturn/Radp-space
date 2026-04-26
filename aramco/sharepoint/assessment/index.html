@@ -152,23 +152,23 @@
     }
 
     .status {
-      font-size: 12px;
-      padding: 4px 8px;
-      border-radius: 4px;
+      font-size: 11px;
+      padding: 3px 6px;
+      border-radius: 3px;
       font-weight: 600;
     }
 
-    .status-pending {
-      background-color: rgba(245, 158, 11, 0.2);
-      color: var(--warn);
-    }
-
-    .status-approved {
+    .status-valid {
       background-color: rgba(16, 185, 129, 0.2);
       color: var(--success);
     }
 
-    .status-rejected {
+    .status-expiring {
+      background-color: rgba(245, 158, 11, 0.2);
+      color: var(--warn);
+    }
+
+    .status-expired {
       background-color: rgba(239, 68, 68, 0.2);
       color: var(--error);
     }
@@ -227,38 +227,126 @@
       color: var(--accent);
     }
 
-    .table-wrapper {
-      overflow-x: auto;
+    .tree-container {
+      background-color: var(--bg-1);
       border-radius: 8px;
       border: 1px solid var(--bg-2);
+      overflow: hidden;
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
+    .tree-item {
+      border-bottom: 1px solid var(--bg-2);
+    }
+
+    .tree-item:last-child {
+      border-bottom: none;
+    }
+
+    .tree-item-header {
+      padding: 12px 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
       background-color: var(--bg-1);
+      transition: background-color 0.2s;
+      user-select: none;
     }
 
-    th {
+    .tree-item-header:hover {
       background-color: var(--bg-2);
-      padding: 12px;
-      text-align: left;
-      font-weight: 600;
+    }
+
+    .tree-toggle {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
       font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--text-1);
-      border-bottom: 1px solid var(--bg-3);
+      font-weight: bold;
     }
 
-    td {
-      padding: 12px;
-      border-bottom: 1px solid var(--bg-3);
+    .tree-toggle.collapsed::before {
+      content: "▶";
+    }
+
+    .tree-toggle.expanded::before {
+      content: "▼";
+    }
+
+    .tree-item-content {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .tree-item-main {
+      flex: 1;
+    }
+
+    .tree-item-name {
+      font-weight: 600;
       font-size: 13px;
+      color: var(--text-0);
     }
 
-    tr:hover {
+    .tree-item-meta {
+      font-size: 12px;
+      color: var(--text-3);
+      margin-top: 2px;
+    }
+
+    .tree-children {
       background-color: var(--bg-2);
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .tree-children.expanded {
+      max-height: 2000px;
+    }
+
+    .tree-child-item {
+      padding: 10px 16px 10px 50px;
+      border-bottom: 1px solid var(--bg-3);
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .tree-child-item:last-child {
+      border-bottom: none;
+    }
+
+    .tree-child-icon {
+      margin-top: 2px;
+      color: var(--accent);
+      font-size: 12px;
+    }
+
+    .tree-child-content {
+      flex: 1;
+    }
+
+    .tree-child-name {
+      font-size: 12px;
+      color: var(--text-1);
+      font-weight: 500;
+    }
+
+    .tree-child-dates {
+      font-size: 11px;
+      color: var(--text-3);
+      margin-top: 2px;
+    }
+
+    .tree-child-dates span {
+      display: inline-block;
+      margin-right: 12px;
     }
 
     .doc-link {
@@ -266,7 +354,8 @@
       text-decoration: none;
       cursor: pointer;
       font-weight: 500;
-      transition: color 0.2s;
+      margin-left: 8px;
+      white-space: nowrap;
     }
 
     .doc-link:hover {
@@ -408,11 +497,9 @@
         color: black;
       }
 
-      .lor-container,
-      .section,
-      table,
-      th,
-      td {
+      .tree-container,
+      .tree-item-header,
+      .tree-children {
         background-color: white;
         color: black;
         border-color: #ccc;
@@ -421,6 +508,10 @@
       .section-title {
         color: #000;
         border-color: #ccc;
+      }
+
+      .tree-children.expanded {
+        max-height: none;
       }
 
       .doc-link {
@@ -433,7 +524,7 @@
   <div class="container">
     <header>
       <h1>Assessment Letter of Responsibility</h1>
-      <p class="header-subtitle">RADP Assessment Review Module</p>
+      <p class="header-subtitle">RADP Assessment Review Module - Tree Structure</p>
     </header>
 
     <div class="search-section">
@@ -481,41 +572,13 @@
       <!-- Personnel Section -->
       <div class="section">
         <h2 class="section-title">👥 Personnel</h2>
-        <div class="table-wrapper">
-          <table id="personnelTable">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Position</th>
-                <th>Documents</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody id="personnelBody">
-              <tr><td colspan="4" class="empty">No personnel</td></tr>
-            </tbody>
-          </table>
-        </div>
+        <div id="personnelTree" class="tree-container"></div>
       </div>
 
       <!-- Equipment Section -->
       <div class="section">
         <h2 class="section-title">⚙️ Equipment</h2>
-        <div class="table-wrapper">
-          <table id="equipmentTable">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Serial Number</th>
-                <th>Documents</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody id="equipmentBody">
-              <tr><td colspan="4" class="empty">No equipment</td></tr>
-            </tbody>
-          </table>
-        </div>
+        <div id="equipmentTree" class="tree-container"></div>
       </div>
 
       <div class="print-section">
