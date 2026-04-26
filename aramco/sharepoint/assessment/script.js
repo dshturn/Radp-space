@@ -426,9 +426,17 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// Allow Enter key to fetch
-document.getElementById('assessmentId').addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') {
-    fetchAssessment();
+// Initialize page
+document.addEventListener('DOMContentLoaded', () => {
+  initializePage();
+
+  // Allow Enter key to fetch (if element exists)
+  const assessmentInput = document.getElementById('assessmentId');
+  if (assessmentInput) {
+    assessmentInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        fetchAssessment();
+      }
+    });
   }
 });
