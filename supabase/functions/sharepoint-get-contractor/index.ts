@@ -41,8 +41,10 @@ async function getFormDigest(): Promise<string | null> {
 // Fetch contractor records from SharePoint list
 async function fetchSharePointData(contractorName: string, listGuid: string, digest: string): Promise<any[]> {
   try {
-    const filter = `Service_x0020_Provider eq '${contractorName.replace(/'/g, "''")}'`;
-    const url = `${SP_BASE_URL}/_api/web/lists(guid'{${listGuid}}')/items?$filter=${encodeURIComponent(filter)}&$top=5000&$orderby=Modified desc`;
+    const escapedName = contractorName.replace(/'/g, "''");
+    const filter = `Service_x0020_Provider eq '${escapedName}'`;
+    const encodedFilter = encodeURIComponent(filter);
+    const url = `${SP_BASE_URL}/_api/web/lists(guid'${listGuid}')/items?$filter=${encodedFilter}&$top=5000&$orderby=Modified desc`;
 
     const auth = btoa(`${SP_USERNAME}:${SP_PASSWORD}`);
     const res = await fetch(url, {
