@@ -194,8 +194,8 @@ async function _renderAuditLog() {
             labelHtml = `<a href="javascript:void(0)" onclick="openDoc('${r.metadata.file_url}')" style="color:var(--accent);cursor:pointer;text-decoration:underline;">${esc(r.label || '—')}</a>`;
           }
           const whoName = r._user?.full_name || '—';
-          const whoCompany = r._user?.company || '';
-          const whoHtml = whoCompany ? `${esc(whoName)}<br><span style="font-size:11px;color:var(--text-3);">${esc(whoCompany)}</span>` : esc(whoName);
+          const whoServiceLine = r._user?.service_line || '';
+          const whoHtml = whoServiceLine ? `${esc(whoName)}<br><span style="font-size:11px;color:var(--text-3);">${esc(whoServiceLine)}</span>` : esc(whoName);
           return `
           <tr style="border-bottom:1px solid var(--border);">
             <td style="padding:8px 10px;color:var(--text-3);white-space:nowrap;">${new Date(r.created_at).toLocaleString()}</td>
