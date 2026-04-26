@@ -7,6 +7,33 @@ const RADP_CONFIG = {
 let authToken = null;
 let currentUser = null;
 
+// Storage utility - fallback to sessionStorage if localStorage fails (for iframe isolation)
+const StorageUtil = {
+  setItem(key, value) {
+    try {
+      localStorage.setItem(key, value);
+    } catch (e) {
+      console.warn('localStorage failed, using sessionStorage:', e);
+      sessionStorage.setItem(key, value);
+    }
+  },
+  getItem(key) {
+    try {
+      return localStorage.getItem(key) || sessionStorage.getItem(key);
+    } catch (e) {
+      return sessionStorage.getItem(key);
+    }
+  },
+  removeItem(key) {
+    try {
+      localStorage.removeItem(key);
+    } catch (e) {}
+    try {
+      sessionStorage.removeItem(key);
+    } catch (e) {}
+  }
+};
+
 // ═══════════════════════════════════════════════════════════════
 // AUTHENTICATION
 // ═══════════════════════════════════════════════════════════════
