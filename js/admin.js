@@ -193,8 +193,8 @@ async function _renderAuditLog() {
           if (r.entity_type === 'document' && r.metadata && r.metadata.file_url) {
             labelHtml = `<a href="javascript:void(0)" onclick="openDoc('${r.metadata.file_url}')" style="color:var(--accent);cursor:pointer;text-decoration:underline;">${esc(r.label || '—')}</a>`;
           }
-          const whoName = r.user_profiles?.full_name || '—';
-          const whoCompany = r.user_profiles?.company || '';
+          const whoName = r._user?.full_name || '—';
+          const whoCompany = r._user?.company || '';
           const whoHtml = whoCompany ? `${esc(whoName)}<br><span style="font-size:11px;color:var(--text-3);">${esc(whoCompany)}</span>` : esc(whoName);
           return `
           <tr style="border-bottom:1px solid var(--border);">
