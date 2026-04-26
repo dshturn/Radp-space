@@ -4,8 +4,6 @@ const RADP_CONFIG = {
   key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzbGxldWVkcWx4cGpuZXJydXp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5OTMxMTksImV4cCI6MjA5MDU2OTExOX0.H1narO5BF5uF2KwlKtKvioz3mun2ecxb1Lg_xVDLdt4'
 };
 
-let currentDocument = null;
-
 function showMessage(message, type = 'info') {
   const container = document.getElementById('messageContainer');
   container.innerHTML = `<div class="${type}">${escapeHtml(message)}</div>`;
@@ -18,6 +16,75 @@ function escapeHtml(text) {
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
+}
+
+function getDocumentStatus(expiryDate) {
+  if (!expiryDate) return null;
+
+  const today = new Date();
+  const expiry = new Date(expiryDate);
+  const diffTime = expiry - today;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) return 'expired';
+  if (diffDays <= 30) return 'expiring';
+  return 'valid';
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function createTreeItemHtml(itemId, itemName, itemMeta, isExpanded = false) {
+  return `
+    <div class="tree-item" data-item-id="${itemId}">
+      <div class="tree-item-header" onclick="toggleTreeItem(this)">
+        <div class="tree-toggle ${isExpanded ? 'expanded' : 'collapsed'}"></div>
+        <div class="tree-item-content">
+          <div class="tree-item-main">
+            <div class="tree-item-name">${escapeHtml(itemName)}</div>
+            ${itemMeta ? `<div class="tree-item-meta">${escapeHtml(itemMeta)}</div>` : ''}
+          </div>
+        </div>
+      </div>
+      <div class="tree-children ${isExpanded ? 'expanded' : ''}"></div>
+    </div>
+  `;
+}
+
+function createTreeChildHtml(docName, issueDate, expiryDate, fileUrl) {
+  const status = getDocumentStatus(expiryDate);
+  const statusClass = status ? `status-${status}` : '';
+  const statusBadge = status ? `<span class="status ${statusClass}">${status.toUpperCase()}</span>` : '';
+
+  return `
+    <div class="tree-child-item">
+      <div class="tree-child-icon">📄</div>
+      <div class="tree-child-content">
+        <div class="tree-child-name">
+          ${escapeHtml(docName)}
+          ${fileUrl ? `<a href="#" class="doc-link" onclick="openDocument(event, '${escapeHtml(fileUrl)}', '${escapeHtml(docName)}')">View</a>` : ''}
+        </div>
+        <div class="tree-child-dates">
+          <span>Issued: ${formatDate(issueDate)}</span>
+          <span>Expires: ${formatDate(expiryDate)}</span>
+          ${statusBadge}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function toggleTreeItem(headerEl) {
+  const item = headerEl.closest('.tree-item');
+  const toggle = headerEl.querySelector('.tree-toggle');
+  const children = item.querySelector('.tree-children');
+
+  toggle.classList.toggle('collapsed');
+  toggle.classList.toggle('expanded');
+  children.classList.toggle('expanded');
 }
 
 async function fetchAssessment() {
@@ -122,50 +189,67 @@ function displayLor(assessment, personnel, equipment, personnelDocs, equipmentDo
   const safeStatus = ['draft', 'pending', 'approved', 'rejected'].includes(assessment.status) ? assessment.status : 'draft';
   statusBadge.innerHTML = `<span class="status status-${safeStatus}">${safeStatus.toUpperCase()}</span>`;
 
-  // Display personnel
-  const personnelBody = document.getElementById('personnelBody');
+  // Display personnel tree
+  const personnelTree = document.getElementById('personnelTree');
   if (personnel && personnel.length > 0) {
-    personnelBody.innerHTML = personnel.map(p => {
+    let html = '';
+    personnel.forEach(p => {
       const person = p.personnel;
       const docs = personnelDocs[p.personnel_id] || [];
-      const docsHtml = docs.length > 0
-        ? docs.map(d => `<a href="#" class="doc-link" onclick="openDocument(event, '${escapeHtml(d.file_url)}', '${escapeHtml(d.doc_type_name)}')">${escapeHtml(d.doc_type_name)}</a>`).join(' • ')
-        : '<span style="color: var(--text-3);">No documents</span>';
+      const meta = person.position ? `Position: ${person.position}` : '';
 
-      return `
-        <tr>
-          <td>${escapeHtml(person.full_name || '—')}</td>
-          <td>${escapeHtml(person.position || '—')}</td>
-          <td>${docsHtml}</td>
-          <td><span class="status status-pending">PENDING</span></td>
-        </tr>
-      `;
-    }).join('');
+      html += createTreeItemHtml(`pers_${p.personnel_id}`, person.full_name || '—', meta);
+    });
+    personnelTree.innerHTML = html;
+
+    // Add documents to each personnel item
+    personnel.forEach(p => {
+      const person = p.personnel;
+      const docs = personnelDocs[p.personnel_id] || [];
+      const itemEl = personnelTree.querySelector(`[data-item-id="pers_${p.personnel_id}"] .tree-children`);
+
+      if (docs.length > 0) {
+        itemEl.innerHTML = docs.map(d =>
+          createTreeChildHtml(d.doc_type_name, d.issue_date, d.expiry_date, d.file_url)
+        ).join('');
+      } else {
+        itemEl.innerHTML = '<div class="tree-child-item"><div class="tree-child-icon">—</div><div class="tree-child-content"><div class="tree-child-name" style="color: var(--text-3);">No documents</div></div></div>';
+      }
+    });
   } else {
-    personnelBody.innerHTML = '<tr><td colspan="4" class="empty">No personnel added</td></tr>';
+    personnelTree.innerHTML = '<div class="empty">No personnel added</div>';
   }
 
-  // Display equipment
-  const equipmentBody = document.getElementById('equipmentBody');
+  // Display equipment tree
+  const equipmentTree = document.getElementById('equipmentTree');
   if (equipment && equipment.length > 0) {
-    equipmentBody.innerHTML = equipment.map(e => {
+    let html = '';
+    equipment.forEach(e => {
       const equip = e.equipment_items;
       const docs = equipmentDocs[e.equipment_item_id] || [];
-      const docsHtml = docs.length > 0
-        ? docs.map(d => `<a href="#" class="doc-link" onclick="openDocument(event, '${escapeHtml(d.file_url)}', '${escapeHtml(d.doc_type_name)}')">${escapeHtml(d.doc_type_name)}</a>`).join(' • ')
-        : '<span style="color: var(--text-3);">No documents</span>';
+      const name = equip.name || equip.model || '—';
+      const meta = equip.serial_number ? `S/N: ${equip.serial_number}` : '';
 
-      return `
-        <tr>
-          <td>${escapeHtml(equip.name || equip.model || '—')}</td>
-          <td>${escapeHtml(equip.serial_number || '—')}</td>
-          <td>${docsHtml}</td>
-          <td><span class="status status-pending">PENDING</span></td>
-        </tr>
-      `;
-    }).join('');
+      html += createTreeItemHtml(`equip_${e.equipment_item_id}`, name, meta);
+    });
+    equipmentTree.innerHTML = html;
+
+    // Add documents to each equipment item
+    equipment.forEach(e => {
+      const equip = e.equipment_items;
+      const docs = equipmentDocs[e.equipment_item_id] || [];
+      const itemEl = equipmentTree.querySelector(`[data-item-id="equip_${e.equipment_item_id}"] .tree-children`);
+
+      if (docs.length > 0) {
+        itemEl.innerHTML = docs.map(d =>
+          createTreeChildHtml(d.doc_type_name, d.issue_date, d.expiry_date, d.file_url)
+        ).join('');
+      } else {
+        itemEl.innerHTML = '<div class="tree-child-item"><div class="tree-child-icon">—</div><div class="tree-child-content"><div class="tree-child-name" style="color: var(--text-3);">No documents</div></div></div>';
+      }
+    });
   } else {
-    equipmentBody.innerHTML = '<tr><td colspan="4" class="empty">No equipment added</td></tr>';
+    equipmentTree.innerHTML = '<div class="empty">No equipment added</div>';
   }
 
   // Show the LoR container
