@@ -144,7 +144,7 @@ async function _renderAuditLog() {
   const dateFrom     = document.getElementById('auditDateFrom')?.value || '';
   const dateTo       = document.getElementById('auditDateTo')?.value || '';
 
-  let url = `${SUPABASE_URL}/rest/v1/audit_log?order=created_at.desc&offset=${_auditPage * _AUDIT_PAGE_SIZE}&limit=${_AUDIT_PAGE_SIZE}`;
+  let url = `${SUPABASE_URL}/rest/v1/audit_log?select=*,user_profiles!actor_id(full_name,company)&order=created_at.desc&offset=${_auditPage * _AUDIT_PAGE_SIZE}&limit=${_AUDIT_PAGE_SIZE}`;
   if (entityFilter) url += `&entity_type=eq.${encodeURIComponent(entityFilter)}`;
   if (dateFrom)     url += `&created_at=gte.${encodeURIComponent(dateFrom)}T00:00:00Z`;
   if (dateTo)       url += `&created_at=lte.${encodeURIComponent(dateTo)}T23:59:59Z`;
