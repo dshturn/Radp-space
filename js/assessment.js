@@ -289,6 +289,9 @@ async function addEquipmentItem(itemId) {
     body: JSON.stringify({ assessment_id: currentAssessmentId, equipment_item_id: itemId })
   });
   if (!r.ok) { showToast('Add failed: ' + r.status, 'error'); return; }
+  const equip = await apiFetch(`${SUPABASE_URL}/rest/v1/equipment_items?id=eq.${itemId}&select=name,serial_number`, { headers: getHeaders() });
+  const equipLabel = equip?.[0] ? `${equip[0].name || 'Equipment'} - ${equip[0].serial_number || ''}` : 'Equipment';
+  logAudit('assessment', currentAssessmentId, 'added_equipment', equipLabel);
   loadSelectedEquipment(currentAssessmentId);
   openEquipmentSelector();
 }
