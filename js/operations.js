@@ -373,6 +373,9 @@ async function addPersonnelToSite(persId) {
     body: JSON.stringify({ site_id: currentSiteId, personnel_id: persId })
   });
   if (!r.ok) { showToast('Failed to add', 'error'); return; }
+  const person = await apiFetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${persId}&select=full_name`, { headers: getHeaders() });
+  const persLabel = person?.[0]?.full_name || 'Personnel';
+  logAudit('site', currentSiteId, 'added_personnel', persLabel);
   loadSiteDetail(currentSiteId);
   openSitePersonnelSelector();
 }
