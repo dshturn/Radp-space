@@ -115,15 +115,17 @@ Assessment (pre-mob request)
 
 Audit Log (immutable, forever)
   ├─ actor_id (user who performed action)
-  ├─ entity_type (personnel, equipment, assessment, operations, document, user)
+  ├─ entity_type (personnel, equipment, assessment, site, document, user)
   ├─ entity_id (reference to affected record)
-  ├─ action (created, uploaded, approved, rejected, deleted, assigned)
-  ├─ label (human-readable: "John Smith — Medical Report")
-  ├─ metadata (optional snapshot of key fields at time of action)
+  ├─ action (created, updated, deleted, uploaded, archived, added_X, removed_X, approved, rejected)
+  ├─ label (human-readable: "John Smith — Medical Report" or "Gauge - 9000ITQ8 - Calibration")
+  ├─ metadata (optional snapshot: file_url for documents, timestamps, etc.)
   ├─ company (captured from user profile for role-based filtering)
   ├─ service_line (captured from user profile for role-based filtering)
   ├─ created_at (ISO timestamp)
-  └─ Access Control: Admins see all 522+ entries; non-admins see only their company+service_line
+  └─ Access Control:
+      ├─ Admins: see all entries across all contractors
+      └─ Contractors: see only entries from their own company + service_line
 
 ## Success Metrics
 
