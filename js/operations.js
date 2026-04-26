@@ -212,6 +212,7 @@ async function saveEditSite() {
     body: JSON.stringify({ title })
   });
   if (!r.ok) { showToast('Failed to rename', 'error'); return; }
+  logAudit('site', String(id), 'updated', title);
   closeModal('opsEditModal');
   showToast('Site renamed', 'success');
   document.getElementById('opsSiteTitle').textContent = title;
