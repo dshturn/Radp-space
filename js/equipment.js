@@ -328,7 +328,7 @@ function equipItemCard(item, name, docs, subs = [], docsByItem = {}, subsByParen
               </div>
               <div class="doc-group-body"><div class="doc-group-inner">
                 ${scDocsHtml}
-                <button class="upload-btn upload-btn-sm" onclick="openAddDoc(${parseInt(sc.id)}, '${sc.name.replace(/'/g, "\\'")}')">+ Add Document</button>
+                <button class="upload-btn upload-btn-sm" onclick="openAddDoc(${parseInt(sc.id)}, this.dataset.name)" data-name="${esc(sc.name)}">+ Add Document</button>
               </div></div>
             </div>
           </div></div>
