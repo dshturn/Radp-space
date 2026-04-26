@@ -170,6 +170,7 @@ async function _renderAuditLog() {
       <thead>
         <tr style="border-bottom:1px solid var(--border);text-align:left;">
           <th style="padding:8px 10px;color:var(--text-3);font-weight:500;">Time</th>
+          <th style="padding:8px 10px;color:var(--text-3);font-weight:500;">Who</th>
           <th style="padding:8px 10px;color:var(--text-3);font-weight:500;">Type</th>
           <th style="padding:8px 10px;color:var(--text-3);font-weight:500;">Action</th>
           <th style="padding:8px 10px;color:var(--text-3);font-weight:500;">Label</th>
@@ -181,9 +182,13 @@ async function _renderAuditLog() {
           if (r.entity_type === 'document' && r.metadata && r.metadata.file_url) {
             labelHtml = `<a href="javascript:void(0)" onclick="openDoc('${r.metadata.file_url}')" style="color:var(--accent);cursor:pointer;text-decoration:underline;">${esc(r.label || '—')}</a>`;
           }
+          const whoName = r.user_profiles?.full_name || '—';
+          const whoCompany = r.user_profiles?.company || '';
+          const whoHtml = whoCompany ? `${esc(whoName)}<br><span style="font-size:11px;color:var(--text-3);">${esc(whoCompany)}</span>` : esc(whoName);
           return `
           <tr style="border-bottom:1px solid var(--border);">
             <td style="padding:8px 10px;color:var(--text-3);white-space:nowrap;">${new Date(r.created_at).toLocaleString()}</td>
+            <td style="padding:8px 10px;color:var(--text-2);">${whoHtml}</td>
             <td style="padding:8px 10px;"><span style="font-size:11px;padding:2px 6px;border-radius:4px;background:var(--surface-3,#334155);color:var(--text-2);">${esc(r.entity_type)}</span></td>
             <td style="padding:8px 10px;color:var(--text-1);">${esc(r.action)}</td>
             <td style="padding:8px 10px;color:var(--text-2);">${labelHtml}</td>
