@@ -482,6 +482,9 @@ async function addSelectedSiteEquipment() {
       headers: { ...getHeaders(), Prefer: 'return=minimal' },
       body: JSON.stringify({ site_id: currentSiteId, equipment_item_id: id })
     });
+    const equip = await apiFetch(`${SUPABASE_URL}/rest/v1/equipment_items?id=eq.${id}&select=name,serial_number`, { headers: getHeaders() });
+    const equipLabel = equip?.[0] ? `${equip[0].name || 'Equipment'} - ${equip[0].serial_number || ''}` : 'Equipment';
+    logAudit('site', currentSiteId, 'added_equipment', equipLabel);
   }
   closeModal('opsEquipModal');
   loadSiteDetail(currentSiteId);
