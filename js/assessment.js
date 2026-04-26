@@ -401,6 +401,7 @@ async function addSelectedPersonnel() {
 async function removePersonnel(id, fromSelector) {
   const r = await fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
   if (!r.ok) { showToast('Remove failed: ' + r.status, 'error'); return; }
+  logAudit('assessment', currentAssessmentId, 'removed_personnel', `Personnel entry ${id}`);
   loadSelectedPersonnel(currentAssessmentId);
   if (fromSelector) openPersonnelSelector();
 }
