@@ -627,9 +627,11 @@ async function deleteDoc(id) {
 
 // ─── Add Document Modal ───
 let currentDocItemId = null;
+let currentDocItemName = '';
 
-function openAddDoc(itemId) {
+function openAddDoc(itemId, itemName = '') {
   currentDocItemId = itemId;
+  currentDocItemName = itemName;
   document.getElementById('docTypeSelect').value = '';
   document.getElementById('docTypeCustom').style.display = 'none';
   document.getElementById('docTypeCustom').value = '';
