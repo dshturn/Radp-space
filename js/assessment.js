@@ -180,6 +180,66 @@ async function loadSharePointContract(companyName) {
   }
 }
 
+async function approveAssessment(assessmentId) {
+  const u = getUser();
+  if (u.role !== 'admin' && u.role !== 'assessor') { showToast('Only assessors can approve', 'warn'); return; }
+
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${assessmentId}`, {
+    method: 'PATCH',
+    headers: { ...getHeaders(), Prefer: 'return=minimal' },
+    body: JSON.stringify({ status: 'approved' })
+  });
+  if (!res.ok) { showToast('Approval failed', 'error'); return; }
+
+  // Trigger SharePoint sync if assessment has sharepoint_request_id
+  const assess = await apiFetch(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${assessmentId}`, { headers: getHeaders() });
+  if (assess?.[0]?.sharepoint_request_id) {
+    const spId = parseInt(assess[0].sharepoint_request_id);
+    syncToSharePoint(assessmentId, spId, 'Approved');
+  }
+
+  logAudit('assessment', assessmentId, 'approved', `Assessment ${assessmentId}`);
+  showToast('Assessment approved', 'success');
+  await loadAssessmentDetail(assessmentId);
+}
+
+async function rejectAssessment(assessmentId) {
+  const u = getUser();
+  if (u.role !== 'admin' && u.role !== 'assessor') { showToast('Only assessors can reject', 'warn'); return; }
+
+  const reason = prompt('Reason for rejection:');
+  if (!reason) return;
+
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${assessmentId}`, {
+    method: 'PATCH',
+    headers: { ...getHeaders(), Prefer: 'return=minimal' },
+    body: JSON.stringify({ status: 'rejected' })
+  });
+  if (!res.ok) { showToast('Rejection failed', 'error'); return; }
+
+  logAudit('assessment', assessmentId, 'rejected', `Assessment ${assessmentId} — ${reason}`);
+  showToast('Assessment rejected', 'success');
+  await loadAssessmentDetail(assessmentId);
+}
+
+async function syncToSharePoint(assessmentId, sharepointId, newStatus) {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/sharepoint-update-status`, {
+      method: 'POST',
+      headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ assessmentId, sharepointId, newStatus })
+    });
+    const result = await res.json();
+    if (result.success) {
+      console.log('SharePoint sync successful:', result.message);
+    } else {
+      console.warn('SharePoint sync failed:', result.error);
+    }
+  } catch (err) {
+    console.error('SharePoint sync error:', err);
+  }
+}
+
 async function loadAssessmentDetail(id) {
   const data = await apiFetch(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${id}`, { headers: getHeaders() });
   if (!data) return;
