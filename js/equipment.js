@@ -702,7 +702,8 @@ async function saveDocument() {
   });
 
   showToast('Document saved', 'success');
-  logAudit('document', _savedEquipDocId, 'uploaded', 'Equipment document', { file_url: fileUrl });
+  const auditLabel = currentDocItemName ? `${docTypeName} - ${currentDocItemName}` : docTypeName;
+  logAudit('document', _savedEquipDocId, 'uploaded', auditLabel, { file_url: fileUrl });
   closeModal('addDocModal');
   loadEquipment(true);
 }
