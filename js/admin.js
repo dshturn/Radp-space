@@ -144,7 +144,7 @@ async function _renderAuditLog() {
   const dateFrom     = document.getElementById('auditDateFrom')?.value || '';
   const dateTo       = document.getElementById('auditDateTo')?.value || '';
 
-  let url = `${SUPABASE_URL}/rest/v1/audit_log?select=*,user_profiles!actor_id(full_name,company)&order=created_at.desc&offset=${_auditPage * _AUDIT_PAGE_SIZE}&limit=${_AUDIT_PAGE_SIZE}`;
+  let url = `${SUPABASE_URL}/rest/v1/audit_log?order=created_at.desc&offset=${_auditPage * _AUDIT_PAGE_SIZE}&limit=${_AUDIT_PAGE_SIZE}`;
   if (entityFilter) url += `&entity_type=eq.${encodeURIComponent(entityFilter)}`;
   if (dateFrom)     url += `&created_at=gte.${encodeURIComponent(dateFrom)}T00:00:00Z`;
   if (dateTo)       url += `&created_at=lte.${encodeURIComponent(dateTo)}T23:59:59Z`;
@@ -155,6 +155,17 @@ async function _renderAuditLog() {
   console.log('Audit log response status:', res.status);
   if (!res.ok) { showToast('Failed to load audit log', 'error'); return; }
   const rows = await res.json();
+
+  // Fetch user profiles for all actors
+  const actorIds = [...new Set(rows.map(r => r.actor_id))].filter(id => id);
+  let userMap = {};
+  if (actorIds.length > 0) {
+    const h = getHeaders();
+    const users = await apiFetch(`${SUPABASE_URL}/rest/v1/user_profiles?id=in.(${actorIds.join(',')})&select=id,full_name,company`, { headers: h }) || [];
+    userMap = Object.fromEntries(users.map(u => [u.id, u]));
+  }
+  // Add user data to rows
+  rows.forEach(r => { r._user = userMap[r.actor_id] || {}; });
   console.log('Audit log rows:', rows);
   console.log('Audit log rows count:', rows?.length || 0);
   const total = parseInt(res.headers.get('Content-Range')?.split('/')[1] || '0', 10);
