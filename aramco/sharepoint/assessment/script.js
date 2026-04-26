@@ -133,8 +133,8 @@ async function handleLogin(event) {
 
 function handleLogout() {
   if (confirm('Are you sure you want to logout?')) {
-    localStorage.removeItem('assessor_token');
-    localStorage.removeItem('assessor_user');
+    StorageUtil.removeItem('assessor_token');
+    StorageUtil.removeItem('assessor_user');
     authToken = null;
     currentUser = null;
     document.getElementById('assessmentId').value = '';
