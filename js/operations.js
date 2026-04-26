@@ -403,6 +403,7 @@ async function removeSitePersonnel(rowId, fromSelector = false) {
     method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' }
   });
   if (!r.ok) { showToast('Failed to remove', 'error'); return; }
+  logAudit('site', currentSiteId, 'removed_personnel', `Personnel entry ${rowId}`);
   if (fromSelector) { loadSiteDetail(currentSiteId); openSitePersonnelSelector(); }
   else loadSiteDetail(currentSiteId);
 }
