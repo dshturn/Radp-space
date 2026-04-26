@@ -302,6 +302,9 @@ async function addPersonnelItem(persId) {
     body: JSON.stringify({ assessment_id: currentAssessmentId, personnel_id: persId })
   });
   if (!r.ok) { showToast('Add failed: ' + r.status, 'error'); return; }
+  const person = await apiFetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${persId}&select=full_name,position`, { headers: getHeaders() });
+  const persLabel = person?.[0]?.full_name || 'Personnel';
+  logAudit('assessment', currentAssessmentId, 'added_personnel', persLabel);
   loadSelectedPersonnel(currentAssessmentId);
   openPersonnelSelector();
 }
