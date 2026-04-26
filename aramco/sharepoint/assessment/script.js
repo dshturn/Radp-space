@@ -276,12 +276,23 @@ async function fetchAssessment() {
 }
 
 async function fetchFromRadp(endpoint) {
+  if (!authToken) {
+    throw new Error('Not authenticated');
+  }
+
   const response = await fetch(`${RADP_CONFIG.url}${endpoint}`, {
     headers: {
-      'apikey': RADP_CONFIG.key,
+      'Authorization': `Bearer ${authToken}`,
+      'apikey': RADP_CONFIG.anonKey,
       'Content-Type': 'application/json'
     }
   });
+
+  if (response.status === 401) {
+    // Token expired
+    handleLogout();
+    throw new Error('Session expired. Please login again.');
+  }
 
   if (!response.ok) {
     throw new Error(`RADP API error: ${response.status}`);
