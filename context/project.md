@@ -147,31 +147,39 @@ Audit Log (immutable, forever)
 
 ## Roadmap
 
-**Phase 1 (MVP, current)**:
+**Phase 1 (MVP, COMPLETE as of 2026-04-26)**:
 - ✅ Auth (email/password)
 - ✅ Personnel + cert upload + expiry tracking
 - ✅ Equipment hierarchy + templates
 - ✅ Assessment submission → approval
-- ✅ Audit logging (role-based access, 522+ backfilled entries, company/service_line filtering)
-  - All events logged: personnel creation, cert upload, assessment approval/rejection, document upload
-  - Non-admins see only their company's events; admins see all
-  - Standalone Audit Log tab visible to all approved users
+- ✅ Audit logging (comprehensive, role-based access, 520+ entries, company/service_line filtering)
+  - All events logged: personnel creation/edit/delete, cert upload, assessment full lifecycle, equipment changes, site operations, user approvals
+  - 6 modules with audit trails: documents, personnel, equipment, assessments, operations, users
+  - 11 distinct action types: created, updated, deleted, uploaded, archived, added_X, removed_X, approved, rejected
+  - Contractors see only their company's events; admins see all
+  - Standalone Audit Log tab with "Who" column (user name + service_line)
   - Pagination (50 entries/page) + filtering by entity type and date range
-- ✅ PWA (offline read, manifest.json)
+  - Document links: clickable URLs to view PDFs/images inline
+- ✅ PWA (offline read, manifest.json, service worker v13)
+- ✅ Admin access: view + edit all contractor records (personnel, equipment, documents)
 
-**Phase 2 (4–6 weeks)**:
-- Reduce AI token burn (~50 tokens/assessment)
-- Mobile UX: faster lookups, cached rosters
-- CSV bulk import (50 crew at once)
-- Email alerts: "H2S expires in 30 days"
-- Code refactor: split assessment.js (31KB → 10KB modules)
+**Phase 2 (4–6 weeks, in progress)**:
+- [ ] Audit log export (PDF/CSV with date range filtering)
+- [ ] Audit log search (by user, action, entity type)
+- [ ] Reduce AI token burn (~50 tokens/assessment)
+- [ ] Mobile UX: faster lookups, cached rosters
+- [ ] CSV bulk import (50 crew at once)
+- [ ] Email alerts: "H2S expires in 30 days" + "Admin edited your record"
+- [ ] Code refactor: split assessment.js (31KB → 10KB modules)
 
 **Phase 3 (2–3 months)**:
-- Admin KPI dashboard
-- SAML/LDAP (Aramco SSO)
-- Equipment maintenance log (service intervals, inspections)
-- Integration with SAP (contractor + crew sync)
+- [ ] Assessment detail view in Audit Log (show crew roster changes)
+- [ ] Admin KPI dashboard (approval rates, rejection patterns)
+- [ ] Audit log retention policy (delete entries >7 years, GDPR compliance)
+- [ ] SAML/LDAP (Aramco SSO)
+- [ ] Equipment maintenance log (service intervals, inspections)
+- [ ] Integration with SAP (contractor + crew sync)
 
 ---
 
-Owner: Tech Lead | Last updated: 2026-04-24
+Owner: Tech Lead | Last updated: 2026-04-26 (Audit Logging Complete)
