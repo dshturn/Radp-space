@@ -70,12 +70,11 @@ async function handleLogin(event) {
   msgEl.innerHTML = '<div class="loading"><div class="spinner"></div> Authenticating...</div>';
 
   try {
-    // Authenticate with RADP
-    const authRes = await fetch(`${RADP_CONFIG.url}/auth/v1/token?grant_type=password`, {
+    // Authenticate via Edge Function (avoids CORS issues)
+    const authRes = await fetch(`${RADP_CONFIG.url}/functions/v1/sharepoint-auth-proxy`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'apikey': RADP_CONFIG.anonKey
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         email: email,
@@ -85,36 +84,14 @@ async function handleLogin(event) {
 
     if (!authRes.ok) {
       const error = await authRes.json();
-      throw new Error(error.error_description || 'Invalid credentials');
+      throw new Error(error.error || 'Invalid credentials');
     }
 
     const authData = await authRes.json();
-    authToken = authData.access_token;
+    authToken = authData.token;
+    currentUser = authData.user.full_name || email;
 
-    // Get user profile to verify role
-    const userRes = await fetch(`${RADP_CONFIG.url}/rest/v1/user_profiles?select=full_name,role`, {
-      headers: {
-        'Authorization': `Bearer ${authToken}`,
-        'apikey': RADP_CONFIG.anonKey
-      }
-    });
-
-    if (!userRes.ok) throw new Error('Failed to fetch user profile');
-
-    const users = await userRes.json();
-    if (!users || users.length === 0) throw new Error('User profile not found');
-
-    const user = users[0];
-
-    // Check if user is assessor
-    if (user.role !== 'assessor' && user.role !== 'admin') {
-      msgEl.innerHTML = '<div class="error">Only assessors and admins can access this module</div>';
-      authToken = null;
-      return;
-    }
-
-    // Store credentials
-    currentUser = user.full_name || email;
+    // Store token and user
     StorageUtil.setItem('assessor_token', authToken);
     StorageUtil.setItem('assessor_user', currentUser);
 
