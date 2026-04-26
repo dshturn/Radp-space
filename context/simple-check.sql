@@ -1,4 +1,3 @@
--- Simple check: show all document audit entries
 SELECT
   id,
   entity_id,
