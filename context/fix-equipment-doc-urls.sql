@@ -28,7 +28,7 @@ UPDATE audit_log al
 SET metadata = metadata || jsonb_build_object('file_url', d.file_url)
 FROM documents d
 WHERE al.entity_type = 'document'
-  AND d.id = al.entity_id
+  AND d.id = CAST(al.entity_id AS INTEGER)
   AND d.file_url IS NOT NULL
   AND (
     al.metadata->>'label' ILIKE '%Calibration%' OR
