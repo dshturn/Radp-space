@@ -264,11 +264,33 @@ async function loadAssessmentDetail(id) {
     }
   }
 
+  // Show sync status if available
+  let syncHtml = '';
+  if (a.sharepoint_sync_status) {
+    const syncIcon = a.sharepoint_sync_status === 'synced' ? '✓' : a.sharepoint_sync_status === 'failed' ? '✗' : '⏳';
+    const syncColor = a.sharepoint_sync_status === 'synced' ? 'color:var(--success);' : a.sharepoint_sync_status === 'failed' ? 'color:var(--error);' : 'color:var(--warn);';
+    syncHtml = `
+      <div style="margin-top:12px;${syncColor}font-size:12px;">
+        ${syncIcon} SharePoint Sync: ${a.sharepoint_sync_status}${a.sharepoint_sync_at ? ` (${new Date(a.sharepoint_sync_at).toLocaleDateString()})` : ''}
+        ${a.sharepoint_sync_error ? `<br/>Error: ${esc(a.sharepoint_sync_error)}` : ''}
+      </div>`;
+  }
+
+  // Approval buttons for assessors/admins
+  let approvalHtml = '';
+  if ((user.role === 'admin' || user.role === 'assessor') && a.status === 'pending') {
+    approvalHtml = `
+      <div style="margin-top:12px;display:flex;gap:8px;">
+        <button class="btn-success" onclick="approveAssessment(${parseInt(id)})">✓ Approve</button>
+        <button class="btn-danger" onclick="rejectAssessment(${parseInt(id)})">✗ Reject</button>
+      </div>`;
+  }
+
   document.getElementById('assessmentInfo').innerHTML = `
     <h2 style="margin-bottom:12px;">${esc(a.field_well)}</h2>
     <div class="detail-info">Type: ${esc(a.type_of_job)}</div>
     <div class="detail-info">Objective: ${esc(a.objective) || '—'}</div>
-    <div class="detail-info" style="margin-bottom:0;">Date: ${esc(a.date_of_issue)} · Status: <span class="badge ${safeStatus}">${safeStatus}</span></div>${aramcoHtml}`;
+    <div class="detail-info" style="margin-bottom:0;">Date: ${esc(a.date_of_issue)} · Status: <span class="badge ${safeStatus}">${safeStatus}</span></div>${aramcoHtml}${syncHtml}${approvalHtml}`;
   loadSelectedEquipment(id);
   loadSelectedPersonnel(id);
 }
