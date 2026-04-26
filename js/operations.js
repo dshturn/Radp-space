@@ -466,6 +466,9 @@ async function addEquipmentToSite(itemId) {
     body: JSON.stringify({ site_id: currentSiteId, equipment_item_id: itemId })
   });
   if (!r.ok) { showToast('Failed to add', 'error'); return; }
+  const equip = await apiFetch(`${SUPABASE_URL}/rest/v1/equipment_items?id=eq.${itemId}&select=name,serial_number`, { headers: getHeaders() });
+  const equipLabel = equip?.[0] ? `${equip[0].name || 'Equipment'} - ${equip[0].serial_number || ''}` : 'Equipment';
+  logAudit('site', currentSiteId, 'added_equipment', equipLabel);
   loadSiteDetail(currentSiteId);
   openSiteEquipmentSelector();
 }
