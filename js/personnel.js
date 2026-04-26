@@ -347,8 +347,9 @@ function openAddPersDoc(personId, personName, typeName, mandatory) {
   openModal('addPersDocModal');
 }
 
-async function openAddCustomPersDoc(personId) {
+async function openAddCustomPersDoc(personId, personName = '') {
   _resetPersDocModal();
+  _currentPersonName = personName;
   document.getElementById('persDocPersonId').value       = personId;
   document.getElementById('persDocIsMandatory').value    = 'false';
   document.getElementById('persDocIsCustom').value       = 'true';
