@@ -312,6 +312,7 @@ async function addPersonnelItem(persId) {
 async function removeEquipment(id, fromSelector) {
   const r = await fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment?id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
   if (!r.ok) { showToast('Remove failed: ' + r.status, 'error'); return; }
+  logAudit('assessment', currentAssessmentId, 'removed_equipment', `Equipment entry ${id}`);
   loadSelectedEquipment(currentAssessmentId);
   if (fromSelector) openEquipmentSelector();
 }
