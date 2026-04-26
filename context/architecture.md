@@ -174,6 +174,14 @@ Simplicity: No AI per-request; pre-computed checklists only
 2. AI token burn: ~50 tokens per assessment generation (pre-computation needed) (see context/tasks.md P0)
 3. N+1 queries: Some lists fetch one-by-one instead of batch
 
+## SharePoint Integration (Phase 3)
+
+See [sharepoint-integration.md](sharepoint-integration.md) for:
+- Three-phase integration plan (Phase 1 & 2 complete, Phase 3 in development)
+- Assessment LoR module: assessors login → view tree-structured assessment with personnel/equipment docs
+- Current CORS authentication challenge and solutions
+- Security considerations (RLS, JWT tokens, service account credentials)
+
 ---
 
-Owner: Tech Lead | Last updated: 2026-04-24 | Reference: context/rules.md (coding standards), context/project.md (business metrics)
+Owner: Tech Lead | Last updated: 2026-04-26 | Reference: context/rules.md (coding standards), context/project.md (business metrics), context/sharepoint-integration.md (SharePoint integration)
