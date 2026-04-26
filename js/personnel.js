@@ -246,7 +246,7 @@ function personnelCard(p, docs, isAdmin = false) {
           <div class="doc-name row-gap-xs">${safeTypeName} ${mandBadge}</div>
           <div class="doc-date text-muted">Not uploaded</div>
         </div>
-        <button class="upload-btn" onclick="openAddPersDoc(${parseInt(p.id)}, this.dataset.type, ${t.mandatory ? 'true' : 'false'})" data-type="${safeTypeName}">↑ Upload</button>
+        <button class="upload-btn" onclick="openAddPersDoc(${parseInt(p.id)}, '${esc(p.full_name)}', this.dataset.type, ${t.mandatory ? 'true' : 'false'})" data-type="${safeTypeName}">↑ Upload</button>
       </div>`;
     }
   }).join('');
