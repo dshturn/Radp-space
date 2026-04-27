@@ -207,7 +207,44 @@ getDocumentStatus(expiryDate) {
 - Accent: `--accent`
 - Status: `--success` (valid), `--warn` (expiring), `--error` (expired)
 
-### Authentication Challenge (CORS)
+### Database Selector Configuration
+
+**Dual-Stack Implementation** (in script.js):
+```javascript
+// Configuration with database selector
+const RADP_CONFIG = {
+  backend: 'azure', // 'azure' or 'supabase' — controls which API to call
+  apis: {
+    azure: 'https://radp-api.herokuapp.com',     // Heroku API endpoint
+    supabase: 'https://fslleuedqlxpjnerruzt.supabase.co/functions/v1/lor-proxy'
+  }
+};
+
+// API calls use selector
+async function fetchAssessment(id) {
+  const apiUrl = RADP_CONFIG.apis[RADP_CONFIG.backend];
+  const response = await fetch(`${apiUrl}/assessments/${id}`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  return response.json();
+}
+```
+
+**Benefits**:
+- Existing Supabase users unaffected (`backend: 'supabase'`)
+- New SharePoint LoR access routed to Heroku (`backend: 'azure'`)
+- Gradual migration: switch users batch-by-batch
+- Easy rollback: flip selector if issues arise
+- No downtime during transition
+
+**Migration Timeline**:
+1. Set up Azure + Heroku (both backends operational)
+2. Set `backend: 'azure'` for new assessments
+3. Monitor stability for 1–2 weeks
+4. Migrate existing Supabase users to `backend: 'azure'`
+5. Decommission Supabase (after cutover complete)
+
+### Authentication Challenge (CORS) [Legacy — Resolved with Backend Migration]
 
 **Problem**:
 - SharePoint iframe calls Supabase auth endpoint
