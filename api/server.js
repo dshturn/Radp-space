@@ -25,37 +25,64 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// ── Test DB Connection ──
+// ── Test Supabase Connection ──
 app.get('/test-db', async (req, res) => {
   try {
-    const result = await pool.query('SELECT NOW()');
+    const response = await axios.get(`${SUPABASE_URL}/rest/v1/assessments?limit=1`, {
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+    });
     res.json({
       status: 'connected',
-      timestamp: result.rows[0].now,
+      supabaseUrl: SUPABASE_URL,
+      timestamp: new Date().toISOString(),
     });
   } catch (err) {
-    console.error('DB connection error:', err);
+    console.error('Supabase connection error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
-// ── API Endpoints (Placeholder for now) ──
-app.get('/api/assessments', async (req, res) => {
+// ── Proxy: GET request to Supabase ──
+app.get('/api/*', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM assessments LIMIT 10');
-    res.json(result.rows);
+    const path = req.params[0];
+    const query = new URLSearchParams(req.query).toString();
+    const url = `${SUPABASE_URL}/rest/v1/${path}${query ? '?' + query : ''}`;
+
+    const response = await axios.get(url, {
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+    });
+    res.json(response.data);
   } catch (err) {
-    console.error('Query error:', err);
-    res.status(500).json({ error: err.message });
+    console.error('Proxy error:', err.message);
+    res.status(err.response?.status || 500).json({ error: err.message });
   }
 });
 
-app.post('/api/check-expiries', async (req, res) => {
+// ── Proxy: POST request to Supabase ──
+app.post('/api/*', async (req, res) => {
   try {
-    // Placeholder: Check expiries logic
-    res.json({ message: 'Check expiries endpoint', timestamp: new Date().toISOString() });
+    const path = req.params[0];
+    const query = new URLSearchParams(req.query).toString();
+    const url = `${SUPABASE_URL}/rest/v1/${path}${query ? '?' + query : ''}`;
+
+    const response = await axios.post(url, req.body, {
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    res.json(response.data);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Proxy error:', err.message);
+    res.status(err.response?.status || 500).json({ error: err.message });
   }
 });
 
