@@ -239,22 +239,38 @@ from origin 'https://sharek.aramco.com.sa' has been blocked by CORS policy
 | **Host on SharePoint server** | Same-origin; no CORS; simplest | Requires file hosting on Aramco infrastructure | ⏳ Recommended next step |
 | **Change auth flow** | Could use SharePoint's SSO context | Requires Aramco IT integration; more complex | ⏳ Future consideration |
 
-### Next Steps
+### Migration Plan: Supabase → Azure SQL + Heroku
 
-**Option A: Use service_role key (quick test)**
-- Update script.js to use service_role key
-- Test login + LoR display end-to-end
-- ⚠️ Rotate key after testing; consider as temporary only
+**Phase 1: Setup (Week 1)**
+1. Create Azure SQL Database
+2. Create Node.js Express API project
+3. Deploy API skeleton to Heroku
+4. Verify both services accessible from Aramco network
 
-**Option B: Host on SharePoint (recommended)**
-- Store assessment module files on SharePoint server
-- Access as same-origin (no CORS needed)
-- Simpler deployment; more secure
+**Phase 2: Data Migration (Week 1)**
+1. Export Supabase PostgreSQL schema
+2. Import schema to Azure SQL
+3. Export assessment data from Supabase
+4. Import data to Azure SQL
+5. Verify data integrity
 
-**Option C: Fix Edge Function CORS**
-- Check Supabase documentation on Function CORS
-- Verify preflight response headers
-- May require Supabase CLI config or plan upgrade
+**Phase 3: API Implementation (Week 2)**
+1. Rewrite API endpoints (assessment, personnel, equipment, documents)
+2. Implement RLS logic (move from Supabase policies → API middleware)
+3. Implement JWT auth (use same token logic as Supabase)
+4. Deploy to Heroku
+
+**Phase 4: Frontend Update (Week 2)**
+1. Update script.js: change proxy URL from Supabase → Heroku
+2. Update API calls (if endpoint structure changes)
+3. Test end-to-end from SharePoint
+4. Verify RLS enforcement (contractors see only own data)
+
+**Phase 5: Cutover (Week 3)**
+1. Enable Heroku API in production
+2. Disable Supabase Edge Functions
+3. Keep Supabase as backup for 1 week
+4. Decommission Supabase (after confirmation)
 
 ---
 
