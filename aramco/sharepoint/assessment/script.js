@@ -251,7 +251,8 @@ async function fetchAssessment() {
 }
 
 async function fetchFromRadp(endpoint) {
-  const proxyUrl = `${RADP_CONFIG.proxyUrl}?endpoint=${encodeURIComponent(endpoint)}`;
+  const encodedEndpoint = encodeURIComponent(endpoint);
+  const proxyUrl = `${RADP_CONFIG.proxyUrl}?endpoint=${encodedEndpoint}`;
 
   const response = await fetch(proxyUrl, {
     headers: {
