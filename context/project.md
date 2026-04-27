@@ -193,4 +193,4 @@ Audit Log (immutable, forever)
 
 ---
 
-Owner: Tech Lead | Last updated: 2026-04-26 (Audit Logging Complete)
+Owner: Tech Lead | Last updated: 2026-04-27 (Azure PostgreSQL + Heroku Migration Started)
