@@ -1,7 +1,6 @@
 // Configuration
 const RADP_CONFIG = {
-  url: 'https://fslleuedqlxpjnerruzt.supabase.co',
-  serviceRoleKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzbGxldWVkcWx4cGpuZXJydXp0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDk5MzExOSwiZXhwIjoyMDkwNTY5MTE5fQ.oY_dihwgMimesUsvHSuKNoJEXTb3c7vuqWKzeH2pwg4'
+  proxyUrl: 'https://fslleuedqlxpjnerruzt.supabase.co/functions/v1/lor-proxy'
 };
 
 let currentUser = null;
