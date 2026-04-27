@@ -164,6 +164,13 @@ Audit Log (immutable, forever)
 - ✅ Admin access: view + edit all contractor records (personnel, equipment, documents)
 
 **Phase 2 (4–6 weeks, in progress)**:
+- [x] LoR module UI + logic (complete, deployed locally)
+- [ ] **Backend Migration: Supabase → Azure SQL + Heroku** (firewall compatibility issue)
+  - [ ] Create Azure SQL Database
+  - [ ] Export/import PostgreSQL schema + data
+  - [ ] Build Node.js API on Heroku
+  - [ ] Update script.js to call Heroku instead of Supabase
+  - [ ] Test from SharePoint (verify firewall allows access)
 - [ ] Audit log export (PDF/CSV with date range filtering)
 - [ ] Audit log search (by user, action, entity type)
 - [ ] Reduce AI token burn (~50 tokens/assessment)
