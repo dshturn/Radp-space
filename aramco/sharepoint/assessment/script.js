@@ -72,6 +72,8 @@ function handleLogout() {
     document.getElementById('messageContainer').innerHTML = '';
     document.getElementById('lorContainer').classList.remove('active');
     document.getElementById('currentUser').textContent = currentUser;
+    document.getElementById('assessorInput').style.display = 'flex';
+    document.getElementById('assessorName').value = '';
   }
 }
 
