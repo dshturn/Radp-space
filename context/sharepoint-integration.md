@@ -518,6 +518,19 @@ C:\Users\dshtu\Radp-space\
 ---
 
 **Document Owner**: Tech Lead  
-**Version**: 1.0  
-**Last Updated**: 2026-04-26  
-**Next Review**: After CORS resolution
+**Version**: 2.0  
+**Last Updated**: 2026-04-27  
+**Next Review**: After Phase 1 (Azure SQL + Heroku setup)
+
+---
+
+## Decision Log
+
+**2026-04-27 — Backend Migration Decision**
+- **Issue**: Aramco firewall blocks Supabase (supabase.co domain)
+- **Testing**: Created firewall-test.html; ran from Aramco network
+- **Results**: Azure AD, Azure SQL, Firebase, Heroku whitelisted; AWS/GCP/Vercel/Supabase blocked
+- **Decision**: Migrate to **Azure SQL + Heroku API**
+  - Rationale: Both whitelisted; Azure SQL is core Microsoft service (lowest future-block risk)
+  - Alternative: Firebase (single service, higher risk)
+- **Next Step**: Build Phase 1 (Azure SQL setup + Heroku skeleton)
