@@ -7,7 +7,7 @@ const _ASSESS_PAGE_SIZE = 25;
 // ── Mini dashboard: assessments tile ──
 async function loadDashAssessments() {
   const u = getUser();
-  const assessments = await apiFetch(`${SUPABASE_URL}/rest/v1/assessments?contractor_id=eq.${u.id}&select=id,status`, { headers: getHeaders() });
+  const assessments = await apiFetch(`${SUPABASE_URL}/api/assessments?contractor_id=eq.${u.id}&select=id,status`, { headers: getHeaders() });
   const aEl   = document.getElementById('dashAssessments');
   const aSub  = document.getElementById('dashAssessmentsSub');
   const aTile = aEl.closest('.dash-tile');
@@ -35,7 +35,7 @@ function showCreate() {
 
 async function loadServiceLines() {
   const u     = getUser();
-  const res   = await fetch(`${SUPABASE_URL}/rest/v1/service_lines?select=name&order=name`, { headers: getHeaders() });
+  const res   = await fetch(`${SUPABASE_URL}/api/service_lines?select=name&order=name`, { headers: getHeaders() });
   const lines = await res.json();
   const sel   = document.getElementById('typeOfJob');
   sel.innerHTML = '<option value="">Select type of job...</option>'
@@ -43,7 +43,7 @@ async function loadServiceLines() {
     + '<option value="__custom__">+ Add custom type of job...</option>';
   document.getElementById('typeOfJobCustomWrap').style.display = 'none';
 
-  const fwRes  = await apiFetch(`${SUPABASE_URL}/rest/v1/assessments?select=field_well&field_well=not.is.null&order=field_well`, { headers: getHeaders() });
+  const fwRes  = await apiFetch(`${SUPABASE_URL}/api/assessments?select=field_well&field_well=not.is.null&order=field_well`, { headers: getHeaders() });
   const unique = [...new Set((fwRes || []).map(r => r.field_well).filter(Boolean))];
   document.getElementById('fieldWellSelect').innerHTML =
     '<option value="">Select field / well...</option>'
@@ -97,7 +97,7 @@ async function loadAssessments() {
   const u = getUser();
   const from = _assessPage * _ASSESS_PAGE_SIZE;
   const res  = await fetch(
-    `${SUPABASE_URL}/rest/v1/assessments?contractor_id=eq.${u.id}&order=created_at.desc&offset=${from}&limit=${_ASSESS_PAGE_SIZE}`,
+    `${SUPABASE_URL}/api/assessments?contractor_id=eq.${u.id}&order=created_at.desc&offset=${from}&limit=${_ASSESS_PAGE_SIZE}`,
     { headers: { ...getHeaders(), Prefer: 'count=exact' } }
   );
   if (!res.ok) { showToast('Failed to load assessments', 'error'); return; }
@@ -147,12 +147,12 @@ async function createAssessment() {
   if (!fieldWell) { showToast('Please select or enter a Field / Well', 'warn'); return; }
   if (!typeOfJob || typeOfJob === '—') { showToast('Please select a Type of Job', 'warn'); return; }
   if (typeOfJobSel.value === '__custom__' && typeOfJob) {
-    await fetch(`${SUPABASE_URL}/rest/v1/service_lines`, {
+    await fetch(`${SUPABASE_URL}/api/service_lines`, {
       method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal' },
       body: JSON.stringify({ name: typeOfJob })
     });
   }
-  const res  = await fetch(`${SUPABASE_URL}/rest/v1/assessments`, {
+  const res  = await fetch(`${SUPABASE_URL}/api/assessments`, {
     method: 'POST', headers: { ...getHeaders(), Prefer: 'return=representation' },
     body: JSON.stringify({ contractor_id: getUser().id, field_well: fieldWell, type_of_job: typeOfJob, objective, sharepoint_request_id: requestId || null })
   });
@@ -184,7 +184,7 @@ async function approveAssessment(assessmentId) {
   const u = getUser();
   if (u.role !== 'admin' && u.role !== 'assessor') { showToast('Only assessors can approve', 'warn'); return; }
 
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${assessmentId}`, {
+  const res = await fetch(`${SUPABASE_URL}/api/assessments?id=eq.${assessmentId}`, {
     method: 'PATCH',
     headers: { ...getHeaders(), Prefer: 'return=minimal' },
     body: JSON.stringify({ status: 'approved' })
@@ -192,7 +192,7 @@ async function approveAssessment(assessmentId) {
   if (!res.ok) { showToast('Approval failed', 'error'); return; }
 
   // Trigger SharePoint sync if assessment has sharepoint_request_id
-  const assess = await apiFetch(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${assessmentId}`, { headers: getHeaders() });
+  const assess = await apiFetch(`${SUPABASE_URL}/api/assessments?id=eq.${assessmentId}`, { headers: getHeaders() });
   if (assess?.[0]?.sharepoint_request_id) {
     const spId = parseInt(assess[0].sharepoint_request_id);
     syncToSharePoint(assessmentId, spId, 'Approved');
@@ -210,7 +210,7 @@ async function rejectAssessment(assessmentId) {
   const reason = prompt('Reason for rejection:');
   if (!reason) return;
 
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${assessmentId}`, {
+  const res = await fetch(`${SUPABASE_URL}/api/assessments?id=eq.${assessmentId}`, {
     method: 'PATCH',
     headers: { ...getHeaders(), Prefer: 'return=minimal' },
     body: JSON.stringify({ status: 'rejected' })
@@ -241,7 +241,7 @@ async function syncToSharePoint(assessmentId, sharepointId, newStatus) {
 }
 
 async function loadAssessmentDetail(id) {
-  const data = await apiFetch(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${id}`, { headers: getHeaders() });
+  const data = await apiFetch(`${SUPABASE_URL}/api/assessments?id=eq.${id}`, { headers: getHeaders() });
   if (!data) return;
   const a = data[0];
   const validStatuses = new Set(['draft', 'approved', 'pending', 'rejected']);
@@ -296,7 +296,7 @@ async function loadAssessmentDetail(id) {
 }
 
 async function loadSelectedEquipment(id) {
-  const items = await apiFetch(`${SUPABASE_URL}/rest/v1/assessment_equipment?assessment_id=eq.${id}&select=*,equipment_items(serial_number,model,equipment_template_id,equipment_templates(name))`, { headers: getHeaders() });
+  const items = await apiFetch(`${SUPABASE_URL}/api/assessment_equipment?assessment_id=eq.${id}&select=*,equipment_items(serial_number,model,equipment_template_id,equipment_templates(name))`, { headers: getHeaders() });
   if (!items) return;
   const el = document.getElementById('selectedEquipment');
   if (!items.length) { el.innerHTML = '<div class="empty">No equipment selected</div>'; return; }
@@ -308,7 +308,7 @@ async function loadSelectedEquipment(id) {
 }
 
 async function loadSelectedPersonnel(id) {
-  const items = await apiFetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?assessment_id=eq.${id}&select=*,personnel(full_name,position,national_id)`, { headers: getHeaders() });
+  const items = await apiFetch(`${SUPABASE_URL}/api/assessment_personnel?assessment_id=eq.${id}&select=*,personnel(full_name,position,national_id)`, { headers: getHeaders() });
   if (!items) return;
   const el = document.getElementById('selectedPersonnel');
   if (!items.length) { el.innerHTML = '<div class="empty">No personnel selected</div>'; return; }
@@ -322,10 +322,10 @@ async function loadSelectedPersonnel(id) {
 async function openEquipmentSelector() {
   const h = getHeaders();
   const [itemsRes, allItemsRes, addedRes, docsRes] = await Promise.all([
-    fetch(`${SUPABASE_URL}/rest/v1/equipment_items?dismissed=is.false&parent_id=is.null&select=*,equipment_templates(name)&order=created_at`, { headers: h }),
-    fetch(`${SUPABASE_URL}/rest/v1/equipment_items?dismissed=is.false&select=id,parent_id`, { headers: h }),
-    fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment?assessment_id=eq.${currentAssessmentId}&select=id,equipment_item_id`, { headers: h }),
-    fetch(`${SUPABASE_URL}/rest/v1/documents?select=equipment_item_id`, { headers: h })
+    fetch(`${SUPABASE_URL}/api/equipment_items?dismissed=is.false&parent_id=is.null&select=*,equipment_templates(name)&order=created_at`, { headers: h }),
+    fetch(`${SUPABASE_URL}/api/equipment_items?dismissed=is.false&select=id,parent_id`, { headers: h }),
+    fetch(`${SUPABASE_URL}/api/assessment_equipment?assessment_id=eq.${currentAssessmentId}&select=id,equipment_item_id`, { headers: h }),
+    fetch(`${SUPABASE_URL}/api/documents?select=equipment_item_id`, { headers: h })
   ]);
   if (itemsRes.status === 401) { localStorage.removeItem('radp_token'); localStorage.removeItem('radp_user'); showPage('login'); return; }
   const items    = await itemsRes.json();
@@ -391,7 +391,7 @@ async function addSelectedEquipment() {
   const checked = [...document.querySelectorAll('#equipSelectorList input:checked')].map(c => c.value);
   if (!checked.length) { showToast('Select at least one item', 'warn'); return; }
   await Promise.all(checked.map(itemId =>
-    fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment`, {
+    fetch(`${SUPABASE_URL}/api/assessment_equipment`, {
       method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal' },
       body: JSON.stringify({ assessment_id: currentAssessmentId, equipment_item_id: parseInt(itemId) })
     })
@@ -401,12 +401,12 @@ async function addSelectedEquipment() {
 }
 
 async function addEquipmentItem(itemId) {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment`, {
+  const r = await fetch(`${SUPABASE_URL}/api/assessment_equipment`, {
     method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal' },
     body: JSON.stringify({ assessment_id: currentAssessmentId, equipment_item_id: itemId })
   });
   if (!r.ok) { showToast('Add failed: ' + r.status, 'error'); return; }
-  const equip = await apiFetch(`${SUPABASE_URL}/rest/v1/equipment_items?id=eq.${itemId}&select=name,serial_number`, { headers: getHeaders() });
+  const equip = await apiFetch(`${SUPABASE_URL}/api/equipment_items?id=eq.${itemId}&select=name,serial_number`, { headers: getHeaders() });
   const equipLabel = equip?.[0] ? `${equip[0].name || 'Equipment'} - ${equip[0].serial_number || ''}` : 'Equipment';
   logAudit('assessment', currentAssessmentId, 'added_equipment', equipLabel);
   loadSelectedEquipment(currentAssessmentId);
@@ -414,12 +414,12 @@ async function addEquipmentItem(itemId) {
 }
 
 async function addPersonnelItem(persId) {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel`, {
+  const r = await fetch(`${SUPABASE_URL}/api/assessment_personnel`, {
     method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal' },
     body: JSON.stringify({ assessment_id: currentAssessmentId, personnel_id: persId })
   });
   if (!r.ok) { showToast('Add failed: ' + r.status, 'error'); return; }
-  const person = await apiFetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${persId}&select=full_name,position`, { headers: getHeaders() });
+  const person = await apiFetch(`${SUPABASE_URL}/api/personnel?id=eq.${persId}&select=full_name,position`, { headers: getHeaders() });
   const persLabel = person?.[0]?.full_name || 'Personnel';
   logAudit('assessment', currentAssessmentId, 'added_personnel', persLabel);
   loadSelectedPersonnel(currentAssessmentId);
@@ -427,7 +427,7 @@ async function addPersonnelItem(persId) {
 }
 
 async function removeEquipment(id, fromSelector) {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment?id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
+  const r = await fetch(`${SUPABASE_URL}/api/assessment_equipment?id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
   if (!r.ok) { showToast('Remove failed: ' + r.status, 'error'); return; }
   logAudit('assessment', currentAssessmentId, 'removed_equipment', `Equipment entry ${id}`);
   loadSelectedEquipment(currentAssessmentId);
@@ -437,8 +437,8 @@ async function removeEquipment(id, fromSelector) {
 async function openPersonnelSelector() {
   const h = getHeaders();
   const [peopleRes, addedRes] = await Promise.all([
-    fetch(`${SUPABASE_URL}/rest/v1/personnel?select=*&order=created_at`, { headers: h }),
-    fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?assessment_id=eq.${currentAssessmentId}&select=id,personnel_id`, { headers: h })
+    fetch(`${SUPABASE_URL}/api/personnel?select=*&order=created_at`, { headers: h }),
+    fetch(`${SUPABASE_URL}/api/assessment_personnel?assessment_id=eq.${currentAssessmentId}&select=id,personnel_id`, { headers: h })
   ]);
   if (peopleRes.status === 401) { localStorage.removeItem('radp_token'); localStorage.removeItem('radp_user'); showPage('login'); return; }
   const people = await peopleRes.json();
@@ -448,7 +448,7 @@ async function openPersonnelSelector() {
   let allDocs = [];
   if (people.length) {
     const ids = people.map(p => p.id).join(',');
-    const docsRes = await fetch(`${SUPABASE_URL}/rest/v1/personnel_documents?personnel_id=in.(${ids})&select=personnel_id,doc_type_name`, { headers: h });
+    const docsRes = await fetch(`${SUPABASE_URL}/api/personnel_documents?personnel_id=in.(${ids})&select=personnel_id,doc_type_name`, { headers: h });
     if (docsRes.ok) allDocs = await docsRes.json();
   }
 
@@ -506,7 +506,7 @@ async function addSelectedPersonnel() {
   const checked = [...document.querySelectorAll('#persSelectorList input:checked')].map(c => c.value);
   if (!checked.length) { showToast('Select at least one person', 'warn'); return; }
   await Promise.all(checked.map(persId =>
-    fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel`, {
+    fetch(`${SUPABASE_URL}/api/assessment_personnel`, {
       method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal' },
       body: JSON.stringify({ assessment_id: currentAssessmentId, personnel_id: parseInt(persId) })
     })
@@ -516,7 +516,7 @@ async function addSelectedPersonnel() {
 }
 
 async function removePersonnel(id, fromSelector) {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
+  const r = await fetch(`${SUPABASE_URL}/api/assessment_personnel?id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
   if (!r.ok) { showToast('Remove failed: ' + r.status, 'error'); return; }
   logAudit('assessment', currentAssessmentId, 'removed_personnel', `Personnel entry ${id}`);
   loadSelectedPersonnel(currentAssessmentId);
@@ -536,9 +536,9 @@ function getExpiryStyle(dateStr) {
 async function generateLoR() {
   const h = getHeaders(), u = getUser();
   const [aRes, eRes, pRes] = await Promise.all([
-    fetch(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${currentAssessmentId}`, { headers: h }),
-    fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment?assessment_id=eq.${currentAssessmentId}&select=*,equipment_items(id,serial_number,model,name,parent_id,equipment_templates(name),documents(*,document_types(document_name)))`, { headers: h }),
-    fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?assessment_id=eq.${currentAssessmentId}&select=*,personnel(*)`, { headers: h })
+    fetch(`${SUPABASE_URL}/api/assessments?id=eq.${currentAssessmentId}`, { headers: h }),
+    fetch(`${SUPABASE_URL}/api/assessment_equipment?assessment_id=eq.${currentAssessmentId}&select=*,equipment_items(id,serial_number,model,name,parent_id,equipment_templates(name),documents(*,document_types(document_name)))`, { headers: h }),
+    fetch(`${SUPABASE_URL}/api/assessment_personnel?assessment_id=eq.${currentAssessmentId}&select=*,personnel(*)`, { headers: h })
   ]);
   const assessment = (await aRes.json())[0];
   const equipment  = await eRes.json();
@@ -550,7 +550,7 @@ async function generateLoR() {
   let childItems  = [];
   if (rootIds.length) {
     const cRes = await fetch(
-      `${SUPABASE_URL}/rest/v1/equipment_items?dismissed=is.false&parent_id=in.(${rootIds.join(',')})&select=id,parent_id,serial_number,model,name,equipment_templates(name),documents(*,document_types(document_name))`,
+      `${SUPABASE_URL}/api/equipment_items?dismissed=is.false&parent_id=in.(${rootIds.join(',')})&select=id,parent_id,serial_number,model,name,equipment_templates(name),documents(*,document_types(document_name))`,
       { headers: h }
     );
     if (cRes.ok) childItems = await cRes.json();
@@ -559,7 +559,7 @@ async function generateLoR() {
   let grandItems = [];
   if (childIds.length) {
     const gcRes = await fetch(
-      `${SUPABASE_URL}/rest/v1/equipment_items?dismissed=is.false&parent_id=in.(${childIds.join(',')})&select=id,parent_id,serial_number,model,name,equipment_templates(name),documents(*,document_types(document_name))`,
+      `${SUPABASE_URL}/api/equipment_items?dismissed=is.false&parent_id=in.(${childIds.join(',')})&select=id,parent_id,serial_number,model,name,equipment_templates(name),documents(*,document_types(document_name))`,
       { headers: h }
     );
     if (gcRes.ok) grandItems = await gcRes.json();

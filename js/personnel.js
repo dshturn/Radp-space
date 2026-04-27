@@ -16,7 +16,7 @@ const PERS_DOC_TYPES = [
 ];
 
 async function openAddPersonnel() {
-  const positions = await apiFetch(`${SUPABASE_URL}/rest/v1/personnel_positions?select=name&order=name`, { headers: getHeaders() }) || [];
+  const positions = await apiFetch(`${SUPABASE_URL}/api/personnel_positions?select=name&order=name`, { headers: getHeaders() }) || [];
   document.getElementById('persPositionSelect').innerHTML =
     '<option value="">Select position...</option>'
     + positions.map(p => `<option value="${p.name}">${p.name}</option>`).join('')
@@ -44,14 +44,14 @@ async function addPersonnel() {
   if (position === '__new__') {
     const newPos = document.getElementById('persPositionNew').value.trim();
     if (!newPos) { showToast('Please enter a position name', 'warn'); return; }
-    await fetch(`${SUPABASE_URL}/rest/v1/personnel_positions`, {
+    await fetch(`${SUPABASE_URL}/api/personnel_positions`, {
       method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal' },
       body: JSON.stringify({ name: newPos })
     });
     position = newPos;
   }
 
-  const _pRes = await fetch(`${SUPABASE_URL}/rest/v1/personnel`, {
+  const _pRes = await fetch(`${SUPABASE_URL}/api/personnel`, {
     method: 'POST', headers: { ...getHeaders(), Prefer: 'return=representation' },
     body: JSON.stringify({ contractor_id: getUser().id, full_name: name, position, national_id: nationalId })
   });
@@ -74,7 +74,7 @@ async function loadPersonnel(preserveState = false) {
   const from = _persPage * _PERS_PAGE_SIZE;
   const isAdmin = roleOf(getUser()) === 'admin';
   const res  = await fetch(
-    `${SUPABASE_URL}/rest/v1/personnel?select=*&order=created_at${_persSearch ? `&full_name=ilike.*${encodeURIComponent(_persSearch)}*` : ''}&offset=${from}&limit=${_PERS_PAGE_SIZE}`,
+    `${SUPABASE_URL}/api/personnel?select=*&order=created_at${_persSearch ? `&full_name=ilike.*${encodeURIComponent(_persSearch)}*` : ''}&offset=${from}&limit=${_PERS_PAGE_SIZE}`,
     { headers: { ...h, Prefer: 'count=exact' } }
   );
   if (res.status === 401) { localStorage.removeItem('radp_token'); localStorage.removeItem('radp_user'); showPage('login'); return; }
@@ -86,7 +86,7 @@ async function loadPersonnel(preserveState = false) {
   // For admin: load company names for all contractors
   if (isAdmin && people.length > 0) {
     const contractorIds = [...new Set(people.map(p => p.contractor_id))].join(',');
-    const contractors = await apiFetch(`${SUPABASE_URL}/rest/v1/user_profiles?id=in.(${contractorIds})&select=id,company`, { headers: h }) || [];
+    const contractors = await apiFetch(`${SUPABASE_URL}/api/user_profiles?id=in.(${contractorIds})&select=id,company`, { headers: h }) || [];
     const companyMap = Object.fromEntries(contractors.map(c => [c.id, c.company]));
     people.forEach(p => { if (!p.contractor_id_obj) p.contractor_id_obj = {}; p.contractor_id_obj.company = companyMap[p.contractor_id]; });
   }
@@ -94,7 +94,7 @@ async function loadPersonnel(preserveState = false) {
   // Load all personnel docs in one shot
   const personIds = people.map(p => p.id).join(',');
   let persDocs = [];
-  if (personIds) persDocs = await apiFetch(`${SUPABASE_URL}/rest/v1/personnel_documents?personnel_id=in.(${personIds})&select=*&order=uploaded_at.desc`, { headers: h }) || [];
+  if (personIds) persDocs = await apiFetch(`${SUPABASE_URL}/api/personnel_documents?personnel_id=in.(${personIds})&select=*&order=uploaded_at.desc`, { headers: h }) || [];
   const docsByPerson = {};
   persDocs.forEach(d => { if (!docsByPerson[d.personnel_id]) docsByPerson[d.personnel_id] = []; docsByPerson[d.personnel_id].push(d); });
 
@@ -364,7 +364,7 @@ async function openAddCustomPersDoc(personId, personName = '') {
   document.getElementById('persDocYearsExpWrap').style.display   = 'none';
   openModal('addPersDocModal');
 
-  const types = await apiFetch(`${SUPABASE_URL}/rest/v1/personnel_doc_types?select=name&order=name`, { headers: getHeaders() }) || [];
+  const types = await apiFetch(`${SUPABASE_URL}/api/personnel_doc_types?select=name&order=name`, { headers: getHeaders() }) || [];
   document.getElementById('persDocCustomTypeSelect').innerHTML =
     '<option value="">Select type...</option>'
     + types.map(t => `<option value="${t.name}">${t.name}</option>`).join('')
@@ -425,7 +425,7 @@ async function savePersDocument() {
       if (!freeText) { showToast('Please enter a new document type name', 'warn'); document.getElementById('persDocCustomName').focus(); return; }
       typeName = freeText;
       // Register for everyone's future use. Conflict on the unique name just means it already existed.
-      await fetch(`${SUPABASE_URL}/rest/v1/personnel_doc_types`, {
+      await fetch(`${SUPABASE_URL}/api/personnel_doc_types`, {
         method: 'POST', headers: { ...getHeaders(), Prefer: 'return=minimal,resolution=ignore-duplicates' },
         body: JSON.stringify({ name: freeText })
       }).catch(() => {});
@@ -467,12 +467,12 @@ async function savePersDocument() {
 
   let _savedDocId = editId ? parseInt(editId) : null;
   if (editId) {
-    await fetch(`${SUPABASE_URL}/rest/v1/personnel_documents?id=eq.${editId}`, {
+    await fetch(`${SUPABASE_URL}/api/personnel_documents?id=eq.${editId}`, {
       method: 'PATCH', headers: { ...getHeaders(), Prefer: 'return=minimal' },
       body: JSON.stringify(payload)
     });
   } else {
-    const _pdRes = await fetch(`${SUPABASE_URL}/rest/v1/personnel_documents`, {
+    const _pdRes = await fetch(`${SUPABASE_URL}/api/personnel_documents`, {
       method: 'POST', headers: { ...getHeaders(), Prefer: 'return=representation' },
       body: JSON.stringify({ personnel_id: parseInt(personId), doc_type_name: typeName, is_mandatory: mandatory, ...payload })
     });
@@ -480,7 +480,7 @@ async function savePersDocument() {
   }
 
   // Reset assessed flag whenever a document is added or updated
-  await fetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${personId}`, {
+  await fetch(`${SUPABASE_URL}/api/personnel?id=eq.${personId}`, {
     method: 'PATCH', headers: { ...getHeaders(), Prefer: 'return=minimal' },
     body: JSON.stringify({ assessed: false })
   });
@@ -489,7 +489,7 @@ async function savePersDocument() {
   if (typeName === 'CV') {
     const yrs = parseInt(document.getElementById('persDocYearsExp').value);
     if (!isNaN(yrs)) {
-      await fetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${personId}`, {
+      await fetch(`${SUPABASE_URL}/api/personnel?id=eq.${personId}`, {
         method: 'PATCH', headers: { ...getHeaders(), Prefer: 'return=minimal' },
         body: JSON.stringify({ years_experience: yrs })
       });
@@ -506,7 +506,7 @@ async function deletePersDoc(id) {
   if (!await showConfirm('Delete this document?')) return;
   const el = document.querySelector(`[data-doc-id="${id}"]`);
   // Start API call immediately so it runs in parallel with the animation
-  const deletePromise = fetch(`${SUPABASE_URL}/rest/v1/personnel_documents?id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
+  const deletePromise = fetch(`${SUPABASE_URL}/api/personnel_documents?id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
   animateRemoveEl(el, async () => {
     const r = await deletePromise;
     if (!r.ok) { showToast('Delete failed: ' + r.status, 'error'); }
@@ -521,7 +521,7 @@ async function markPersAssessed(personId) {
   const badge = card?.querySelector('.sbadge-awaiting');
   if (badge) { badge.className = 'sbadge sbadge-ready'; badge.textContent = 'READY'; }
 
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${personId}`, {
+  const r = await fetch(`${SUPABASE_URL}/api/personnel?id=eq.${personId}`, {
     method: 'PATCH', headers: { ...getHeaders(), Prefer: 'return=minimal' },
     body: JSON.stringify({ assessed: true })
   });
@@ -541,9 +541,9 @@ async function deletePersRecord(id) {
   // Delete dependents in parallel, then the personnel record — all concurrent with animation
   const h = { ...getHeaders(), Prefer: 'return=minimal' };
   const deletePromise = Promise.all([
-    fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?personnel_id=eq.${id}`, { method: 'DELETE', headers: h }),
-    fetch(`${SUPABASE_URL}/rest/v1/personnel_documents?personnel_id=eq.${id}`, { method: 'DELETE', headers: h })
-  ]).then(() => fetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${id}`, { method: 'DELETE', headers: h }));
+    fetch(`${SUPABASE_URL}/api/assessment_personnel?personnel_id=eq.${id}`, { method: 'DELETE', headers: h }),
+    fetch(`${SUPABASE_URL}/api/personnel_documents?personnel_id=eq.${id}`, { method: 'DELETE', headers: h })
+  ]).then(() => fetch(`${SUPABASE_URL}/api/personnel?id=eq.${id}`, { method: 'DELETE', headers: h }));
   animateRemoveEl(el, async () => {
     const r = await deletePromise;
     if (!r.ok) { const t = await r.text(); showToast('Delete failed: ' + r.status, 'error'); }
@@ -554,11 +554,11 @@ async function deletePersRecord(id) {
 
 async function exportPersonnelCsv() {
   const h = getHeaders();
-  const people = await apiFetch(`${SUPABASE_URL}/rest/v1/personnel?select=*&order=created_at`, { headers: h });
+  const people = await apiFetch(`${SUPABASE_URL}/api/personnel?select=*&order=created_at`, { headers: h });
   if (!people) return;
   const personIds = people.map(p => p.id).join(',');
   let docs = [];
-  if (personIds) docs = await apiFetch(`${SUPABASE_URL}/rest/v1/personnel_documents?personnel_id=in.(${personIds})&select=*`, { headers: h }) || [];
+  if (personIds) docs = await apiFetch(`${SUPABASE_URL}/api/personnel_documents?personnel_id=in.(${personIds})&select=*`, { headers: h }) || [];
   const docsByPerson = {};
   docs.forEach(d => { (docsByPerson[d.personnel_id] = docsByPerson[d.personnel_id] || []).push(d); });
 
@@ -605,9 +605,9 @@ async function bulkDeletePersonnel() {
   try {
     const results = await Promise.all(ids.map(id =>
       Promise.all([
-        fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?personnel_id=eq.${id}`, { method: 'DELETE', headers: h }),
-        fetch(`${SUPABASE_URL}/rest/v1/personnel_documents?personnel_id=eq.${id}`, { method: 'DELETE', headers: h })
-      ]).then(() => fetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${id}`, { method: 'DELETE', headers: h }))
+        fetch(`${SUPABASE_URL}/api/assessment_personnel?personnel_id=eq.${id}`, { method: 'DELETE', headers: h }),
+        fetch(`${SUPABASE_URL}/api/personnel_documents?personnel_id=eq.${id}`, { method: 'DELETE', headers: h })
+      ]).then(() => fetch(`${SUPABASE_URL}/api/personnel?id=eq.${id}`, { method: 'DELETE', headers: h }))
     ));
     const failed = results.filter(r => !r.ok);
     if (failed.length) {
@@ -627,7 +627,7 @@ async function bulkDeletePersonnel() {
 // Admin: Edit personnel record
 async function openEditPersonnel(persId) {
   const h = getHeaders();
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${persId}&select=*`, { headers: h });
+  const res = await fetch(`${SUPABASE_URL}/api/personnel?id=eq.${persId}&select=*`, { headers: h });
   if (!res.ok) { showToast('Failed to load personnel', 'error'); return; }
   const [pers] = await res.json();
   if (!pers) { showToast('Personnel not found', 'error'); return; }
@@ -649,7 +649,7 @@ async function saveEditPersonnel() {
   const years_experience = parseInt(document.getElementById('editPersYearsExperience').value) || null;
   const assessed = document.getElementById('editPersAssessed').checked;
   if (!full_name) { showToast('Name is required', 'warn'); return; }
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${id}`, {
+  const res = await fetch(`${SUPABASE_URL}/api/personnel?id=eq.${id}`, {
     method: 'PATCH',
     headers: { ...h, Prefer: 'return=minimal' },
     body: JSON.stringify({ full_name, position, national_id, years_experience, assessed })

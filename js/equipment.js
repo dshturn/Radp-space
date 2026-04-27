@@ -6,7 +6,7 @@ let _equipBulkMode = false;
 
 async function openAddEquipment() {
   const u = getUser(), h = getHeaders();
-  const templates = await apiFetch(`${SUPABASE_URL}/rest/v1/equipment_templates?service_line=eq.${encodeURIComponent(u.service_line)}&order=name`, { headers: h }) || [];
+  const templates = await apiFetch(`${SUPABASE_URL}/api/equipment_templates?service_line=eq.${encodeURIComponent(u.service_line)}&order=name`, { headers: h }) || [];
   document.getElementById('equipSelect').innerHTML =
     '<option value="">Select equipment type...</option>'
     + templates.map(t => `<option value="${t.id}">${t.name}</option>`).join('')
@@ -35,7 +35,7 @@ async function loadEquipment(preserveState = false) {
   const from = _equipPage * _EQUIP_PAGE_SIZE;
   const isAdmin = roleOf(getUser()) === 'admin';
   const res  = await fetch(
-    `${SUPABASE_URL}/rest/v1/equipment_items?dismissed=is.false&parent_id=is.null&select=*,equipment_templates(name)&order=created_at${_equipSearch ? `&equipment_templates.name=ilike.*${encodeURIComponent(_equipSearch)}*` : ''}&offset=${from}&limit=${_EQUIP_PAGE_SIZE}`,
+    `${SUPABASE_URL}/api/equipment_items?dismissed=is.false&parent_id=is.null&select=*,equipment_templates(name)&order=created_at${_equipSearch ? `&equipment_templates.name=ilike.*${encodeURIComponent(_equipSearch)}*` : ''}&offset=${from}&limit=${_EQUIP_PAGE_SIZE}`,
     { headers: { ...h, Prefer: 'count=exact' } }
   );
   if (res.status === 401) { localStorage.removeItem('radp_token'); localStorage.removeItem('radp_user'); showPage('login'); return; }
@@ -46,7 +46,7 @@ async function loadEquipment(preserveState = false) {
   // For admin: load company names for all contractors
   if (isAdmin && items.length > 0) {
     const contractorIds = [...new Set(items.map(i => i.contractor_id))].join(',');
-    const contractors = await apiFetch(`${SUPABASE_URL}/rest/v1/user_profiles?id=in.(${contractorIds})&select=id,company`, { headers: h }) || [];
+    const contractors = await apiFetch(`${SUPABASE_URL}/api/user_profiles?id=in.(${contractorIds})&select=id,company`, { headers: h }) || [];
     const companyMap = Object.fromEntries(contractors.map(c => [c.id, c.company]));
     items.forEach(i => { if (!i.contractor_id_obj) i.contractor_id_obj = {}; i.contractor_id_obj.company = companyMap[i.contractor_id]; });
   }
@@ -56,7 +56,7 @@ async function loadEquipment(preserveState = false) {
   let allSubs = [];
   if (rootIds) {
     const subsRes = await fetch(
-      `${SUPABASE_URL}/rest/v1/equipment_items?dismissed=is.false&parent_id=in.(${rootIds})&select=*&order=created_at`,
+      `${SUPABASE_URL}/api/equipment_items?dismissed=is.false&parent_id=in.(${rootIds})&select=*&order=created_at`,
       { headers: h }
     );
     if (subsRes.ok) {
@@ -66,7 +66,7 @@ async function loadEquipment(preserveState = false) {
       let grandChildren = [];
       if (subIds) {
         const gcRes = await fetch(
-          `${SUPABASE_URL}/rest/v1/equipment_items?dismissed=is.false&parent_id=in.(${subIds})&select=*&order=created_at`,
+          `${SUPABASE_URL}/api/equipment_items?dismissed=is.false&parent_id=in.(${subIds})&select=*&order=created_at`,
           { headers: h }
         );
         if (gcRes.ok) grandChildren = await gcRes.json();
@@ -86,7 +86,7 @@ async function loadEquipment(preserveState = false) {
   // Load docs for active items
   const itemIds = activeItems.map(i => i.id).join(',');
   let docs = [];
-  if (itemIds) docs = await apiFetch(`${SUPABASE_URL}/rest/v1/documents?equipment_item_id=in.(${itemIds})&select=*&order=uploaded_at.desc`, { headers: h }) || [];
+  if (itemIds) docs = await apiFetch(`${SUPABASE_URL}/api/documents?equipment_item_id=in.(${itemIds})&select=*&order=uploaded_at.desc`, { headers: h }) || [];
   const docsByItem = {};
   docs.forEach(d => { if (!docsByItem[d.equipment_item_id]) docsByItem[d.equipment_item_id] = []; docsByItem[d.equipment_item_id].push(d); });
 
@@ -434,7 +434,7 @@ async function addEquipment() {
     const customName = document.getElementById('equipName').value.trim();
     if (!customName) { showToast('Please enter the equipment name', 'warn'); return; }
     const u = getUser();
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/equipment_templates`, {
+    const res = await fetch(`${SUPABASE_URL}/api/equipment_templates`, {
       method: 'POST',
       headers: { ...getHeaders(), Prefer: 'return=representation' },
       body: JSON.stringify({ name: customName, service_line: u.service_line })
@@ -449,7 +449,7 @@ async function addEquipment() {
     finalName = selEl.options[selEl.selectedIndex].text;
   }
 
-  const _eqRes = await fetch(`${SUPABASE_URL}/rest/v1/equipment_items`, {
+  const _eqRes = await fetch(`${SUPABASE_URL}/api/equipment_items`, {
     method: 'POST', headers: { ...getHeaders(), Prefer: 'return=representation' },
     body: JSON.stringify({ contractor_id: getUser().id, equipment_template_id: finalTemplateId, serial_number: serial, name: finalName })
   });
@@ -465,7 +465,7 @@ async function openReassignModal(itemId, itemName, currentParentId) {
   currentReassignItemId = itemId;
   document.getElementById('reassignTitle').textContent = `Change: ${itemName}`;
   const h = getHeaders();
-  const allItems = await apiFetch(`${SUPABASE_URL}/rest/v1/equipment_items?select=*&order=created_at`, { headers: h });
+  const allItems = await apiFetch(`${SUPABASE_URL}/api/equipment_items?select=*&order=created_at`, { headers: h });
   const active = (allItems || []).filter(i => !i.dismissed && i.id !== itemId);
   const directChildIds = new Set(active.filter(i => i.parent_id === itemId).map(i => i.id));
   const choices = active.filter(i => !directChildIds.has(i.id));
@@ -527,7 +527,7 @@ async function saveReassign() {
     newParentId = parseInt(checked.value);
   }
 
-  await fetch(`${SUPABASE_URL}/rest/v1/equipment_items?id=eq.${currentReassignItemId}`, {
+  await fetch(`${SUPABASE_URL}/api/equipment_items?id=eq.${currentReassignItemId}`, {
     method: 'PATCH',
     headers: { ...getHeaders(), Prefer: 'return=minimal' },
     body: JSON.stringify({ parent_id: newParentId })
@@ -547,7 +547,7 @@ async function openAddSubComponent(parentId, parentName) {
   document.getElementById('newSubNameWrap').style.display = 'none';
   const h = getHeaders();
   const u = getUser();
-  const templates = await apiFetch(`${SUPABASE_URL}/rest/v1/equipment_templates?service_line=eq.${encodeURIComponent(u.service_line)}&order=name`, { headers: h }) || [];
+  const templates = await apiFetch(`${SUPABASE_URL}/api/equipment_templates?service_line=eq.${encodeURIComponent(u.service_line)}&order=name`, { headers: h }) || [];
   const sel = document.getElementById('subEquipSelect');
   sel.innerHTML = '<option value="">Select component type...</option>'
     + templates.map(t => `<option value="${t.id}">${t.name}</option>`).join('')
@@ -573,7 +573,7 @@ async function addSubComponent() {
     const customName = document.getElementById('subEquipName').value.trim();
     if (!customName) { showToast('Please enter the component name', 'warn'); return; }
     const u = getUser();
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/equipment_templates`, {
+    const res = await fetch(`${SUPABASE_URL}/api/equipment_templates`, {
       method: 'POST',
       headers: { ...getHeaders(), Prefer: 'return=representation' },
       body: JSON.stringify({ name: customName, service_line: u.service_line })
@@ -588,7 +588,7 @@ async function addSubComponent() {
     finalName = selEl.options[selEl.selectedIndex].text;
   }
 
-  const _scRes = await fetch(`${SUPABASE_URL}/rest/v1/equipment_items`, {
+  const _scRes = await fetch(`${SUPABASE_URL}/api/equipment_items`, {
     method: 'POST', headers: { ...getHeaders(), Prefer: 'return=representation' },
     body: JSON.stringify({ contractor_id: getUser().id, equipment_template_id: finalTemplateId, serial_number: serial, name: finalName, parent_id: currentSubParentId })
   });
@@ -602,8 +602,8 @@ async function deleteEquipItem(id) {
   const el = document.querySelector(`[data-id="${id}"]`);
   // Start API calls immediately so they run in parallel with the animation
   const h = { ...getHeaders(), Prefer: 'return=minimal' };
-  const deletePromise = fetch(`${SUPABASE_URL}/rest/v1/documents?equipment_item_id=eq.${id}`, { method: 'DELETE', headers: h })
-    .then(() => fetch(`${SUPABASE_URL}/rest/v1/equipment_items?id=eq.${id}`, { method: 'DELETE', headers: h }));
+  const deletePromise = fetch(`${SUPABASE_URL}/api/documents?equipment_item_id=eq.${id}`, { method: 'DELETE', headers: h })
+    .then(() => fetch(`${SUPABASE_URL}/api/equipment_items?id=eq.${id}`, { method: 'DELETE', headers: h }));
   animateRemoveEl(el, async () => {
     const r = await deletePromise;
     if (!r.ok) { showToast('Delete failed: ' + r.status, 'error'); }
@@ -616,7 +616,7 @@ async function deleteDoc(id) {
   if (!await showConfirm('Delete this document?')) return;
   const el = document.querySelector(`[data-doc-id="${id}"]`);
   // Start API call immediately so it runs in parallel with the animation
-  const deletePromise = fetch(`${SUPABASE_URL}/rest/v1/documents?id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
+  const deletePromise = fetch(`${SUPABASE_URL}/api/documents?id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
   animateRemoveEl(el, async () => {
     const r = await deletePromise;
     if (!r.ok) { showToast('Delete failed: ' + r.status, 'error'); }
@@ -681,7 +681,7 @@ async function saveDocument() {
     fileUrl = `${SUPABASE_URL}/storage/v1/object/public/equipment-docs/${path}`;
   }
 
-  const _docRes = await fetch(`${SUPABASE_URL}/rest/v1/documents`, {
+  const _docRes = await fetch(`${SUPABASE_URL}/api/documents`, {
     method: 'POST', headers: { ...getHeaders(), Prefer: 'return=representation' },
     body: JSON.stringify({
       equipment_item_id: currentDocItemId,
@@ -696,7 +696,7 @@ async function saveDocument() {
   if (_docRes.ok) { const [_newDoc] = await _docRes.json(); window._justAddedDocId = _newDoc?.id; _savedEquipDocId = _newDoc?.id; }
 
   // Reset assessed flag whenever a document is added
-  await fetch(`${SUPABASE_URL}/rest/v1/equipment_items?id=eq.${currentDocItemId}`, {
+  await fetch(`${SUPABASE_URL}/api/equipment_items?id=eq.${currentDocItemId}`, {
     method: 'PATCH', headers: { ...getHeaders(), Prefer: 'return=minimal' },
     body: JSON.stringify({ assessed: false })
   });
@@ -713,7 +713,7 @@ async function markEquipAssessed(itemId) {
   const badge = card?.querySelector('.sbadge-awaiting');
   if (badge) { badge.className = 'sbadge sbadge-ready'; badge.textContent = 'READY'; }
 
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/equipment_items?id=eq.${itemId}`, {
+  const r = await fetch(`${SUPABASE_URL}/api/equipment_items?id=eq.${itemId}`, {
     method: 'PATCH', headers: { ...getHeaders(), Prefer: 'return=minimal' },
     body: JSON.stringify({ assessed: true })
   });
@@ -728,11 +728,11 @@ async function markEquipAssessed(itemId) {
 
 async function exportEquipmentCsv() {
   const h = getHeaders();
-  const items = await apiFetch(`${SUPABASE_URL}/rest/v1/equipment_items?dismissed=is.false&parent_id=is.null&select=*,equipment_templates(name)&order=created_at`, { headers: h });
+  const items = await apiFetch(`${SUPABASE_URL}/api/equipment_items?dismissed=is.false&parent_id=is.null&select=*,equipment_templates(name)&order=created_at`, { headers: h });
   if (!items) return;
   const ids  = items.map(i => i.id).join(',');
   let docs = [];
-  if (ids) docs = await apiFetch(`${SUPABASE_URL}/rest/v1/documents?equipment_item_id=in.(${ids})&select=*`, { headers: h }) || [];
+  if (ids) docs = await apiFetch(`${SUPABASE_URL}/api/documents?equipment_item_id=in.(${ids})&select=*`, { headers: h }) || [];
   const docsByItem = {};
   docs.forEach(d => { (docsByItem[d.equipment_item_id] = docsByItem[d.equipment_item_id] || []).push(d); });
 
@@ -777,8 +777,8 @@ async function bulkDeleteEquipment() {
   const h   = { ...getHeaders(), Prefer: 'return=minimal' };
   try {
     const results = await Promise.all(ids.map(id =>
-      fetch(`${SUPABASE_URL}/rest/v1/documents?equipment_item_id=eq.${id}`, { method: 'DELETE', headers: h })
-        .then(() => fetch(`${SUPABASE_URL}/rest/v1/equipment_items?id=eq.${id}`, { method: 'DELETE', headers: h }))
+      fetch(`${SUPABASE_URL}/api/documents?equipment_item_id=eq.${id}`, { method: 'DELETE', headers: h })
+        .then(() => fetch(`${SUPABASE_URL}/api/equipment_items?id=eq.${id}`, { method: 'DELETE', headers: h }))
     ));
     const failed = results.filter(r => !r.ok);
     if (failed.length) {
@@ -798,7 +798,7 @@ async function bulkDeleteEquipment() {
 // Admin: Edit equipment record
 async function openEditEquipment(itemId) {
   const h = getHeaders();
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/equipment_items?id=eq.${itemId}&select=*`, { headers: h });
+  const res = await fetch(`${SUPABASE_URL}/api/equipment_items?id=eq.${itemId}&select=*`, { headers: h });
   if (!res.ok) { showToast('Failed to load equipment', 'error'); return; }
   const [item] = await res.json();
   if (!item) { showToast('Equipment not found', 'error'); return; }
@@ -816,7 +816,7 @@ async function saveEditEquipment() {
   const serial_number = document.getElementById('editEquipSerial').value.trim();
   const assessed = document.getElementById('editEquipAssessed').checked;
   if (!name) { showToast('Equipment name is required', 'warn'); return; }
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/equipment_items?id=eq.${id}`, {
+  const res = await fetch(`${SUPABASE_URL}/api/equipment_items?id=eq.${id}`, {
     method: 'PATCH',
     headers: { ...h, Prefer: 'return=minimal' },
     body: JSON.stringify({ name, serial_number, assessed })

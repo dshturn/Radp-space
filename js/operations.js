@@ -78,7 +78,7 @@ async function loadOperations() {
 
   const from = _sitesPage * _SITES_PAGE_SIZE;
   const res  = await fetch(
-    `${SUPABASE_URL}/rest/v1/operation_sites`
+    `${SUPABASE_URL}/api/operation_sites`
     + `?contractor_id=eq.${u.id}&status=eq.active&order=created_at.desc`
     + `&select=*,operation_site_personnel(personnel_id,personnel(expiry_date))`
     + `,operation_site_equipment(equipment_item_id,equipment_items(documents(expiry_date)))`
@@ -181,7 +181,7 @@ function openCreateSite() {
 async function createSite() {
   const title = document.getElementById('newSiteTitle').value.trim();
   if (!title) { showToast('Enter a site name', 'warn'); return; }
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/operation_sites`, {
+  const r = await fetch(`${SUPABASE_URL}/api/operation_sites`, {
     method: 'POST',
     headers: { ...getHeaders(), Prefer: 'return=representation' },
     body: JSON.stringify({ contractor_id: getUser().id, title })
@@ -206,7 +206,7 @@ async function saveEditSite() {
   const id    = parseInt(document.getElementById('editSiteId').value);
   const title = document.getElementById('editSiteTitle').value.trim();
   if (!title) { showToast('Title cannot be empty', 'warn'); return; }
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/operation_sites?id=eq.${id}`, {
+  const r = await fetch(`${SUPABASE_URL}/api/operation_sites?id=eq.${id}`, {
     method: 'PATCH',
     headers: { ...getHeaders(), Prefer: 'return=minimal' },
     body: JSON.stringify({ title })
@@ -223,7 +223,7 @@ async function saveEditSite() {
 async function archiveSite(id) {
   const ok = await showConfirm('Archive this operation site? All personnel and equipment assignments will be removed.');
   if (!ok) return;
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/operation_sites?id=eq.${id}`, {
+  const r = await fetch(`${SUPABASE_URL}/api/operation_sites?id=eq.${id}`, {
     method: 'PATCH',
     headers: { ...getHeaders(), Prefer: 'return=minimal' },
     body: JSON.stringify({ status: 'archived' })
@@ -239,9 +239,9 @@ async function archiveSite(id) {
 async function loadSiteDetail(id) {
   const h = getHeaders();
   const [siteRes, persRes, equipRes] = await Promise.all([
-    apiFetch(`${SUPABASE_URL}/rest/v1/operation_sites?id=eq.${id}`, { headers: h }),
-    apiFetch(`${SUPABASE_URL}/rest/v1/operation_site_personnel?site_id=eq.${id}&select=*,personnel(id,full_name,position,national_id,expiry_date)`, { headers: h }),
-    apiFetch(`${SUPABASE_URL}/rest/v1/operation_site_equipment?site_id=eq.${id}&select=*,equipment_items(id,serial_number,model,equipment_templates(name),documents(expiry_date))`, { headers: h })
+    apiFetch(`${SUPABASE_URL}/api/operation_sites?id=eq.${id}`, { headers: h }),
+    apiFetch(`${SUPABASE_URL}/api/operation_site_personnel?site_id=eq.${id}&select=*,personnel(id,full_name,position,national_id,expiry_date)`, { headers: h }),
+    apiFetch(`${SUPABASE_URL}/api/operation_site_equipment?site_id=eq.${id}&select=*,equipment_items(id,serial_number,model,equipment_templates(name),documents(expiry_date))`, { headers: h })
   ]);
 
   if (!siteRes?.length) return;
@@ -324,8 +324,8 @@ function renderSiteEquipment(items) {
 async function openSitePersonnelSelector() {
   const h = getHeaders();
   const [peopleRes, assignedRes] = await Promise.all([
-    fetch(`${SUPABASE_URL}/rest/v1/personnel?assessed=eq.true&select=*&order=full_name`, { headers: h }),
-    fetch(`${SUPABASE_URL}/rest/v1/operation_site_personnel?site_id=eq.${currentSiteId}&select=id,personnel_id`, { headers: h })
+    fetch(`${SUPABASE_URL}/api/personnel?assessed=eq.true&select=*&order=full_name`, { headers: h }),
+    fetch(`${SUPABASE_URL}/api/operation_site_personnel?site_id=eq.${currentSiteId}&select=id,personnel_id`, { headers: h })
   ]);
   if (peopleRes.status === 401) { localStorage.removeItem('radp_token'); localStorage.removeItem('radp_user'); showPage('login'); return; }
   const people   = peopleRes.ok  ? await peopleRes.json()  : [];
@@ -367,13 +367,13 @@ async function openSitePersonnelSelector() {
 }
 
 async function addPersonnelToSite(persId) {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/operation_site_personnel`, {
+  const r = await fetch(`${SUPABASE_URL}/api/operation_site_personnel`, {
     method: 'POST',
     headers: { ...getHeaders(), Prefer: 'return=minimal' },
     body: JSON.stringify({ site_id: currentSiteId, personnel_id: persId })
   });
   if (!r.ok) { showToast('Failed to add', 'error'); return; }
-  const person = await apiFetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${persId}&select=full_name`, { headers: getHeaders() });
+  const person = await apiFetch(`${SUPABASE_URL}/api/personnel?id=eq.${persId}&select=full_name`, { headers: getHeaders() });
   const persLabel = person?.[0]?.full_name || 'Personnel';
   logAudit('site', currentSiteId, 'added_personnel', persLabel);
   loadSiteDetail(currentSiteId);
@@ -384,12 +384,12 @@ async function addSelectedSitePersonnel() {
   const checked = [...document.querySelectorAll('#opsPersSelList input:checked')].map(c => parseInt(c.value));
   if (!checked.length) { showToast('Select at least one person', 'warn'); return; }
   for (const id of checked) {
-    await fetch(`${SUPABASE_URL}/rest/v1/operation_site_personnel`, {
+    await fetch(`${SUPABASE_URL}/api/operation_site_personnel`, {
       method: 'POST',
       headers: { ...getHeaders(), Prefer: 'return=minimal' },
       body: JSON.stringify({ site_id: currentSiteId, personnel_id: id })
     });
-    const person = await apiFetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${id}&select=full_name`, { headers: getHeaders() });
+    const person = await apiFetch(`${SUPABASE_URL}/api/personnel?id=eq.${id}&select=full_name`, { headers: getHeaders() });
     const persLabel = person?.[0]?.full_name || 'Personnel';
     logAudit('site', currentSiteId, 'added_personnel', persLabel);
   }
@@ -399,7 +399,7 @@ async function addSelectedSitePersonnel() {
 }
 
 async function removeSitePersonnel(rowId, fromSelector = false) {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/operation_site_personnel?id=eq.${rowId}`, {
+  const r = await fetch(`${SUPABASE_URL}/api/operation_site_personnel?id=eq.${rowId}`, {
     method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' }
   });
   if (!r.ok) { showToast('Failed to remove', 'error'); return; }
@@ -413,8 +413,8 @@ async function removeSitePersonnel(rowId, fromSelector = false) {
 async function openSiteEquipmentSelector() {
   const h = getHeaders();
   const [itemsRes, assignedRes] = await Promise.all([
-    fetch(`${SUPABASE_URL}/rest/v1/equipment_items?assessed=eq.true&dismissed=is.false&parent_id=is.null&select=*,equipment_templates(name),documents(expiry_date)&order=created_at`, { headers: h }),
-    fetch(`${SUPABASE_URL}/rest/v1/operation_site_equipment?site_id=eq.${currentSiteId}&select=id,equipment_item_id`, { headers: h })
+    fetch(`${SUPABASE_URL}/api/equipment_items?assessed=eq.true&dismissed=is.false&parent_id=is.null&select=*,equipment_templates(name),documents(expiry_date)&order=created_at`, { headers: h }),
+    fetch(`${SUPABASE_URL}/api/operation_site_equipment?site_id=eq.${currentSiteId}&select=id,equipment_item_id`, { headers: h })
   ]);
   if (itemsRes.status === 401) { localStorage.removeItem('radp_token'); localStorage.removeItem('radp_user'); showPage('login'); return; }
   const items    = itemsRes.ok  ? await itemsRes.json()  : [];
@@ -460,13 +460,13 @@ async function openSiteEquipmentSelector() {
 }
 
 async function addEquipmentToSite(itemId) {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/operation_site_equipment`, {
+  const r = await fetch(`${SUPABASE_URL}/api/operation_site_equipment`, {
     method: 'POST',
     headers: { ...getHeaders(), Prefer: 'return=minimal' },
     body: JSON.stringify({ site_id: currentSiteId, equipment_item_id: itemId })
   });
   if (!r.ok) { showToast('Failed to add', 'error'); return; }
-  const equip = await apiFetch(`${SUPABASE_URL}/rest/v1/equipment_items?id=eq.${itemId}&select=name,serial_number`, { headers: getHeaders() });
+  const equip = await apiFetch(`${SUPABASE_URL}/api/equipment_items?id=eq.${itemId}&select=name,serial_number`, { headers: getHeaders() });
   const equipLabel = equip?.[0] ? `${equip[0].name || 'Equipment'} - ${equip[0].serial_number || ''}` : 'Equipment';
   logAudit('site', currentSiteId, 'added_equipment', equipLabel);
   loadSiteDetail(currentSiteId);
@@ -477,12 +477,12 @@ async function addSelectedSiteEquipment() {
   const checked = [...document.querySelectorAll('#opsEquipSelList input:checked')].map(c => parseInt(c.value));
   if (!checked.length) { showToast('Select at least one item', 'warn'); return; }
   for (const id of checked) {
-    await fetch(`${SUPABASE_URL}/rest/v1/operation_site_equipment`, {
+    await fetch(`${SUPABASE_URL}/api/operation_site_equipment`, {
       method: 'POST',
       headers: { ...getHeaders(), Prefer: 'return=minimal' },
       body: JSON.stringify({ site_id: currentSiteId, equipment_item_id: id })
     });
-    const equip = await apiFetch(`${SUPABASE_URL}/rest/v1/equipment_items?id=eq.${id}&select=name,serial_number`, { headers: getHeaders() });
+    const equip = await apiFetch(`${SUPABASE_URL}/api/equipment_items?id=eq.${id}&select=name,serial_number`, { headers: getHeaders() });
     const equipLabel = equip?.[0] ? `${equip[0].name || 'Equipment'} - ${equip[0].serial_number || ''}` : 'Equipment';
     logAudit('site', currentSiteId, 'added_equipment', equipLabel);
   }
@@ -492,7 +492,7 @@ async function addSelectedSiteEquipment() {
 }
 
 async function removeSiteEquipment(rowId, fromSelector = false) {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/operation_site_equipment?id=eq.${rowId}`, {
+  const r = await fetch(`${SUPABASE_URL}/api/operation_site_equipment?id=eq.${rowId}`, {
     method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' }
   });
   if (!r.ok) { showToast('Failed to remove', 'error'); return; }
@@ -504,9 +504,9 @@ async function removeSiteEquipment(rowId, fromSelector = false) {
 async function printSiteSummary() {
   const h = getHeaders();
   const [siteRes, persRes, equipRes] = await Promise.all([
-    apiFetch(`${SUPABASE_URL}/rest/v1/operation_sites?id=eq.${currentSiteId}`, { headers: h }),
-    apiFetch(`${SUPABASE_URL}/rest/v1/operation_site_personnel?site_id=eq.${currentSiteId}&select=*,personnel(full_name,position,national_id)`, { headers: h }),
-    apiFetch(`${SUPABASE_URL}/rest/v1/operation_site_equipment?site_id=eq.${currentSiteId}&select=*,equipment_items(serial_number,model,equipment_templates(name))`, { headers: h }),
+    apiFetch(`${SUPABASE_URL}/api/operation_sites?id=eq.${currentSiteId}`, { headers: h }),
+    apiFetch(`${SUPABASE_URL}/api/operation_site_personnel?site_id=eq.${currentSiteId}&select=*,personnel(full_name,position,national_id)`, { headers: h }),
+    apiFetch(`${SUPABASE_URL}/api/operation_site_equipment?site_id=eq.${currentSiteId}&select=*,equipment_items(serial_number,model,equipment_templates(name))`, { headers: h }),
   ]);
   if (!siteRes || !persRes || !equipRes) return;
   const site = siteRes[0];

@@ -3,7 +3,7 @@
 const _adminUserMap = new Map();
 
 async function loadUsers() {
-  let url = `${SUPABASE_URL}/rest/v1/user_profiles?select=*&order=status.asc,created_at.desc`;
+  let url = `${SUPABASE_URL}/api/user_profiles?select=*&order=status.asc,created_at.desc`;
   const roleFilter = document.getElementById('usersRoleFilter')?.value;
   if (roleFilter) url += `&role=eq.${encodeURIComponent(roleFilter)}`;
 
@@ -72,8 +72,8 @@ async function openEditUser(userId) {
 
   const h = getHeaders();
   const [companies, serviceLines] = await Promise.all([
-    fetch(`${SUPABASE_URL}/rest/v1/companies?select=name&order=name`, { headers: h }).then(r => r.json()),
-    fetch(`${SUPABASE_URL}/rest/v1/service_lines?select=name&order=name`, { headers: h }).then(r => r.json())
+    fetch(`${SUPABASE_URL}/api/companies?select=name&order=name`, { headers: h }).then(r => r.json()),
+    fetch(`${SUPABASE_URL}/api/service_lines?select=name&order=name`, { headers: h }).then(r => r.json())
   ]);
 
   const cSel = document.getElementById('editCompany');
@@ -99,7 +99,7 @@ async function saveEditUser() {
   const role        = document.getElementById('editRole')?.value || 'contractor';
   if (!full_name || !email) { showToast('Name and email are required', 'warn'); return; }
 
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/user_profiles?id=eq.${id}`, {
+  const res = await fetch(`${SUPABASE_URL}/api/user_profiles?id=eq.${id}`, {
     method: 'PATCH',
     headers: { ...getHeaders(), Prefer: 'return=minimal' },
     body: JSON.stringify({ full_name, email, company, service_line, role })
@@ -110,7 +110,7 @@ async function saveEditUser() {
 }
 
 async function updateStatus(id, status) {
-  await fetch(`${SUPABASE_URL}/rest/v1/user_profiles?id=eq.${id}`, {
+  await fetch(`${SUPABASE_URL}/api/user_profiles?id=eq.${id}`, {
     method: 'PATCH',
     headers: { ...getHeaders(), Prefer: 'return=minimal' },
     body: JSON.stringify({ status })
@@ -121,7 +121,7 @@ async function updateStatus(id, status) {
 
 async function deleteUser(id) {
   if (!await showConfirm('Delete this user?')) return;
-  const _delRes = await fetch(`${SUPABASE_URL}/rest/v1/user_profiles?id=eq.${id}`, {
+  const _delRes = await fetch(`${SUPABASE_URL}/api/user_profiles?id=eq.${id}`, {
     method: 'DELETE',
     headers: { ...getHeaders(), Prefer: 'return=minimal' }
   });
@@ -144,7 +144,7 @@ async function _renderAuditLog() {
   const dateFrom     = document.getElementById('auditDateFrom')?.value || '';
   const dateTo       = document.getElementById('auditDateTo')?.value || '';
 
-  let url = `${SUPABASE_URL}/rest/v1/audit_log?order=created_at.desc&offset=${_auditPage * _AUDIT_PAGE_SIZE}&limit=${_AUDIT_PAGE_SIZE}`;
+  let url = `${SUPABASE_URL}/api/audit_log?order=created_at.desc&offset=${_auditPage * _AUDIT_PAGE_SIZE}&limit=${_AUDIT_PAGE_SIZE}`;
   if (entityFilter) url += `&entity_type=eq.${encodeURIComponent(entityFilter)}`;
   if (dateFrom)     url += `&created_at=gte.${encodeURIComponent(dateFrom)}T00:00:00Z`;
   if (dateTo)       url += `&created_at=lte.${encodeURIComponent(dateTo)}T23:59:59Z`;
@@ -161,7 +161,7 @@ async function _renderAuditLog() {
   let userMap = {};
   if (actorIds.length > 0) {
     const h = getHeaders();
-    const users = await apiFetch(`${SUPABASE_URL}/rest/v1/user_profiles?id=in.(${actorIds.join(',')})&select=id,full_name,service_line`, { headers: h }) || [];
+    const users = await apiFetch(`${SUPABASE_URL}/api/user_profiles?id=in.(${actorIds.join(',')})&select=id,full_name,service_line`, { headers: h }) || [];
     userMap = Object.fromEntries(users.map(u => [u.id, u]));
   }
   // Add user data to rows

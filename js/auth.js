@@ -19,7 +19,7 @@ async function login() {
     return;
   }
 
-  const profileRes = await fetch(`${SUPABASE_URL}/rest/v1/user_profiles?id=eq.${data.user.id}&select=status,role,full_name,company,service_line`, {
+  const profileRes = await fetch(`${SUPABASE_URL}/api/user_profiles?id=eq.${data.user.id}&select=status,role,full_name,company,service_line`, {
     headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${data.access_token}` }
   });
   const profiles = await profileRes.json();
@@ -57,11 +57,11 @@ async function loadRegisterOptions() {
 
   // Contractors pick from service_lines; Aramco users pick from aramco_departments.
   const optionsUrl = isContractor
-    ? `${SUPABASE_URL}/rest/v1/service_lines?select=name&order=name`
-    : `${SUPABASE_URL}/rest/v1/aramco_departments?select=name&order=name`;
+    ? `${SUPABASE_URL}/api/service_lines?select=name&order=name`
+    : `${SUPABASE_URL}/api/aramco_departments?select=name&order=name`;
 
   const [companies, options] = await Promise.all([
-    fetch(`${SUPABASE_URL}/rest/v1/companies?select=name&order=name`, { headers: anonH }).then(r => r.json()),
+    fetch(`${SUPABASE_URL}/api/companies?select=name&order=name`, { headers: anonH }).then(r => r.json()),
     fetch(optionsUrl, { headers: anonH }).then(r => r.json())
   ]);
 
@@ -109,7 +109,7 @@ async function addNewCompany() {
   const msg  = document.getElementById('newCompanyMsg');
   if (!name) { msg.style.color = '#fda4af'; msg.textContent = 'Please enter a company name.'; return; }
   msg.style.color = '#94a3b8'; msg.textContent = 'Adding...';
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/companies`, {
+  const res = await fetch(`${SUPABASE_URL}/api/companies`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${getToken() || SUPABASE_KEY}`, Prefer: 'return=minimal' },
     body: JSON.stringify({ name })
@@ -134,7 +134,7 @@ async function addNewServiceLine() {
   const label = 'department';
   if (!name) { msg.style.color = '#fda4af'; msg.textContent = `Please enter a ${label} name.`; return; }
   msg.style.color = '#94a3b8'; msg.textContent = 'Adding...';
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/aramco_departments`, {
+  const res = await fetch(`${SUPABASE_URL}/api/aramco_departments`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${getToken() || SUPABASE_KEY}`, Prefer: 'return=minimal' },
     body: JSON.stringify({ name })
@@ -185,7 +185,7 @@ async function register() {
   });
   const data = await res.json();
   if (data.user) {
-    await fetch(`${SUPABASE_URL}/rest/v1/user_profiles`, {
+    await fetch(`${SUPABASE_URL}/api/user_profiles`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Prefer: 'resolution=merge-duplicates' },
       body: JSON.stringify({ id: data.user.id, ...profile })
