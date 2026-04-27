@@ -1,24 +1,20 @@
 const express = require('express');
-const { Pool } = require('pg');
+const axios = require('axios');
 const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ── Database Connection Pool ──
-const pool = new Pool({
-  host: process.env.AZURE_DB_HOST,
-  port: process.env.AZURE_DB_PORT || 5432,
-  database: process.env.AZURE_DB_NAME,
-  user: process.env.AZURE_DB_USER,
-  password: process.env.AZURE_DB_PASSWORD,
-  ssl: { rejectUnauthorized: false }, // Required for Azure
-});
+// ── Supabase Configuration ──
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 
-pool.on('error', (err) => {
-  console.error('Unexpected pool error:', err);
-});
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  console.error('Missing Supabase environment variables');
+  process.exit(1);
+}
 
 // ── Middleware ──
 app.use(cors());
