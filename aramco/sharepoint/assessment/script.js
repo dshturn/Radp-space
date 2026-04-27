@@ -38,14 +38,8 @@ const StorageUtil = {
 // ═══════════════════════════════════════════════════════════════
 
 function initializePage() {
-  authToken = StorageUtil.getItem('assessor_token');
-  currentUser = StorageUtil.getItem('assessor_user');
-
-  if (authToken && currentUser) {
-    showContentView();
-  } else {
-    showLoginView();
-  }
+  currentUser = StorageUtil.getItem('assessor_user') || 'Assessor';
+  showContentView();
 }
 
 function showLoginView() {
