@@ -165,12 +165,16 @@ Audit Log (immutable, forever)
 
 **Phase 2 (4–6 weeks, in progress)**:
 - [x] LoR module UI + logic (complete, deployed locally)
-- [ ] **Backend Migration: Supabase → Azure SQL + Heroku** (firewall compatibility issue)
-  - [ ] Create Azure SQL Database
-  - [ ] Export/import PostgreSQL schema + data
-  - [ ] Build Node.js API on Heroku
+- [ ] **Backend Migration: Supabase → Azure PostgreSQL + Heroku** (firewall compatibility issue)
+  - [x] Create Azure Database for PostgreSQL (2026-04-27: `radp-postgres.postgres.database.azure.com`, region UAE North, v18.3)
+  - [x] Configure firewall rules (IP 166.87.29.57 added)
+  - [ ] Build & deploy Node.js API on Heroku (NEXT)
+  - [ ] Test Heroku → Azure PostgreSQL connectivity (verify before data migration)
+  - [ ] Test from SharePoint → Heroku (verify firewall allows access)
+  - [ ] Export Supabase schema + data (pg_dump, PENDING pg tools install)
+  - [ ] Import into Azure PostgreSQL
   - [ ] Update script.js to call Heroku instead of Supabase
-  - [ ] Test from SharePoint (verify firewall allows access)
+  - **Decision (2026-04-27)**: Test connectivity before migration to avoid wasted work if firewall blocks Heroku
 - [ ] Audit log export (PDF/CSV with date range filtering)
 - [ ] Audit log search (by user, action, entity type)
 - [ ] Reduce AI token burn (~50 tokens/assessment)
