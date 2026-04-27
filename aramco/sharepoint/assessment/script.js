@@ -82,16 +82,6 @@ function showContentView() {
   document.getElementById('currentUser').textContent = currentUser;
 }
 
-function setAssessorName(event) {
-  event.preventDefault();
-  const name = document.getElementById('assessorName').value.trim();
-  if (name) {
-    currentUser = name;
-    StorageUtil.setItem('assessor_user', currentUser);
-    document.getElementById('currentUser').textContent = currentUser;
-    document.getElementById('assessorInput').style.display = 'none';
-  }
-}
 
 function handleLogout() {
   if (confirm('Clear session and reset?')) {
