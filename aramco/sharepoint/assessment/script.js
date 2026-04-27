@@ -65,15 +65,13 @@ function setAssessorName(event) {
 }
 
 function handleLogout() {
-  if (confirm('Are you sure you want to logout?')) {
-    StorageUtil.removeItem('assessor_token');
+  if (confirm('Clear session and reset?')) {
     StorageUtil.removeItem('assessor_user');
-    authToken = null;
-    currentUser = null;
+    currentUser = 'Assessor';
     document.getElementById('assessmentId').value = '';
     document.getElementById('messageContainer').innerHTML = '';
     document.getElementById('lorContainer').classList.remove('active');
-    showLoginView();
+    document.getElementById('currentUser').textContent = currentUser;
   }
 }
 
