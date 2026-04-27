@@ -1,8 +1,9 @@
 # SharePoint Integration: RADP Assessment LoR Module
 
-**Status**: Phase 3 (LoR Module) — In Development  
-**Last Updated**: 2026-04-26  
-**Owner**: Tech Lead
+**Status**: Phase 3 (LoR Module) — Blocked on backend access  
+**Last Updated**: 2026-04-27  
+**Owner**: Tech Lead  
+**Blocker**: Aramco firewall blocks outbound requests to supabase.co domain
 
 ---
 
