@@ -251,10 +251,10 @@ async function fetchAssessment() {
 }
 
 async function fetchFromRadp(endpoint) {
-  const response = await fetch(`${RADP_CONFIG.url}${endpoint}`, {
+  const proxyUrl = `${RADP_CONFIG.proxyUrl}?endpoint=${encodeURIComponent(endpoint)}`;
+
+  const response = await fetch(proxyUrl, {
     headers: {
-      'apikey': RADP_CONFIG.serviceRoleKey,
-      'Authorization': `Bearer ${RADP_CONFIG.serviceRoleKey}`,
       'Content-Type': 'application/json'
     }
   });
