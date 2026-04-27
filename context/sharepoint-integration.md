@@ -479,9 +479,9 @@ C:\Users\dshtu\Radp-space\
 
 ## Known Issues & Workarounds
 
-| Issue | Status | Workaround |
+| Issue | Status | Workaround/Resolution |
 |-------|--------|-----------|
-| Aramco firewall blocks supabase.co | 🔴 Blocking | Use alternative backend on whitelisted domain |
+| Aramco firewall blocks supabase.co | ✅ Resolved | Migrate to Azure SQL + Heroku (both whitelisted) |
 | sessionStorage may fail in iframe | ✅ Handled | StorageUtil falls back to sessionStorage |
 | Document viewer slow on large PDFs | ⚠️ Known | No optimization yet; acceptable for MVP |
 | No pagination for large rosters | ⚠️ Known | Acceptable; typical assessment has <50 personnel |
