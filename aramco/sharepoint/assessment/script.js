@@ -37,9 +37,38 @@ const StorageUtil = {
 // AUTHENTICATION
 // ═══════════════════════════════════════════════════════════════
 
-function initializePage() {
-  currentUser = StorageUtil.getItem('assessor_user') || 'Assessor';
+async function initializePage() {
+  currentUser = StorageUtil.getItem('assessor_user');
+
+  // Get user from SharePoint if not cached
+  if (!currentUser) {
+    const user = await getCurrentUser();
+    if (user?.title) {
+      currentUser = user.title;
+      StorageUtil.setItem('assessor_user', currentUser);
+    } else {
+      currentUser = 'Assessor';
+    }
+  }
+
   showContentView();
+}
+
+async function getCurrentUser() {
+  const base = 'https://sharek.aramco.com.sa';
+  try {
+    const resp = await fetch(`${base}/_api/web/currentuser`, {
+      method: 'GET',
+      headers: { 'Accept': 'application/json; odata=verbose' }
+    });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const json = await resp.json();
+    const u = json?.d ?? {};
+    return { id: u.Id, title: u.Title, email: u.Email };
+  } catch (e) {
+    console.error('User fetch error', e);
+    return null;
+  }
 }
 
 function showLoginView() {
