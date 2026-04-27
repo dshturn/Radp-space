@@ -426,11 +426,33 @@ C:\Users\dshtu\Radp-space\
 
 ---
 
+## Critical Issue: Aramco Firewall Blocks Supabase (2026-04-27)
+
+**Problem**: Aramco's network firewall blocks outbound requests to `fslleuedqlxpjnerruzt.supabase.co`
+- LoR module works perfectly locally (tested with proxy architecture)
+- LoR module fails from SharePoint (network-level block)
+- All API calls are blocked before they reach Supabase
+
+**Root Cause**: Aramco's firewall policy restricts external domain access
+
+**Attempted Solutions**:
+1. ✅ Edge Function proxy — works locally, blocked from SharePoint
+2. ✅ Anon API key — valid key, blocked by firewall
+3. ✅ Service role key — valid approach, blocked by firewall
+4. ✅ RLS policies — configured correctly, not the issue
+
+**Solution Path**: Use alternative backend service
+- Must be external (not Aramco infrastructure)
+- Must be on domain Aramco firewall allows
+- Candidates: Azure, AWS, Vercel, Firebase, or custom domain
+
+**Next Action**: Identify which external domains/services Aramco allows, then migrate backend from Supabase to that service.
+
 ## Known Issues & Workarounds
 
 | Issue | Status | Workaround |
 |-------|--------|-----------|
-| CORS blocks auth requests | 🟡 Investigating | Use service_role key (temp) or host on SharePoint |
+| Aramco firewall blocks supabase.co | 🔴 Blocking | Use alternative backend on whitelisted domain |
 | sessionStorage may fail in iframe | ✅ Handled | StorageUtil falls back to sessionStorage |
 | Document viewer slow on large PDFs | ⚠️ Known | No optimization yet; acceptable for MVP |
 | No pagination for large rosters | ⚠️ Known | Acceptable; typical assessment has <50 personnel |
