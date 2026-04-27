@@ -19,20 +19,21 @@
 
 ## P0: Critical (In Progress)
 
-### Backend Migration to Heroku + Azure (Phase 2)
-- **Status**: Azure PostgreSQL created; Heroku setup NEXT
+### Heroku Proxy Layer for Supabase (Phase 2)
+- **Status**: API scaffold created; Heroku deployment NEXT
 - **Completed**: 
-  - Azure Database for PostgreSQL (radp-postgres.postgres.database.azure.com)
-  - Firewall rule added (IP 166.87.29.57)
+  - Node.js API scaffold (Express + pg client ready)
+  - Firewall testing: Heroku ✅ whitelisted, Supabase ❌ blocked
+  - Decision: proxy architecture, no migration
 - **Remaining**:
-  - Create Heroku app + Node.js API scaffold
-  - Test Heroku → Azure connectivity
-  - Test SharePoint → Heroku (firewall validation)
-  - Export/import Supabase data
-  - Update frontend to call Heroku
-- **Estimate**: 2–3 days
+  - Update API to proxy requests to Supabase (not Azure DB)
+  - Create Heroku app + deploy
+  - Test SharePoint → Heroku connectivity
+  - Update script.js to call Heroku endpoints
+  - Deactivate direct Supabase calls from frontend
+- **Estimate**: 1–2 days
 - **Owner**: Tech Lead
-- **Blocker**: PostgreSQL CLI tools (pg_dump, psql) need to be installed locally for data export
+- **Benefit**: Zero data migration risk, instant rollback, existing Supabase schema intact
 
 ## P1: High (Next 2–3 weeks)
 
