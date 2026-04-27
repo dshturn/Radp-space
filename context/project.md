@@ -1,5 +1,22 @@
 # Project Context: RADP
 
+## Architecture (Hybrid: Public + Internal Aramco)
+
+**Public deployment** (External contractors, public internet):
+- Frontend: GitHub → Vercel
+- Database: Supabase
+- API: Direct to Supabase REST API
+
+**Internal deployment** (Aramco employees, restricted firewall):
+- Frontend: Same app hosted in SharePoint
+- Database: Supabase (same as public)
+- API: SharePoint → Heroku proxy → Supabase REST API
+- **Why Heroku?** Firewall blocks vercel.com and supabase.co, but allows herokuapp.com
+
+**Data source:** Single Supabase instance (shared by both)
+
+---
+
 ## What It Does
 
 RADP verifies contractor crew and equipment are qualified before mobilizing to well intervention jobs. Contractors submit roster + certs. Aramco assessor approves or rejects within 24h. Field supervisor checks expiry status on tablet before job start.
