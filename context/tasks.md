@@ -17,6 +17,23 @@
 - **Timeline**: ASAP
 - **Owner**: Backend Engineer
 
+## P0: Critical (In Progress)
+
+### Backend Migration to Heroku + Azure (Phase 2)
+- **Status**: Azure PostgreSQL created; Heroku setup NEXT
+- **Completed**: 
+  - Azure Database for PostgreSQL (radp-postgres.postgres.database.azure.com)
+  - Firewall rule added (IP 166.87.29.57)
+- **Remaining**:
+  - Create Heroku app + Node.js API scaffold
+  - Test Heroku → Azure connectivity
+  - Test SharePoint → Heroku (firewall validation)
+  - Export/import Supabase data
+  - Update frontend to call Heroku
+- **Estimate**: 2–3 days
+- **Owner**: Tech Lead
+- **Blocker**: PostgreSQL CLI tools (pg_dump, psql) need to be installed locally for data export
+
 ## P1: High (Next 2–3 weeks)
 
 ### Mobile UX: Faster Lookups
