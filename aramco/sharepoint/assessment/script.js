@@ -1,10 +1,9 @@
 // Configuration
 const RADP_CONFIG = {
   url: 'https://fslleuedqlxpjnerruzt.supabase.co',
-  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzbGxldWVkcWx4cGpuZXJydXp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5OTMxMTksImV4cCI6MjA5MDU2OTExOX0.H1narO5BF5uF2KwlKtKvioz3mun2ecxb1Lg_xVDLdt4'
+  secretKey: 'sb_secret_nzqPB-s8Y1LZRKW4ao2x9A_P4kCjPc4'
 };
 
-let authToken = null;
 let currentUser = null;
 
 // Storage utility - fallback to sessionStorage if localStorage fails (for iframe isolation)
