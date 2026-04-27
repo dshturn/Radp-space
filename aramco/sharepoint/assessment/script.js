@@ -53,74 +53,14 @@ function showContentView() {
   document.getElementById('currentUser').textContent = currentUser;
 }
 
-async function handleLogin(event) {
+function setAssessorName(event) {
   event.preventDefault();
-
-  const email = document.getElementById('loginEmail').value;
-  const password = document.getElementById('loginPassword').value;
-  const msgEl = document.getElementById('loginMessage');
-
-  msgEl.innerHTML = '<div class="loading"><div class="spinner"></div> Authenticating...</div>';
-
-  try {
-    // Authenticate with Supabase directly
-    const authRes = await fetch(`${RADP_CONFIG.url}/auth/v1/token?grant_type=password`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': RADP_CONFIG.anonKey
-      },
-      body: JSON.stringify({
-        email: email,
-        password: password
-      })
-    });
-
-    if (!authRes.ok) {
-      const error = await authRes.json();
-      throw new Error(error.error_description || 'Invalid credentials');
-    }
-
-    const authData = await authRes.json();
-    authToken = authData.access_token;
-
-    // Get user profile to verify role
-    const userRes = await fetch(`${RADP_CONFIG.url}/rest/v1/user_profiles?select=full_name,role`, {
-      headers: {
-        'Authorization': `Bearer ${authToken}`,
-        'apikey': RADP_CONFIG.anonKey
-      }
-    });
-
-    if (!userRes.ok) throw new Error('Failed to fetch user profile');
-
-    const users = await userRes.json();
-    if (!users || users.length === 0) throw new Error('User profile not found');
-
-    const user = users[0];
-
-    // Check if user is assessor
-    if (user.role !== 'assessor' && user.role !== 'admin') {
-      msgEl.innerHTML = '<div class="error">Only assessors and admins can access this module</div>';
-      authToken = null;
-      return;
-    }
-
-    // Store credentials
-    currentUser = user.full_name || email;
-    StorageUtil.setItem('assessor_token', authToken);
+  const name = document.getElementById('assessorName').value.trim();
+  if (name) {
+    currentUser = name;
     StorageUtil.setItem('assessor_user', currentUser);
-
-    msgEl.innerHTML = '<div class="success">Login successful! Loading module...</div>';
-    setTimeout(() => {
-      showContentView();
-      msgEl.innerHTML = '';
-    }, 1000);
-
-  } catch (error) {
-    console.error('Login error:', error);
-    msgEl.innerHTML = `<div class="error">${escapeHtml(error.message)}</div>`;
-    authToken = null;
+    document.getElementById('currentUser').textContent = currentUser;
+    document.getElementById('assessorInput').style.display = 'none';
   }
 }
 
