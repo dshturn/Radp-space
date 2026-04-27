@@ -426,7 +426,7 @@ C:\Users\dshtu\Radp-space\
 
 ---
 
-## Critical Issue: Aramco Firewall Blocks Supabase (2026-04-27)
+## Critical Issue: Aramco Firewall Blocks Supabase (RESOLVED 2026-04-27)
 
 **Problem**: Aramco's network firewall blocks outbound requests to `fslleuedqlxpjnerruzt.supabase.co`
 - LoR module works perfectly locally (tested with proxy architecture)
@@ -435,18 +435,31 @@ C:\Users\dshtu\Radp-space\
 
 **Root Cause**: Aramco's firewall policy restricts external domain access
 
-**Attempted Solutions**:
-1. ✅ Edge Function proxy — works locally, blocked from SharePoint
-2. ✅ Anon API key — valid key, blocked by firewall
-3. ✅ Service role key — valid approach, blocked by firewall
-4. ✅ RLS policies — configured correctly, not the issue
+**Firewall Test Results** (2026-04-27):
+```
+✅ WHITELISTED:
+  - Azure AD (login.microsoftonline.com)
+  - Azure SQL (database.windows.net)
+  - Firebase (firebaseio.com)
+  - Heroku (herokuapp.com)
 
-**Solution Path**: Use alternative backend service
-- Must be external (not Aramco infrastructure)
-- Must be on domain Aramco firewall allows
-- Candidates: Azure, AWS, Vercel, Firebase, or custom domain
+❌ BLOCKED:
+  - Azure App Service (azurewebsites.net)
+  - AWS (all: rds.amazonaws.com, lambda.amazonaws.com, etc.)
+  - Google Cloud Functions (cloudfunctions.net)
+  - Vercel (vercel.com)
+  - Supabase (supabase.co)
+```
 
-**Next Action**: Identify which external domains/services Aramco allows, then migrate backend from Supabase to that service.
+**Selected Solution: Azure SQL + Heroku API** ✅
+- **Why**: Both services whitelisted; Azure SQL is core Microsoft service (very unlikely to be blocked in future); familiar PostgreSQL + REST API tech stack
+- **Data Storage**: Azure SQL Database (PostgreSQL-compatible)
+- **API Layer**: Node.js Express on Heroku
+- **Migration Path**: Export from Supabase → Import to Azure SQL (straightforward SQL migration)
+
+**Alternative Considered**: Firebase Firestore
+- Pros: Single service, simpler deployment
+- Cons: Google service (medium future-block risk if Aramco restricts Google domains)
 
 ## Known Issues & Workarounds
 
