@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aramco Firewall Compatibility Test</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+
+    .test-section {
+      margin-bottom: 30px;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 20px;
+    }
+
+    .test-section h2 {
+      font-size: 16px;
+      color: #333;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .service-icon {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      background: #e0e0e0;
+      border-radius: 4px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #666;
+    }
+
+    .tests {
+      display: grid;
+      gap: 12px;
+    }
+
+    .test-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: #fafafa;
+      border-radius: 4px;
+      border-left: 4px solid #ddd;
+    }
+
+    .test-item.testing {
+      background: #f0f7ff;
+      border-left-color: #0066cc;
+    }
+
+    .test-item.success {
+      background: #f0f8f4;
+      border-left-color: #10b981;
+    }
+
+    .test-item.failed {
+      background: #fef2f2;
+      border-left-color: #ef4444;
+    }
+
+    .test-label {
+      flex: 1;
+      font-size: 13px;
+      color: #333;
+    }
+
+    .test-label small {
+      display: block;
+      color: #666;
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      background: #0066cc;
+      color: white;
+      font-weight: 500;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    button:hover {
+      background: #0052a3;
+    }
+
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .status {
+      font-size: 12px;
+      font-weight: 500;
+      min-width: 60px;
+      text-align: right;
+    }
+
+    .status.loading {
+      color: #0066cc;
+    }
+
+    .status.success {
+      color: #10b981;
+    }
+
+    .status.failed {
+      color: #ef4444;
+    }
+
+    .result-box {
+      margin-top: 12px;
+      padding: 12px;
+      background: #f5f5f5;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      color: #333;
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+    }
+
+    .result-box.success {
+      background: #f0f8f4;
+      border-color: #10b981;
+      color: #10b981;
+    }
+
+    .result-box.failed {
+      background: #fef2f2;
+      border-color: #ef4444;
+      color: #ef4444;
+    }
+
+    .summary {
+      margin-top: 30px;
+      padding: 20px;
+      background: #f9fafb;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .summary h3 {
+      font-size: 14px;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .summary-text {
+      font-size: 13px;
+      color: #666;
+      line-height: 1.6;
+    }
+
+    .whitelisted {
+      color: #10b981;
+      font-weight: 500;
+    }
+
+    .blocked {
+      color: #ef4444;
+      font-weight: 500;
+    }
+
+    .info-box {
+      margin-bottom: 20px;
+      padding: 12px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 4px;
+      font-size: 13px;
+      color: #1e40af;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔒 Aramco Firewall Compatibility Test</h1>
+    <p class="subtitle">Click each button to test if the service is accessible from Aramco's network</p>
+
+    <div class="info-box">
+      <strong>How this works:</strong> Each button attempts a fetch request to that cloud service. If it succeeds, the service is likely whitelisted. If it fails with a network/CORS error, the firewall is blocking it.
+    </div>
+
+    <!-- Azure Tests -->
+    <div class="test-section">
+      <h2><span class="service-icon">☁️</span> Microsoft Azure</h2>
+      <div class="tests" id="azure-tests">
+        <div class="test-item" id="test-azure-auth">
+          <div class="test-label">
+            Azure AD Authentication
+            <small>api.identityserver.com (federated auth)</small>
+          </div>
+          <button onclick="testAzureAD()">Test</button>
+          <span class="status" id="status-azure-auth">—</span>
+        </div>
+        <div id="result-azure-auth"></div>
+
+        <div class="test-item" id="test-azure-sql">
+          <div class="test-label">
+            Azure SQL (via Azure Data Studio)
+            <small>database.windows.net (metadata check)</small>
+          </div>
+          <button onclick="testAzureSQL()">Test</button>
+          <span class="status" id="status-azure-sql">—</span>
+        </div>
+        <div id="result-azure-sql"></div>
+
+        <div class="test-item" id="test-azure-app">
+          <div class="test-label">
+            Azure App Service
+            <small>azurewebsites.net (REST API hosting)</small>
+          </div>
+          <button onclick="testAzureAppService()">Test</button>
+          <span class="status" id="status-azure-app">—</span>
+        </div>
+        <div id="result-azure-app"></div>
+      </div>
+    </div>
+
+    <!-- AWS Tests -->
+    <div class="test-section">
+      <h2><span class="service-icon">☁️</span> Amazon Web Services (AWS)</h2>
+      <div class="tests" id="aws-tests">
+        <div class="test-item" id="test-aws-rds">
+          <div class="test-label">
+            AWS RDS (PostgreSQL)
+            <small>rds.amazonaws.com (database endpoint)</small>
+          </div>
+          <button onclick="testAWSRDS()">Test</button>
+          <span class="status" id="status-aws-rds">—</span>
+        </div>
+        <div id="result-aws-rds"></div>
+
+        <div class="test-item" id="test-aws-api">
+          <div class="test-label">
+            AWS API Gateway
+            <small>execute-api.amazonaws.com (REST endpoints)</small>
+          </div>
+          <button onclick="testAWSAPI()">Test</button>
+          <span class="status" id="status-aws-api">—</span>
+        </div>
+        <div id="result-aws-api"></div>
+
+        <div class="test-item" id="test-aws-lambda">
+          <div class="test-label">
+            AWS Lambda
+            <small>lambda.amazonaws.com (serverless functions)</small>
+          </div>
+          <button onclick="testAWSLambda()">Test</button>
+          <span class="status" id="status-aws-lambda">—</span>
+        </div>
+        <div id="result-aws-lambda"></div>
+      </div>
+    </div>
+
+    <!-- Google Cloud Tests -->
+    <div class="test-section">
+      <h2><span class="service-icon">☁️</span> Google Cloud Platform (GCP)</h2>
+      <div class="tests" id="gcp-tests">
+        <div class="test-item" id="test-gcp-firestore">
+          <div class="test-label">
+            Google Cloud SQL
+            <small>cloudsql.googleapis.com (managed database)</small>
+          </div>
+          <button onclick="testGCPSQL()">Test</button>
+          <span class="status" id="status-gcp-sql">—</span>
+        </div>
+        <div id="result-gcp-sql"></div>
+
+        <div class="test-item" id="test-gcp-functions">
+          <div class="test-label">
+            Google Cloud Functions
+            <small>cloudfunctions.net (serverless)</small>
+          </div>
+          <button onclick="testGCPFunctions()">Test</button>
+          <span class="status" id="status-gcp-functions">—</span>
+        </div>
+        <div id="result-gcp-functions"></div>
+
+        <div class="test-item" id="test-firebase">
+          <div class="test-label">
+            Firebase Realtime Database
+            <small>firebaseio.com (NoSQL)</small>
+          </div>
+          <button onclick="testFirebase()">Test</button>
+          <span class="status" id="status-firebase">—</span>
+        </div>
+        <div id="result-firebase"></div>
+      </div>
+    </div>
+
+    <!-- Other Services -->
+    <div class="test-section">
+      <h2><span class="service-icon">☁️</span> Other Services</h2>
+      <div class="tests" id="other-tests">
+        <div class="test-item" id="test-vercel">
+          <div class="test-label">
+            Vercel Functions
+            <small>vercel.com (edge computing)</small>
+          </div>
+          <button onclick="testVercel()">Test</button>
+          <span class="status" id="status-vercel">—</span>
+        </div>
+        <div id="result-vercel"></div>
+
+        <div class="test-item" id="test-heroku">
+          <div class="test-label">
+            Heroku
+            <small>herokuapp.com (app hosting)</small>
+          </div>
+          <button onclick="testHeroku()">Test</button>
+          <span class="status" id="status-heroku">—</span>
+        </div>
+        <div id="result-heroku"></div>
+
+        <div class="test-item" id="test-supabase">
+          <div class="test-label">
+            Supabase (Current)
+            <small>supabase.co (for reference)</small>
+          </div>
+          <button onclick="testSupabase()">Test</button>
+          <span class="status" id="status-supabase">—</span>
+        </div>
+        <div id="result-supabase"></div>
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="summary" id="summary-box" style="display: none;">
+      <h3>📊 Summary</h3>
+      <div class="summary-text" id="summary-text"></div>
+    </div>
+  </div>
+
+  <script>
+    const tests = {};
+
+    function setStatus(testId, status, message = '') {
+      const statusEl = document.getElementById(`status-${testId}`);
+      const resultEl = document.getElementById(`result-${testId}`);
+      const itemEl = document.getElementById(`test-${testId}`);
+
+      statusEl.textContent = status === 'loading' ? '⏳' :
+                            status === 'success' ? '✅' :
+                            status === 'failed' ? '❌' : '—';
+      statusEl.className = `status ${status}`;
+
+      itemEl.className = `test-item ${status}`;
+
+      if (message) {
+        resultEl.innerHTML = `<div class="result-box ${status === 'success' ? 'success' : 'failed'}">${escapeHtml(message)}</div>`;
+      } else {
+        resultEl.innerHTML = '';
+      }
+
+      tests[testId] = status;
+      updateSummary();
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    async function testEndpoint(testId, url, description) {
+      setStatus(testId, 'loading');
+      const startTime = Date.now();
+
+      try {
+        const response = await fetch(url, {
+          method: 'HEAD',
+          mode: 'cors',
+          cache: 'no-cache',
+          timeout: 10000
+        });
+
+        const elapsed = Date.now() - startTime;
+        const message = `✅ Connected (${elapsed}ms)\nStatus: ${response.status} ${response.statusText}`;
+        setStatus(testId, 'success', message);
+      } catch (error) {
+        const elapsed = Date.now() - startTime;
+        const errorMsg = error.message || error.toString();
+        const message = `❌ Blocked (${elapsed}ms)\nError: ${errorMsg}`;
+        setStatus(testId, 'failed', message);
+      }
+    }
+
+    // Azure
+    function testAzureAD() { testEndpoint('azure-auth', 'https://login.microsoftonline.com/common/discovery/v2.0/keys', 'Azure AD'); }
+    function testAzureSQL() { testEndpoint('azure-sql', 'https://management.azure.com/subscriptions?api-version=2021-04-01', 'Azure SQL'); }
+    function testAzureAppService() { testEndpoint('azure-app', 'https://azure.microsoft.com/api/v1/status', 'Azure App Service'); }
+
+    // AWS
+    function testAWSRDS() { testEndpoint('aws-rds', 'https://rds.amazonaws.com/', 'AWS RDS'); }
+    function testAWSAPI() { testEndpoint('aws-api', 'https://apigateway.amazonaws.com/', 'AWS API Gateway'); }
+    function testAWSLambda() { testEndpoint('aws-lambda', 'https://lambda.amazonaws.com/', 'AWS Lambda'); }
+
+    // GCP
+    function testGCPSQL() { testEndpoint('gcp-sql', 'https://cloudsql.googleapis.com/v1/projects', 'Google Cloud SQL'); }
+    function testGCPFunctions() { testEndpoint('gcp-functions', 'https://cloudfunctions.net/', 'Google Cloud Functions'); }
+    function testFirebase() { testEndpoint('firebase', 'https://www.firebaseio.com/', 'Firebase'); }
+
+    // Other
+    function testVercel() { testEndpoint('vercel', 'https://vercel.com/api/v1/status', 'Vercel'); }
+    function testHeroku() { testEndpoint('heroku', 'https://api.heroku.com/', 'Heroku'); }
+    function testSupabase() { testEndpoint('supabase', 'https://supabase.co/api/v1/status', 'Supabase'); }
+
+    function updateSummary() {
+      const whitelisted = Object.entries(tests).filter(([_, status]) => status === 'success').map(([key, _]) => key);
+      const blocked = Object.entries(tests).filter(([_, status]) => status === 'failed').map(([key, _]) => key);
+
+      if (whitelisted.length === 0 && blocked.length === 0) {
+        document.getElementById('summary-box').style.display = 'none';
+        return;
+      }
+
+      document.getElementById('summary-box').style.display = 'block';
+
+      const serviceNames = {
+        'azure-auth': 'Azure AD',
+        'azure-sql': 'Azure SQL',
+        'azure-app': 'Azure App Service',
+        'aws-rds': 'AWS RDS',
+        'aws-api': 'AWS API Gateway',
+        'aws-lambda': 'AWS Lambda',
+        'gcp-sql': 'Google Cloud SQL',
+        'gcp-functions': 'Google Cloud Functions',
+        'firebase': 'Firebase',
+        'vercel': 'Vercel',
+        'heroku': 'Heroku',
+        'supabase': 'Supabase'
+      };
+
+      let html = '<p><strong>Whitelisted:</strong><br>';
+      if (whitelisted.length > 0) {
+        html += whitelisted.map(id => `<span class="whitelisted">✅ ${serviceNames[id]}</span>`).join('<br>');
+      } else {
+        html += '<em>None detected yet</em>';
+      }
+      html += '</p>';
+
+      html += '<p><strong>Blocked:</strong><br>';
+      if (blocked.length > 0) {
+        html += blocked.map(id => `<span class="blocked">❌ ${serviceNames[id]}</span>`).join('<br>');
+      } else {
+        html += '<em>None detected yet</em>';
+      }
+      html += '</p>';
+
+      document.getElementById('summary-text').innerHTML = html;
+    }
+  </script>
+</body>
+</html>
