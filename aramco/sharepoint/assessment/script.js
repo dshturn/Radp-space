@@ -86,13 +86,10 @@ function showContentView() {
 function handleLogout() {
   if (confirm('Clear session and reset?')) {
     StorageUtil.removeItem('assessor_user');
-    currentUser = 'Assessor';
     document.getElementById('assessmentId').value = '';
     document.getElementById('messageContainer').innerHTML = '';
     document.getElementById('lorContainer').classList.remove('active');
-    document.getElementById('currentUser').textContent = currentUser;
-    document.getElementById('assessorInput').style.display = 'flex';
-    document.getElementById('assessorName').value = '';
+    location.reload();
   }
 }
 
