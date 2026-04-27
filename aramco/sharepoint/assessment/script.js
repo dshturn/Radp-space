@@ -254,7 +254,8 @@ async function fetchAssessment() {
 async function fetchFromRadp(endpoint) {
   const response = await fetch(`${RADP_CONFIG.url}${endpoint}`, {
     headers: {
-      'Authorization': `Bearer ${RADP_CONFIG.secretKey}`,
+      'apikey': RADP_CONFIG.serviceRoleKey,
+      'Authorization': `Bearer ${RADP_CONFIG.serviceRoleKey}`,
       'Content-Type': 'application/json'
     }
   });
