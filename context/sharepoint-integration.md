@@ -421,7 +421,16 @@ C:\Users\dshtu\Radp-space\
 │   │   └── script.js
 │   └── RADP/
 │       └── index.html
+├── firewall-test.html    (Firewall compatibility tester)
+└── context/
+    └── sharepoint-integration.md (this file)
 ```
+
+**Firewall Testing Tool**:
+- `firewall-test.html` — Browser-based tool to test which cloud services are accessible from Aramco network
+- Run from SharePoint or any Aramco-networked browser
+- Tests: Azure (AD, SQL, App Service), AWS (all), GCP (all), Firebase, Heroku, Vercel, Supabase
+- Shows real-time results: ✅ whitelisted or ❌ blocked
 
 ---
 
