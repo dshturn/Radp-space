@@ -1,7 +1,7 @@
 // Configuration
 const RADP_CONFIG = {
   url: 'https://fslleuedqlxpjnerruzt.supabase.co',
-  secretKey: 'sb_secret_nzqPB-s8Y1LZRKW4ao2x9A_P4kCjPc4'
+  serviceRoleKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzbGxldWVkcWx4cGpuZXJydXp0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDk5MzExOSwiZXhwIjoyMDkwNTY5MTE5fQ.oY_dihwgMimesUsvHSuKNoJEXTb3c7vuqWKzeH2pwg4'
 };
 
 let currentUser = null;
