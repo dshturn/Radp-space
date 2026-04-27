@@ -577,11 +577,16 @@ C:\Users\dshtu\Radp-space\
 
 ## Decision Log
 
-**2026-04-27 — Backend Migration Decision**
+**2026-04-27 — Dual-Stack Migration Approach**
 - **Issue**: Aramco firewall blocks Supabase (supabase.co domain)
 - **Testing**: Created firewall-test.html; ran from Aramco network
 - **Results**: Azure AD, Azure SQL, Firebase, Heroku whitelisted; AWS/GCP/Vercel/Supabase blocked
-- **Decision**: Migrate to **Azure SQL + Heroku API**
+- **Decision**: Migrate to **Azure SQL + Heroku API** with **dual-stack approach**
   - Rationale: Both whitelisted; Azure SQL is core Microsoft service (lowest future-block risk)
-  - Alternative: Firebase (single service, higher risk)
-- **Next Step**: Build Phase 1 (Azure SQL setup + Heroku skeleton)
+  - Dual-stack: Keep Supabase for existing users; add Heroku in parallel; gradual migration
+  - Alternative: Firebase (single service, higher risk) — rejected
+- **Config Strategy**: Add database selector in script.js (`RADP_CONFIG.backend`)
+  - `backend: 'supabase'` → existing users (no disruption)
+  - `backend: 'azure'` → new assessments (Aramco firewall compatible)
+  - Easy rollback if needed
+- **Next Step**: Phase 1 — Create Azure SQL + Heroku accounts and deploy skeleton
