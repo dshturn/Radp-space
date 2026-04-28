@@ -17,7 +17,12 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
 }
 
 // ── Middleware ──
-app.use(cors());
+app.use(cors({
+  origin: ['https://sharek.aramco.com.sa', 'http://localhost:3000', 'http://localhost:5000'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'apikey']
+}));
 app.use(express.json());
 
 // ── Health Check ──
