@@ -225,7 +225,7 @@ async function fetchAssessment() {
     if (equipment && equipment.length > 0) {
       const equipIds = equipment.map(e => e.equipment_item_id).filter(Boolean).join(',');
       if (equipIds) {
-        const docs = await fetchFromRadp(`/rest/v1/documents?equipment_item_id=in.(${equipIds})`);
+        const docs = await fetchFromRadp(`/documents?equipment_item_id=in.(${equipIds})`);
         if (docs) {
           docs.forEach(doc => {
             if (!equipmentDocs[doc.equipment_item_id]) {
