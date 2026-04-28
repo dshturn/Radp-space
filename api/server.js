@@ -82,8 +82,17 @@ app.get('/api/*', async (req, res) => {
 // ── Proxy: POST request to Supabase ──
 app.post('/api/*', async (req, res) => {
   try {
-    const path = req.params[0];
-    const query = new URLSearchParams(req.query).toString();
+    let path = req.params[0];
+    let query = new URLSearchParams(req.query).toString();
+
+    // Handle query parameter format: ?endpoint=/assessments?...
+    if (req.query.endpoint) {
+      path = req.query.endpoint;
+      // Remove 'endpoint' from query params
+      const { endpoint, ...otherParams } = req.query;
+      query = new URLSearchParams(otherParams).toString();
+    }
+
     const url = `${SUPABASE_URL}/rest/v1/${path}${query ? '?' + query : ''}`;
 
     const response = await axios.post(url, req.body, {
