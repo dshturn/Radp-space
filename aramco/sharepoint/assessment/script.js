@@ -189,9 +189,9 @@ async function fetchAssessment() {
   try {
     // Fetch assessment + personnel + equipment in parallel
     const [assessment, personnel, equipment] = await Promise.all([
-      fetchFromRadp(`/rest/v1/assessments?id=eq.${assessmentId}`),
-      fetchFromRadp(`/rest/v1/assessment_personnel?assessment_id=eq.${assessmentId}&select=*,personnel(id,full_name,position,national_id)`),
-      fetchFromRadp(`/rest/v1/assessment_equipment?assessment_id=eq.${assessmentId}&select=*,equipment_items(id,name,serial_number,model)`)
+      fetchFromRadp(`/assessments?id=eq.${assessmentId}`),
+      fetchFromRadp(`/assessment_personnel?assessment_id=eq.${assessmentId}&select=*,personnel(id,full_name,position,national_id)`),
+      fetchFromRadp(`/assessment_equipment?assessment_id=eq.${assessmentId}&select=*,equipment_items(id,name,serial_number,model)`)
     ]);
 
     if (!assessment || assessment.length === 0) {
