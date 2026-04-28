@@ -1,6 +1,6 @@
 // Configuration
 const RADP_CONFIG = {
-  proxyUrl: 'https://fslleuedqlxpjnerruzt.supabase.co/functions/v1/lor-proxy'
+  proxyUrl: 'https://radp-b73e8e73c2e5.herokuapp.com/api'
 };
 
 let currentUser = null;
