@@ -208,7 +208,7 @@ async function fetchAssessment() {
     if (personnel && personnel.length > 0) {
       const personalIds = personnel.map(p => p.personnel_id).filter(Boolean).join(',');
       if (personalIds) {
-        const docs = await fetchFromRadp(`/rest/v1/personnel_documents?personnel_id=in.(${personalIds})`);
+        const docs = await fetchFromRadp(`/personnel_documents?personnel_id=in.(${personalIds})`);
         if (docs) {
           docs.forEach(doc => {
             if (!personnelDocs[doc.personnel_id]) {
