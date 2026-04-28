@@ -105,6 +105,32 @@ app.get('/api/*', async (req, res) => {
 });
 
 // ── Proxy: POST request to Supabase ──
+app.post('/api', async (req, res) => {
+  try {
+    // Query parameter format: ?endpoint=/path
+    if (!req.query.endpoint) {
+      return res.status(400).json({ error: 'Missing endpoint parameter' });
+    }
+
+    let path = req.query.endpoint;
+    const { endpoint, ...otherParams } = req.query;
+    const query = new URLSearchParams(otherParams).toString();
+    const url = `${SUPABASE_URL}/rest/v1/${path}${query ? '?' + query : ''}`;
+
+    const response = await axios.post(url, req.body, {
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    res.json(response.data);
+  } catch (err) {
+    console.error('Proxy error:', err.message);
+    res.status(err.response?.status || 500).json({ error: err.message });
+  }
+});
+
 app.post('/api/*', async (req, res) => {
   try {
     let path = req.params[0];
