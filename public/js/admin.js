@@ -198,12 +198,17 @@ async function _renderAuditLog() {
   }
 }
 
-function openAuditFile(documentId, entityType) {
-  // Determine bucket based on entity type from the label (Equipment doc or Personnel doc)
-  // For now, default to trying equipment-docs first
-  let bucket = entityType && entityType.includes('Equipment') ? 'equipment-docs' : 'personnel-docs';
-  const url = `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${esc(documentId)}`;
-  window.open(url, '_blank');
+async function openAuditFile(documentId, entityType) {
+  try {
+    const doc = await apiCall(`/documents?id=eq.${documentId}&select=file_url`);
+    if (doc && doc[0] && doc[0].file_url) {
+      window.open(doc[0].file_url, '_blank');
+    } else {
+      showToast('Document not found', 'error');
+    }
+  } catch (err) {
+    showToast('Failed to open document: ' + err.message, 'error');
+  }
 }
 
 // Page initialization - called when admin page is shown
