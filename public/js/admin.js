@@ -154,8 +154,8 @@ async function _renderAuditLog() {
     if (!rows) { showToast('Failed to load audit log', 'error'); return; }
     const total = rows.length; // Note: actual total should come from Prefer header, this is simplified
 
-  const list = document.getElementById('auditLogList');
-  if (!rows.length) { list.innerHTML = '<div class="empty">No audit entries found</div>'; document.getElementById('auditLogPagination').innerHTML = ''; return; }
+    const list = document.getElementById('auditLogList');
+    if (!rows.length) { list.innerHTML = '<div class="empty">No audit entries found</div>'; document.getElementById('auditLogPagination').innerHTML = ''; return; }
 
   list.innerHTML = `
     <table style="width:100%;border-collapse:collapse;font-size:13px;">
