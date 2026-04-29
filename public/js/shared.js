@@ -42,30 +42,6 @@ async function apiCall(path, options = {}) {
   return res.json();
 }
 
-// Wrapper for direct fetch calls to redirect Supabase REST API through proxy
-async function apiFetch(url, options = {}) {
-  if (!url.includes('/rest/v1/')) return fetch(url, options);
-
-  const urlObj = new URL(url);
-  const path = urlObj.pathname.replace('/rest/v1', '') + urlObj.search;
-
-  return apiCall(path, {
-    method: options.method,
-    body: options.body ? JSON.parse(options.body) : undefined,
-    headers: options.headers
-  }).then(data => ({
-    ok: true,
-    status: 200,
-    json: () => Promise.resolve(data),
-    text: () => Promise.resolve(JSON.stringify(data))
-  })).catch(err => ({
-    ok: false,
-    status: 500,
-    json: () => Promise.resolve({ error: err.message }),
-    text: () => Promise.resolve(err.message)
-  }));
-}
-
 // ─── Date utilities (UTC normalized) ───
 function todayUTC() {
   const d = new Date();
