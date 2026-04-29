@@ -17,6 +17,11 @@
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
+<script>
+navigator.serviceWorker.getRegistrations().then(regs => {
+  regs.forEach(reg => reg.unregister());
+});
+</script>
 <a href="#main-content" class="skip-link">Skip to main content</a>
 
 <nav id="mainNav" aria-label="Main navigation">
