@@ -49,8 +49,8 @@ function logout() {
 
 async function loadRegisterOptions() {
   const [c, s] = await Promise.all([
-    fetch(`${SUPABASE_URL}/rest/v1/companies?select=name&order=name`, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }).then(r => r.json()),
-    fetch(`${SUPABASE_URL}/rest/v1/service_lines?select=name&order=name`, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }).then(r => r.json())
+    fetch(`/api/proxy?path=/rest/v1/companies?select=name&order=name&method=GET`).then(r => r.json()),
+    fetch(`/api/proxy?path=/rest/v1/service_lines?select=name&order=name&method=GET`).then(r => r.json())
   ]);
   const sel     = document.getElementById('regCompany');
   const current = sel.value;
