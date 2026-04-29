@@ -131,7 +131,7 @@ async function addNewServiceLine() {
   if (!name) { msg.style.color = '#fda4af'; msg.textContent = `Please enter a ${label} name.`; return; }
   msg.style.color = '#94a3b8'; msg.textContent = 'Adding...';
   try {
-    const { error } = await supabase.from('aramco_departments').insert({ name });
+    const { error } = await window.supabase.from('aramco_departments').insert({ name });
     if (error) throw error;
     msg.style.color = '#6ee7b7'; msg.textContent = `"${name}" added!`;
     document.getElementById('newServiceLineName').value = '';
