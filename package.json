@@ -1,6 +1,6 @@
 {
   "name": "radp-space",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Readiness Assessment Digital Platform",
   "engines": {
     "node": "24.x"
