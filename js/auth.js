@@ -64,12 +64,13 @@ async function logout() {
 async function loadRegisterOptions() {
   const role         = sessionStorage.getItem('radp_reg_role') || 'contractor';
   const isContractor = role === 'contractor';
+  const sb = getSupabaseClient();
 
   const [companiesResult, optionsResult] = await Promise.all([
-    window.supabase.from('companies').select('name').order('name'),
+    sb.from('companies').select('name').order('name'),
     isContractor
-      ? window.supabase.from('service_lines').select('name').order('name')
-      : window.supabase.from('aramco_departments').select('name').order('name')
+      ? sb.from('service_lines').select('name').order('name')
+      : sb.from('aramco_departments').select('name').order('name')
   ]);
 
   const companies = companiesResult.data || [];
