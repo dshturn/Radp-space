@@ -1,10 +1,5 @@
 // ═══════════════════ AUTH ═══════════════════
 
-// Ensure Supabase client is initialized
-if (!window.supabase && window.supabase?.createClient) {
-  window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-}
-
 async function login() {
   const email    = document.getElementById('loginEmail').value;
   const password = document.getElementById('loginPassword').value;
