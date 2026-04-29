@@ -18,12 +18,14 @@ async function apiCall(path, options = {}) {
   const token = getToken();
   const headers = {
     'Content-Type': 'application/json',
-    ...(token && { 'Authorization': `Bearer ${token}` })
+    ...(token && { 'Authorization': `Bearer ${token}` }),
+    ...options.headers
   };
 
-  const proxyUrl = `${SUPABASE_URL}/functions/v1/api-proxy?path=${encodeURIComponent(path)}`;
+  const method = options.method || 'GET';
+  const proxyUrl = `${SUPABASE_URL}/functions/v1/api-proxy?path=${encodeURIComponent(path)}&method=${encodeURIComponent(method)}`;
 
-  console.log('[apiCall] Proxying:', path, 'via:', proxyUrl);
+  console.log('[apiCall] Proxying:', method, path);
 
   const res = await fetch(proxyUrl, {
     method: 'POST',
