@@ -6,9 +6,9 @@ async function login() {
   const msg      = document.getElementById('loginMsg');
   msg.className  = 'auth-msg';
 
-  const res  = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+  const res  = await fetch(`/api/proxy?path=/auth/v1/token?grant_type=password&method=POST`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password })
   });
   const data = await res.json();
@@ -19,8 +19,8 @@ async function login() {
     return;
   }
 
-  const profileRes = await fetch(`${SUPABASE_URL}/rest/v1/user_profiles?id=eq.${data.user.id}&select=status,full_name,company,service_line`, {
-    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${data.access_token}` }
+  const profileRes = await fetch(`/api/proxy?path=/rest/v1/user_profiles?id=eq.${data.user.id}&select=status,full_name,company,service_line&method=GET`, {
+    headers: { Authorization: `Bearer ${data.access_token}` }
   });
   const profiles = await profileRes.json();
   const profile  = profiles[0];
