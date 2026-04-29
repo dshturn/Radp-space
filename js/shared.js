@@ -3,9 +3,18 @@
 const SUPABASE_URL = window.SUPABASE_CONFIG?.url || '';
 const SUPABASE_KEY = window.SUPABASE_CONFIG?.key || '';
 
-const getToken   = () => localStorage.getItem('radp_token');
-const getUser    = () => JSON.parse(localStorage.getItem('radp_user') || '{}');
-const getHeaders = () => ({ apikey: SUPABASE_KEY, Authorization: `Bearer ${getToken()}`, 'Content-Type': 'application/json' });
+const getToken   = () => localStorage.getItem('radp_token') || '';
+const getUser    = () => {
+  try {
+    return JSON.parse(localStorage.getItem('radp_user') || '{}');
+  } catch {
+    return {};
+  }
+};
+const getHeaders = () => {
+  const token = getToken();
+  return { apikey: SUPABASE_KEY, Authorization: token ? `Bearer ${token}` : '', 'Content-Type': 'application/json' };
+};
 
 // ─── Date utilities (UTC normalized) ───
 function todayUTC() {
