@@ -181,21 +181,24 @@ async function register() {
     ? { email, full_name: fullName, company, service_line: choice, role }
     : { email, full_name: fullName, company, ...(choice ? { aramco_department: choice } : {}), role };
 
-  const res  = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY },
-    body: JSON.stringify({ email, password, options: { data: { full_name: fullName, company, ...(isContractor ? { service_line: choice } : { aramco_department: choice }) } } })
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { full_name: fullName, company, ...(isContractor ? { service_line: choice } : { aramco_department: choice }) } }
   });
-  const data = await res.json();
-  if (data.user) {
-    await fetch(`${SUPABASE_URL}/rest/v1/user_profiles`, {
+  if (error || !data.user) {
+    msg.className = 'auth-msg error'; msg.textContent = 'Registration failed. Try again.';
+    return;
+  }
+  try {
+    await apiCall('/user_profiles', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Prefer: 'resolution=merge-duplicates' },
-      body: JSON.stringify({ id: data.user.id, ...profile })
+      body: { id: data.user.id, ...profile },
+      headers: { 'Prefer': 'resolution=merge-duplicates' }
     });
     sessionStorage.removeItem('radp_reg_role');
     msg.className = 'auth-msg success'; msg.textContent = 'Account created! Waiting for admin approval.';
-  } else {
+  } catch (err) {
     msg.className = 'auth-msg error'; msg.textContent = 'Registration failed. Try again.';
   }
 }
