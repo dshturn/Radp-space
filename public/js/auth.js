@@ -39,8 +39,8 @@ async function login() {
   }
 
   const role = profile.role || 'contractor';
-  localStorage.setItem('radp_token', data.access_token);
-  localStorage.setItem('radp_user', JSON.stringify({ id: data.user.id, email: data.user.email, ...profile }));
+  localStorage.setItem('radp_token', data.session.access_token);
+  localStorage.setItem('radp_user', JSON.stringify({ id: userId, email: data.user.email, ...profile }));
   showPage(ROLE_LANDING[role] || 'contractor');
   startNotifPolling();
 }
