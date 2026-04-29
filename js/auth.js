@@ -78,9 +78,9 @@ async function addNewCompany() {
   const msg  = document.getElementById('newCompanyMsg');
   if (!name) { msg.style.color = '#fda4af'; msg.textContent = 'Please enter a company name.'; return; }
   msg.style.color = '#94a3b8'; msg.textContent = 'Adding...';
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/companies`, {
+  const res = await fetch(`/api/proxy?path=/rest/v1/companies&method=POST`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Prefer: 'return=minimal' },
+    headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' },
     body: JSON.stringify({ name })
   });
   if (res.ok || res.status === 201) {
