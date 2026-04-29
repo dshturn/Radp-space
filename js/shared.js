@@ -57,7 +57,7 @@ async function apiFetch(url, options = {}) {
       const queryPart = url.includes('?') ? url.split('?')[1] : '';
       // Convert /api/ paths to /rest/v1/ for standard Supabase routing
       const normalizedEndpoint = endpoint.replace(/^\/api\//, '/rest/v1/');
-      fetchUrl = `/api?endpoint=${encodeURIComponent(normalizedEndpoint)}${queryPart ? '&' + queryPart : ''}`;
+      fetchUrl = `http://localhost:5000/api?endpoint=${encodeURIComponent(normalizedEndpoint)}${queryPart ? '&' + queryPart : ''}`;
     }
 
     const res = await fetch(fetchUrl, options);
