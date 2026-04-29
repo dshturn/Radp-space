@@ -171,7 +171,8 @@ async function register() {
     return;
   }
 
-  const { data, error } = await window.supabase.auth.signUp({
+  const sb = getSupabaseClient();
+  const { data, error } = await sb.auth.signUp({
     email,
     password,
     options: {
