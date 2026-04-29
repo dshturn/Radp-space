@@ -61,7 +61,16 @@ app.get('/api', async (req, res) => {
     let path = req.query.endpoint;
     const { endpoint, ...otherParams } = req.query;
     const query = new URLSearchParams(otherParams).toString();
-    const url = `${SUPABASE_URL}/rest/v1/${path}${query ? '?' + query : ''}`;
+
+    // Determine full URL based on path format
+    let url;
+    if (path.startsWith('/auth/')) {
+      url = `${SUPABASE_URL}${path}${query ? '?' + query : ''}`;
+    } else if (path.startsWith('/rest/v1/')) {
+      url = `${SUPABASE_URL}${path}${query ? '?' + query : ''}`;
+    } else {
+      url = `${SUPABASE_URL}/rest/v1/${path}${query ? '?' + query : ''}`;
+    }
 
     const response = await axios.get(url, {
       headers: {
