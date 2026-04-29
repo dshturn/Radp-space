@@ -10,8 +10,7 @@
 **Internal deployment** (Aramco employees, restricted firewall):
 - Frontend: Same app hosted in SharePoint
 - Database: Supabase (same as public)
-- API: SharePoint → Heroku proxy → Supabase REST API
-- **Why Heroku?** Firewall blocks vercel.com and supabase.co, but allows herokuapp.com
+- API: Direct to Supabase (via email-based workflow, Phase 2)
 
 **Data source:** Single Supabase instance (shared by both)
 
