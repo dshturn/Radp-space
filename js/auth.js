@@ -49,7 +49,7 @@ async function login() {
 
 async function logout() {
   stopNotifPolling();
-  await supabase.auth.signOut();
+  await window.supabase.auth.signOut();
   localStorage.removeItem('radp_token');
   localStorage.removeItem('radp_user');
   showPage('login');
