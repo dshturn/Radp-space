@@ -27,6 +27,7 @@ Deno.serve(async (req: Request) => {
   try {
     // Get authorization header from original request
     const authHeader = req.headers.get('Authorization');
+    const preferHeader = req.headers.get('Prefer');
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'apikey': SUPABASE_KEY,
@@ -34,6 +35,9 @@ Deno.serve(async (req: Request) => {
 
     if (authHeader) {
       headers['Authorization'] = authHeader;
+    }
+    if (preferHeader) {
+      headers['Prefer'] = preferHeader;
     }
 
     // Build the full Supabase REST API URL
