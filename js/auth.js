@@ -95,6 +95,28 @@ async function addNewCompany() {
   }
 }
 
+async function addNewServiceLine() {
+  const name = document.getElementById('newServiceLineName').value.trim();
+  const msg  = document.getElementById('newServiceLineMsg');
+  if (!name) { msg.style.color = '#fda4af'; msg.textContent = 'Please enter a service line name.'; return; }
+  msg.style.color = '#94a3b8'; msg.textContent = 'Adding...';
+  const res = await fetch(`/api?endpoint=${encodeURIComponent('/rest/v1/service_lines')}&Prefer=return=minimal`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name })
+  });
+  if (res.ok || res.status === 201) {
+    msg.style.color = '#6ee7b7'; msg.textContent = `"${name}" added!`;
+    document.getElementById('newServiceLineName').value = '';
+    await loadRegisterOptions();
+    document.getElementById('regServiceLine').value = name;
+    document.getElementById('newServiceLineWrap').style.display = 'none';
+    msg.textContent = '';
+  } else {
+    msg.style.color = '#fda4af'; msg.textContent = 'Failed to add. It may already exist.';
+  }
+}
+
 async function register() {
   const fullName    = document.getElementById('regFullName').value;
   const email       = document.getElementById('regEmail').value;
