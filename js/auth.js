@@ -107,16 +107,16 @@ async function register() {
     msg.textContent = company === '__new__' ? 'Please finish adding your company first.' : 'Please fill all fields.';
     return;
   }
-  const res  = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
+  const res  = await fetch(`/api/proxy?path=/auth/v1/signup&method=POST`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password, options: { data: { full_name: fullName, company, service_line: serviceLine } } })
   });
   const data = await res.json();
   if (data.user) {
-    await fetch(`${SUPABASE_URL}/rest/v1/user_profiles`, {
+    await fetch(`/api/proxy?path=/rest/v1/user_profiles&method=POST`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Prefer: 'resolution=merge-duplicates' },
+      headers: { 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' },
       body: JSON.stringify({ id: data.user.id, email, full_name: fullName, company, service_line: serviceLine })
     });
     msg.className = 'auth-msg success'; msg.textContent = 'Account created! Waiting for admin approval.';
