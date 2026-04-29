@@ -31,7 +31,9 @@ window.fetch = function(url, options) {
 
   // Route Supabase API calls through localhost proxy
   if (typeof url === 'string' && url.includes('supabase.co') && window.location.hostname === 'localhost') {
-    const endpoint = url.replace(SUPABASE_URL, '');
+    let endpoint = url.replace(SUPABASE_URL, '');
+    // Normalize /api/ paths to /rest/v1/
+    endpoint = endpoint.replace(/^\/api\//, '/rest/v1/');
     finalUrl = `http://localhost:5000/api?endpoint=${encodeURIComponent(endpoint)}`;
   }
 
