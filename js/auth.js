@@ -1,19 +1,6 @@
 // ═══════════════════ AUTH ═══════════════════
 
-async function apiCall(path, options = {}) {
-  const body = options.body ? JSON.stringify(options.body) : undefined;
-  const encodedPath = encodeURIComponent(path);
-  const url = `${window.RADP_PROXY_URL || '/api/proxy'}?endpoint=${encodedPath}`;
-
-  const res = await fetch(url, {
-    method: options.method || 'GET',
-    headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, ...options.headers },
-    body
-  });
-
-  if (!res.ok) throw new Error(`API error: ${res.status}`);
-  return res.json();
-}
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 async function login() {
   const email    = document.getElementById('loginEmail').value;
@@ -21,44 +8,47 @@ async function login() {
   const msg      = document.getElementById('loginMsg');
   msg.className  = 'auth-msg';
 
-  const res  = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY },
-    body: JSON.stringify({ email, password })
-  });
-  const data = await res.json();
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-  if (!data.access_token) {
+  if (error || !data.user) {
     msg.className = 'auth-msg error';
     msg.textContent = 'Invalid email or password.';
     return;
   }
 
-  const profiles = await apiCall(`/api/user_profiles?id=eq.${data.user.id}&select=status,role,full_name,company,service_line`, {
-    headers: { Authorization: `Bearer ${data.access_token}` }
-  });
-  const profile  = profiles[0];
+  const { data: profiles, error: profileError } = await supabase
+    .from('user_profiles')
+    .select('status,role,full_name,company,service_line')
+    .eq('id', data.user.id)
+    .single();
 
-  if (!profile || profile.status === 'pending') {
+  if (profileError || !profiles) {
+    msg.className = 'auth-msg error';
+    msg.textContent = 'Profile not found.';
+    return;
+  }
+
+  if (profiles.status === 'pending') {
     msg.className = 'auth-msg warning';
     msg.textContent = 'Your account is pending admin approval.';
     return;
   }
-  if (profile.status === 'rejected') {
+  if (profiles.status === 'rejected') {
     msg.className = 'auth-msg error';
     msg.textContent = 'Your account has been rejected. Contact admin.';
     return;
   }
 
-  const role = profile.role || 'contractor';
-  localStorage.setItem('radp_token', data.access_token);
-  localStorage.setItem('radp_user', JSON.stringify({ id: data.user.id, email: data.user.email, ...profile }));
+  const role = profiles.role || 'contractor';
+  localStorage.setItem('radp_token', data.session.access_token);
+  localStorage.setItem('radp_user', JSON.stringify({ id: data.user.id, email: data.user.email, ...profiles }));
   showPage(ROLE_LANDING[role] || 'contractor');
   startNotifPolling();
 }
 
-function logout() {
+async function logout() {
   stopNotifPolling();
+  await supabase.auth.signOut();
   localStorage.removeItem('radp_token');
   localStorage.removeItem('radp_user');
   showPage('login');
@@ -68,18 +58,16 @@ async function loadRegisterOptions() {
   const role         = sessionStorage.getItem('radp_reg_role') || 'contractor';
   const isContractor = role === 'contractor';
 
-  // Contractors pick from service_lines; Aramco users pick from aramco_departments.
-  const optionsPath = isContractor
-    ? `/api/service_lines?select=name&order=name`
-    : `/api/aramco_departments?select=name&order=name`;
-
-  const [companies, options] = await Promise.all([
-    apiCall(`/api/companies?select=name&order=name`),
-    apiCall(optionsPath)
+  const [companiesResult, optionsResult] = await Promise.all([
+    supabase.from('companies').select('name').order('name'),
+    isContractor
+      ? supabase.from('service_lines').select('name').order('name')
+      : supabase.from('aramco_departments').select('name').order('name')
   ]);
 
-  // Company dropdown: contractor variant is the only case that uses this
-  // UI — Aramco users have company auto-set to 'Aramco' on submit.
+  const companies = companiesResult.data || [];
+  const options = optionsResult.data || [];
+
   const cSel = document.getElementById('regCompany');
   const current = cSel.value;
   cSel.innerHTML = '<option value="">Select company...</option>'
@@ -87,7 +75,6 @@ async function loadRegisterOptions() {
     + '<option value="__new__">+ Add new company...</option>';
   if (current) cSel.value = current;
 
-  // Aramco users get "+ Add custom" so the department list can grow over time.
   const svcSel = document.getElementById('regServiceLine');
   const placeholder = isContractor ? 'Select service line...' : 'Select department...';
   let svcHtml = `<option value="">${placeholder}</option>`
@@ -123,11 +110,8 @@ async function addNewCompany() {
   if (!name) { msg.style.color = '#fda4af'; msg.textContent = 'Please enter a company name.'; return; }
   msg.style.color = '#94a3b8'; msg.textContent = 'Adding...';
   try {
-    await apiCall(`/api/companies`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${getToken() || SUPABASE_KEY}`, Prefer: 'return=minimal' },
-      body: { name }
-    });
+    const { error } = await supabase.from('companies').insert({ name });
+    if (error) throw error;
     msg.style.color = '#6ee7b7'; msg.textContent = `"${name}" added!`;
     document.getElementById('newCompanyName').value = '';
     await loadRegisterOptions();
@@ -146,11 +130,8 @@ async function addNewServiceLine() {
   if (!name) { msg.style.color = '#fda4af'; msg.textContent = `Please enter a ${label} name.`; return; }
   msg.style.color = '#94a3b8'; msg.textContent = 'Adding...';
   try {
-    await apiCall(`/api/aramco_departments`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${getToken() || SUPABASE_KEY}`, Prefer: 'return=minimal' },
-      body: { name }
-    });
+    const { error } = await supabase.from('aramco_departments').insert({ name });
+    if (error) throw error;
     msg.style.color = '#6ee7b7'; msg.textContent = `"${name}" added!`;
     document.getElementById('newServiceLineName').value = '';
     await loadRegisterOptions();
@@ -171,10 +152,8 @@ async function register() {
   const choice       = document.getElementById('regServiceLine').value;
   const msg          = document.getElementById('registerMsg');
 
-  // Contractor picks their company; operations/assessor are always Aramco.
   const company = isContractor ? document.getElementById('regCompany').value : 'Aramco';
 
-  // Validate: contractors must have both company and service_line; Aramco users can proceed with just company
   const needsServiceLine = !choice || choice === '__new__';
   if (!fullName || !email || !password || !company || company === '__new__' || (isContractor && needsServiceLine)) {
     msg.className = 'auth-msg error';
@@ -184,26 +163,33 @@ async function register() {
     return;
   }
 
-  // Contractor's pick lives in service_line; Aramco pick lives in aramco_department.
-  const profile = isContractor
-    ? { email, full_name: fullName, company, service_line: choice, role }
-    : { email, full_name: fullName, company, ...(choice ? { aramco_department: choice } : {}), role };
-
-  const res  = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY },
-    body: JSON.stringify({ email, password, options: { data: { full_name: fullName, company, ...(isContractor ? { service_line: choice } : { aramco_department: choice }) } } })
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        full_name: fullName,
+        company,
+        ...(isContractor ? { service_line: choice } : { aramco_department: choice })
+      }
+    }
   });
-  const data = await res.json();
-  if (data.user) {
-    await apiCall(`/api/user_profiles`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${SUPABASE_KEY}`, Prefer: 'resolution=merge-duplicates' },
-      body: { id: data.user.id, ...profile }
-    });
-    sessionStorage.removeItem('radp_reg_role');
-    msg.className = 'auth-msg success'; msg.textContent = 'Account created! Waiting for admin approval.';
-  } else {
+
+  if (error || !data.user) {
     msg.className = 'auth-msg error'; msg.textContent = 'Registration failed. Try again.';
+    return;
   }
+
+  const profile = isContractor
+    ? { id: data.user.id, email, full_name: fullName, company, service_line: choice, role }
+    : { id: data.user.id, email, full_name: fullName, company, ...(choice ? { aramco_department: choice } : {}), role };
+
+  const { error: profileError } = await supabase.from('user_profiles').upsert(profile);
+  if (profileError) {
+    msg.className = 'auth-msg error'; msg.textContent = 'Profile creation failed.';
+    return;
+  }
+
+  sessionStorage.removeItem('radp_reg_role');
+  msg.className = 'auth-msg success'; msg.textContent = 'Account created! Waiting for admin approval.';
 }
