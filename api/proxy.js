@@ -32,7 +32,7 @@ export default async (req, res) => {
       headers['Prefer'] = req.headers.prefer;
     }
 
-    const restUrl = `${supabaseUrl}/rest/v1${path}`;
+    const restUrl = path.startsWith('/auth/') ? `${supabaseUrl}${path}` : `${supabaseUrl}/rest/v1${path}`;
     const body = method !== 'GET' && method !== 'HEAD' ? JSON.stringify(req.body) : undefined;
 
     const response = await fetch(restUrl, {
