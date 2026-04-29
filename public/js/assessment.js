@@ -152,8 +152,7 @@ async function loadAssessmentDetail(id) {
     <div class="detail-info">Type: ${esc(a.type_of_job)}</div>
     <div class="detail-info">Objective: ${esc(a.objective) || '—'}</div>
     <div class="detail-info" style="margin-bottom:0;">Date: ${esc(a.date_of_issue)} · Status: <span class="badge ${safeStatus}">${safeStatus}</span></div>`;
-  loadSelectedEquipment(id);
-  loadSelectedPersonnel(id);
+  loadAssessmentHierarchy(id);
 }
 
 async function loadAssessmentHierarchy(id) {
