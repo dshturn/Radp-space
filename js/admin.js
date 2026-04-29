@@ -11,9 +11,13 @@ function auditInit() {
 }
 
 async function loadUsers() {
-  let url = `${SUPABASE_URL}/api/user_profiles?select=*&order=status.asc,created_at.desc`;
+  let endpoint = `/api/user_profiles?select=*&order=status.asc,created_at.desc`;
   const roleFilter = document.getElementById('usersRoleFilter')?.value;
-  if (roleFilter) url += `&role=eq.${encodeURIComponent(roleFilter)}`;
+  if (roleFilter) endpoint += `&role=eq.${encodeURIComponent(roleFilter)}`;
+
+  const url = window.location.hostname === 'localhost'
+    ? `/api?endpoint=${encodeURIComponent(endpoint)}`
+    : `${SUPABASE_URL}${endpoint}`;
 
   const rows = await apiFetch(url, { headers: getHeaders() });
   if (!rows) return;
