@@ -290,7 +290,7 @@ async function fetchFromRadp(endpoint) {
   return Array.isArray(data) ? data : (data ? [data] : []);
 }
 
-function displayLor(assessment, personnel, equipment, personnelDocs, equipmentDocs) {
+function displayLor(assessment, personnel, equipment, personnelDocs, equipmentHierarchy, equipmentDocs) {
   // Update header
   document.getElementById('assessmentIdDisplay').textContent = assessment.id;
   document.getElementById('fieldWell').textContent = assessment.field_well || '—';
@@ -332,13 +332,14 @@ function displayLor(assessment, personnel, equipment, personnelDocs, equipmentDo
     personnelTree.innerHTML = '<div class="empty">No personnel added</div>';
   }
 
-  // Display equipment tree
+  // Display equipment tree with hierarchy
   const equipmentTree = document.getElementById('equipmentTree');
   if (equipment && equipment.length > 0) {
     let html = '';
     equipment.forEach(e => {
       const equip = e.equipment_items;
       const docs = equipmentDocs[e.equipment_item_id] || [];
+      const children = equipmentHierarchy[e.equipment_item_id] || [];
       const name = equip.name || equip.model || '—';
       const meta = equip.serial_number ? `S/N: ${equip.serial_number}` : '';
 
@@ -346,19 +347,69 @@ function displayLor(assessment, personnel, equipment, personnelDocs, equipmentDo
     });
     equipmentTree.innerHTML = html;
 
-    // Add documents to each equipment item
+    // Add content to each equipment item (documents + sub-components)
     equipment.forEach(e => {
       const equip = e.equipment_items;
-      const docs = equipmentDocs[e.equipment_item_id] || [];
+      const parentDocs = equipmentDocs[e.equipment_item_id] || [];
+      const children = equipmentHierarchy[e.equipment_item_id] || [];
       const itemEl = equipmentTree.querySelector(`[data-item-id="equip_${e.equipment_item_id}"] .tree-children`);
 
-      if (docs.length > 0) {
-        itemEl.innerHTML = docs.map(d =>
+      let content = '';
+
+      // Add parent documents
+      if (parentDocs.length > 0) {
+        content += parentDocs.map(d =>
           createTreeChildHtml(d.doc_type_name, d.issue_date, d.expiry_date, d.file_url)
         ).join('');
-      } else {
-        itemEl.innerHTML = '<div class="tree-child-item"><div class="tree-child-icon">—</div><div class="tree-child-content"><div class="tree-child-name" style="color: var(--text-3);">No documents</div></div></div>';
       }
+
+      // Add sub-components with their documents
+      if (children.length > 0) {
+        children.forEach(child => {
+          const childDocs = equipmentDocs[child.id] || [];
+          const childName = child.name || child.model || '—';
+          const childMeta = child.serial_number ? `S/N: ${child.serial_number}` : '';
+
+          // Create nested component structure
+          content += `
+            <div class="tree-child-item" style="padding: 12px 16px 12px 50px; background-color: var(--bg-3); border: none; cursor: default;">
+              <div style="flex: 1;">
+                <div class="tree-child-name" style="font-weight: 600; color: var(--text-0);">${escapeHtml(childName)}</div>
+                ${childMeta ? `<div class="tree-child-dates" style="margin-top: 2px;">${escapeHtml(childMeta)}</div>` : ''}
+              </div>
+            </div>
+          `;
+
+          // Add child documents with extra indentation
+          if (childDocs.length > 0) {
+            childDocs.forEach(d => {
+              content += `
+                <div class="tree-child-item" style="padding: 10px 16px 10px 80px;">
+                  <div class="tree-child-icon">📄</div>
+                  <div class="tree-child-content">
+                    <div class="tree-child-name">
+                      ${escapeHtml(d.doc_type_name)}
+                      ${d.file_url ? `<a href="#" class="doc-link" onclick="openDocument(event, '${escapeHtml(d.file_url)}', '${escapeHtml(d.doc_type_name)}')">View</a>` : ''}
+                    </div>
+                    <div class="tree-child-dates">
+                      <span>Issued: ${formatDate(d.issue_date)}</span>
+                      <span>Expires: ${formatDate(d.expiry_date)}</span>
+                      ${getDocumentStatus(d.expiry_date) ? `<span class="status status-${getDocumentStatus(d.expiry_date)}">${getDocumentStatus(d.expiry_date).toUpperCase()}</span>` : ''}
+                    </div>
+                  </div>
+                </div>
+              `;
+            });
+          }
+        });
+      }
+
+      // Show no documents/components message if empty
+      if (!parentDocs.length && !children.length) {
+        content = '<div class="tree-child-item"><div class="tree-child-icon">—</div><div class="tree-child-content"><div class="tree-child-name" style="color: var(--text-3);">No documents or components</div></div></div>';
+      }
+
+      itemEl.innerHTML = content;
     });
   } else {
     equipmentTree.innerHTML = '<div class="empty">No equipment added</div>';
