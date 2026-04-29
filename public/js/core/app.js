@@ -212,10 +212,11 @@ async function login() {
       return;
     }
 
-    // Get user profile
-    const profiles = await apiCall(`/user_profiles?id=eq.${data.user.id}&select=*`, {
-      headers: { Authorization: `Bearer ${data.access_token}` }
-    });
+    // Save token to localStorage so apiCall() can use it
+    localStorage.setItem('radp_token', data.access_token);
+
+    // Get user profile via apiCall proxy
+    const profiles = await apiCall(`/user_profiles?id=eq.${data.user.id}&select=*`);
     const profile = profiles[0];
 
     if (!profile || profile.status === 'pending') {
