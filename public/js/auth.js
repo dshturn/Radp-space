@@ -15,16 +15,23 @@ async function login() {
   }
 
   const userId = data.user.id;
-  const { data: profiles, error: profileErr } = await supabase
-    .from('user_profiles')
-    .select('status,role,full_name,company,service_line')
-    .eq('id', userId);
 
-  if (profileErr || !profiles?.length) {
+  try {
+    const profiles = await apiCall(`/user_profiles?id=eq.${userId}&select=status,role,full_name,company,service_line`);
+
+    if (!profiles?.length) {
+      msg.className = 'auth-msg error';
+      msg.textContent = 'Failed to load user profile.';
+      return;
+    }
+    const profile = profiles[0];
+  } catch (err) {
     msg.className = 'auth-msg error';
-    msg.textContent = 'Failed to load user profile.';
+    msg.textContent = 'Failed to load user profile: ' + err.message;
     return;
   }
+
+  const profiles = await apiCall(`/user_profiles?id=eq.${userId}&select=status,role,full_name,company,service_line`);
   const profile = profiles[0];
 
   if (!profile || profile.status === 'pending') {
