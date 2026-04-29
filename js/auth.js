@@ -2,8 +2,12 @@
 
 // Initialize Supabase client on first use
 function getSupabaseClient() {
-  if (!window._sbClient && window.supabaseLib?.createClient) {
-    window._sbClient = window.supabaseLib.createClient(SUPABASE_URL, SUPABASE_KEY);
+  if (!window._sbClient) {
+    const lib = window.supabaseLib || window.supabase;
+    if (!lib?.createClient) {
+      throw new Error(`Supabase library not loaded. Available: ${Object.keys(window).filter(k => k.includes('supa')).join(', ')}`);
+    }
+    window._sbClient = lib.createClient(SUPABASE_URL, SUPABASE_KEY);
   }
   return window._sbClient;
 }
