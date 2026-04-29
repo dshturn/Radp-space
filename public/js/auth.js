@@ -19,11 +19,17 @@ async function login() {
     return;
   }
 
-  const profileRes = await fetch(`${SUPABASE_URL}/rest/v1/user_profiles?id=eq.${data.user.id}&select=status,role,full_name,company,service_line`, {
-    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${data.access_token}` }
-  });
-  const profiles = await profileRes.json();
-  const profile  = profiles[0];
+  const { data: profiles, error: profileErr } = await supabase
+    .from('user_profiles')
+    .select('status,role,full_name,company,service_line')
+    .eq('id', data.user.id);
+
+  if (profileErr || !profiles?.length) {
+    msg.className = 'auth-msg error';
+    msg.textContent = 'Failed to load user profile.';
+    return;
+  }
+  const profile = profiles[0];
 
   if (!profile || profile.status === 'pending') {
     msg.className = 'auth-msg warning';
