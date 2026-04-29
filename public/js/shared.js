@@ -8,7 +8,7 @@ const getUser    = () => JSON.parse(localStorage.getItem('radp_user') || '{}');
 const getHeaders = () => ({ apikey: SUPABASE_KEY, Authorization: `Bearer ${getToken()}`, 'Content-Type': 'application/json' });
 
 // Supabase client (for auth, uses edge function for REST API)
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { persistSession: false },
   realtime: { params: { eventsPerSecond: 10 } }
 });
