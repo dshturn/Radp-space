@@ -114,19 +114,19 @@ async function addNewCompany() {
   const msg  = document.getElementById('newCompanyMsg');
   if (!name) { msg.style.color = '#fda4af'; msg.textContent = 'Please enter a company name.'; return; }
   msg.style.color = '#94a3b8'; msg.textContent = 'Adding...';
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/companies`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${getToken() || SUPABASE_KEY}`, Prefer: 'return=minimal' },
-    body: JSON.stringify({ name })
-  });
-  if (res.ok || res.status === 201) {
+  try {
+    await apiCall('/companies', {
+      method: 'POST',
+      body: { name },
+      headers: { 'Prefer': 'return=minimal' }
+    });
     msg.style.color = '#6ee7b7'; msg.textContent = `"${name}" added!`;
     document.getElementById('newCompanyName').value = '';
     await loadRegisterOptions();
     document.getElementById('regCompany').value = name;
     document.getElementById('newCompanyWrap').style.display = 'none';
     msg.textContent = '';
-  } else {
+  } catch (err) {
     msg.style.color = '#fda4af'; msg.textContent = 'Failed to add. It may already exist.';
   }
 }
