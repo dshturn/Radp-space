@@ -6,16 +6,11 @@ async function login() {
   const msg      = document.getElementById('loginMsg');
   msg.className  = 'auth-msg';
 
-  const res  = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY },
-    body: JSON.stringify({ email, password })
-  });
-  const data = await res.json();
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-  if (!data.access_token) {
+  if (error || !data.session?.access_token) {
     msg.className = 'auth-msg error';
-    msg.textContent = 'Invalid email or password.';
+    msg.textContent = error?.message || 'Invalid email or password.';
     return;
   }
 
