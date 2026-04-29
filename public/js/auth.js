@@ -14,10 +14,11 @@ async function login() {
     return;
   }
 
+  const userId = data.user.id;
   const { data: profiles, error: profileErr } = await supabase
     .from('user_profiles')
     .select('status,role,full_name,company,service_line')
-    .eq('id', data.user.id);
+    .eq('id', userId);
 
   if (profileErr || !profiles?.length) {
     msg.className = 'auth-msg error';
