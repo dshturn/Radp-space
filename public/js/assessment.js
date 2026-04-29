@@ -68,29 +68,7 @@ function showDetail(id) {
   currentAssessmentId = id;
   document.querySelectorAll('#assessment-page .as-view').forEach(v => v.classList.remove('active'));
   document.getElementById('detailView').classList.add('active');
-  document.querySelectorAll('#detailTabs .tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('#detailTabs .tab')[0].classList.add('active');
-  document.getElementById('personnelTab').style.display = 'block';
-  document.getElementById('equipmentTab').style.display = 'none';
   loadAssessmentDetail(id);
-}
-
-const DT_ORDER = { personnel: 0, equipment: 1 };
-
-function showDetailTab(tab, el) {
-  const perVisible = document.getElementById('personnelTab').style.display !== 'none';
-  const current    = perVisible ? 'personnel' : 'equipment';
-  const goingRight = DT_ORDER[tab] > DT_ORDER[current];
-  const animClass  = goingRight ? 'slide-in-right' : 'slide-in-left';
-  document.querySelectorAll('#detailTabs .tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  const target = tab === 'equipment' ? document.getElementById('equipmentTab') : document.getElementById('personnelTab');
-  const other  = tab === 'equipment' ? document.getElementById('personnelTab')  : document.getElementById('equipmentTab');
-  other.style.display = 'none';
-  target.style.display = 'block';
-  target.classList.remove('slide-in-right', 'slide-in-left');
-  target.classList.add(animClass);
-  target.addEventListener('animationend', () => target.classList.remove(animClass), { once: true });
 }
 
 async function loadAssessments() {
