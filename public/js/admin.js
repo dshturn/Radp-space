@@ -207,7 +207,7 @@ async function openAuditFile(documentId, entityType) {
     ]);
     const doc = (equipDocs && equipDocs[0]) || (persDocs && persDocs[0]);
     if (doc && doc.file_url) {
-      window.open(doc.file_url, '_blank');
+      openDoc(doc.file_url);
     } else {
       showToast('Document not found', 'error');
     }
