@@ -58,9 +58,9 @@ Deno.serve(async (req: Request) => {
 
     // Forward the request
     const forwardReq = new Request(restUrl, {
-      method: req.method === 'GET' ? 'GET' : method,
+      method: method,
       headers: headers,
-      body: req.method !== 'GET' ? await req.text() : undefined,
+      body: method !== 'GET' && method !== 'HEAD' ? await req.text() : undefined,
     });
 
     const response = await fetch(forwardReq);
