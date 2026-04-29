@@ -157,42 +157,45 @@ async function _renderAuditLog() {
     const list = document.getElementById('auditLogList');
     if (!rows.length) { list.innerHTML = '<div class="empty">No audit entries found</div>'; document.getElementById('auditLogPagination').innerHTML = ''; return; }
 
-  list.innerHTML = `
-    <table style="width:100%;border-collapse:collapse;font-size:13px;">
-      <thead>
-        <tr style="border-bottom:1px solid var(--border);text-align:left;">
-          <th style="padding:8px 10px;color:var(--text-3);font-weight:500;">Time</th>
-          <th style="padding:8px 10px;color:var(--text-3);font-weight:500;">Type</th>
-          <th style="padding:8px 10px;color:var(--text-3);font-weight:500;">Action</th>
-          <th style="padding:8px 10px;color:var(--text-3);font-weight:500;">Label</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${rows.map(r => {
-          const isDocument = r.entity_type === 'document' && r.entity_id;
-          const labelHtml = isDocument
-            ? `<a href="javascript:openAuditFile('${esc(r.entity_id)}')" style="color:var(--primary);text-decoration:underline;cursor:pointer;">${esc(r.label || '—')}</a>`
-            : `<span style="color:var(--text-2);">${esc(r.label || '—')}</span>`;
-          return `
-          <tr style="border-bottom:1px solid var(--border);">
-            <td style="padding:8px 10px;color:var(--text-3);white-space:nowrap;">${new Date(r.created_at).toLocaleString()}</td>
-            <td style="padding:8px 10px;"><span style="font-size:11px;padding:2px 6px;border-radius:4px;background:var(--surface-3,#334155);color:var(--text-2);">${esc(r.entity_type)}</span></td>
-            <td style="padding:8px 10px;color:var(--text-1);">${esc(r.action)}</td>
-            <td style="padding:8px 10px;">${labelHtml}</td>
-          </tr>`;
-        }).join('')}
-      </tbody>
-    </table>`;
+    list.innerHTML = `
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border);text-align:left;">
+            <th style="padding:8px 10px;color:var(--text-3);font-weight:500;">Time</th>
+            <th style="padding:8px 10px;color:var(--text-3);font-weight:500;">Type</th>
+            <th style="padding:8px 10px;color:var(--text-3);font-weight:500;">Action</th>
+            <th style="padding:8px 10px;color:var(--text-3);font-weight:500;">Label</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(r => {
+            const isDocument = r.entity_type === 'document' && r.entity_id;
+            const labelHtml = isDocument
+              ? `<a href="javascript:openAuditFile('${esc(r.entity_id)}')" style="color:var(--primary);text-decoration:underline;cursor:pointer;">${esc(r.label || '—')}</a>`
+              : `<span style="color:var(--text-2);">${esc(r.label || '—')}</span>`;
+            return `
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:8px 10px;color:var(--text-3);white-space:nowrap;">${new Date(r.created_at).toLocaleString()}</td>
+              <td style="padding:8px 10px;"><span style="font-size:11px;padding:2px 6px;border-radius:4px;background:var(--surface-3,#334155);color:var(--text-2);">${esc(r.entity_type)}</span></td>
+              <td style="padding:8px 10px;color:var(--text-1);">${esc(r.action)}</td>
+              <td style="padding:8px 10px;">${labelHtml}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>`;
 
-  const totalPages = Math.ceil(total / _AUDIT_PAGE_SIZE);
-  const pagEl = document.getElementById('auditLogPagination');
-  if (totalPages <= 1) { pagEl.innerHTML = ''; return; }
-  pagEl.innerHTML = `
-    <div class="pagination">
-      <button class="pag-btn" onclick="_auditPage=Math.max(0,_auditPage-1);_renderAuditLog()" ${_auditPage===0?'disabled':''}>← Prev</button>
-      <span class="pag-info">Page ${_auditPage+1} of ${totalPages}</span>
-      <button class="pag-btn" onclick="_auditPage=Math.min(${totalPages-1},_auditPage+1);_renderAuditLog()" ${_auditPage>=totalPages-1?'disabled':''}>Next →</button>
-    </div>`;
+    const totalPages = Math.ceil(total / _AUDIT_PAGE_SIZE);
+    const pagEl = document.getElementById('auditLogPagination');
+    if (totalPages <= 1) { pagEl.innerHTML = ''; return; }
+    pagEl.innerHTML = `
+      <div class="pagination">
+        <button class="pag-btn" onclick="_auditPage=Math.max(0,_auditPage-1);_renderAuditLog()" ${_auditPage===0?'disabled':''}>← Prev</button>
+        <span class="pag-info">Page ${_auditPage+1} of ${totalPages}</span>
+        <button class="pag-btn" onclick="_auditPage=Math.min(${totalPages-1},_auditPage+1);_renderAuditLog()" ${_auditPage>=totalPages-1?'disabled':''}>Next →</button>
+      </div>`;
+  } catch (err) {
+    showToast('Failed to load audit log: ' + err.message, 'error');
+  }
 }
 
 function openAuditFile(documentId) {
