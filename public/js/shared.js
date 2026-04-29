@@ -7,10 +7,36 @@ const getToken   = () => localStorage.getItem('radp_token');
 const getUser    = () => JSON.parse(localStorage.getItem('radp_user') || '{}');
 const getHeaders = () => ({ apikey: SUPABASE_KEY, Authorization: `Bearer ${getToken()}`, 'Content-Type': 'application/json' });
 
-// Supabase client (handles CORS automatically)
+// Supabase client (for auth, uses edge function for REST API)
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: { persistSession: false }
+  auth: { persistSession: false },
+  realtime: { params: { eventsPerSecond: 10 } }
 });
+
+// API proxy function to bypass CORS
+async function apiCall(path, options = {}) {
+  const method = options.method || 'GET';
+  const body = options.body ? JSON.stringify(options.body) : undefined;
+  const token = getToken();
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token && { 'Authorization': `Bearer ${token}` })
+  };
+
+  const proxyUrl = `${SUPABASE_URL}/functions/v1/api-proxy?path=${encodeURIComponent(path)}&method=${method}`;
+
+  const res = await fetch(proxyUrl, {
+    method: 'POST',
+    headers,
+    body
+  });
+
+  if (!res.ok) {
+    throw new Error(`API error: ${res.status}`);
+  }
+
+  return res.json();
+}
 
 // ─── Date utilities (UTC normalized) ───
 function todayUTC() {
