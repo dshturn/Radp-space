@@ -26,7 +26,7 @@ async function login() {
 
   let profile;
   try {
-    const profileRes = await fetch(`/api?endpoint=${encodeURIComponent(`/rest/v1/user_profiles?id=eq.${data.user.id}&select=status,full_name,company,service_line`)}`, {
+    const profileRes = await fetch((window.location.hostname === 'localhost' ? 'http://localhost:5000' : '') + `/api?endpoint=${encodeURIComponent(`/rest/v1/user_profiles?id=eq.${data.user.id}&select=status,full_name,company,service_line`)}`, {
       headers: { Authorization: `Bearer ${data.access_token}` }
     });
     if (!profileRes.ok) throw new Error(`Profile fetch failed: ${profileRes.status}`);
@@ -65,8 +65,8 @@ function logout() {
 async function loadRegisterOptions() {
   try {
     const [cRes, sRes] = await Promise.all([
-      fetch(`/api?endpoint=${encodeURIComponent('/rest/v1/companies?select=name&order=name')}`),
-      fetch(`/api?endpoint=${encodeURIComponent('/rest/v1/service_lines?select=name&order=name')}`)
+      fetch((window.location.hostname === 'localhost' ? 'http://localhost:5000' : '') + `/api?endpoint=${encodeURIComponent('/rest/v1/companies?select=name&order=name')}`),
+      fetch((window.location.hostname === 'localhost' ? 'http://localhost:5000' : '') + `/api?endpoint=${encodeURIComponent('/rest/v1/service_lines?select=name&order=name')}`)
     ]);
     if (!cRes.ok || !sRes.ok) throw new Error('Failed to load options');
     const c = await cRes.json();
@@ -110,7 +110,7 @@ async function addNewCompany() {
   const msg  = document.getElementById('newCompanyMsg');
   if (!name) { msg.style.color = '#fda4af'; msg.textContent = 'Please enter a company name.'; return; }
   msg.style.color = '#94a3b8'; msg.textContent = 'Adding...';
-  const res = await fetch(`/api?endpoint=${encodeURIComponent('/rest/v1/companies')}&Prefer=return=minimal`, {
+  const res = await fetch((window.location.hostname === 'localhost' ? 'http://localhost:5000' : '') + `/api?endpoint=${encodeURIComponent('/rest/v1/companies')}&Prefer=return=minimal`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name })
@@ -132,7 +132,7 @@ async function addNewServiceLine() {
   const msg  = document.getElementById('newServiceLineMsg');
   if (!name) { msg.style.color = '#fda4af'; msg.textContent = 'Please enter a service line name.'; return; }
   msg.style.color = '#94a3b8'; msg.textContent = 'Adding...';
-  const res = await fetch(`/api?endpoint=${encodeURIComponent('/rest/v1/service_lines')}&Prefer=return=minimal`, {
+  const res = await fetch((window.location.hostname === 'localhost' ? 'http://localhost:5000' : '') + `/api?endpoint=${encodeURIComponent('/rest/v1/service_lines')}&Prefer=return=minimal`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name })
@@ -161,14 +161,14 @@ async function register() {
     msg.textContent = company === '__new__' ? 'Please finish adding your company first.' : 'Please fill all fields.';
     return;
   }
-  const res  = await fetch(`/api?endpoint=${encodeURIComponent('/auth/v1/signup')}`, {
+  const res  = await fetch((window.location.hostname === 'localhost' ? 'http://localhost:5000' : '') + `/api?endpoint=${encodeURIComponent('/auth/v1/signup')}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password, options: { data: { full_name: fullName, company, service_line: serviceLine } } })
   });
   const data = await res.json();
   if (data.user) {
-    await fetch(`/api?endpoint=${encodeURIComponent('/rest/v1/user_profiles')}&Prefer=resolution=merge-duplicates`, {
+    await fetch((window.location.hostname === 'localhost' ? 'http://localhost:5000' : '') + `/api?endpoint=${encodeURIComponent('/rest/v1/user_profiles')}&Prefer=resolution=merge-duplicates`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: data.user.id, email, full_name: fullName, company, service_line: serviceLine })
