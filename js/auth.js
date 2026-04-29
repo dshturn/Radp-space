@@ -112,14 +112,16 @@ async function register() {
     msg.textContent = company === '__new__' ? 'Please finish adding your company first.' : 'Please fill all fields.';
     return;
   }
-  const res  = await fetch(`/api/proxy?path=/auth/v1/signup&method=POST`, {
+  const path1 = encodeURIComponent('/auth/v1/signup');
+  const res  = await fetch(`/api/proxy?path=${path1}&method=POST`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password, options: { data: { full_name: fullName, company, service_line: serviceLine } } })
   });
   const data = await res.json();
   if (data.user) {
-    await fetch(`/api/proxy?path=/rest/v1/user_profiles&method=POST`, {
+    const path2 = encodeURIComponent('/rest/v1/user_profiles');
+    await fetch(`/api/proxy?path=${path2}&method=POST`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' },
       body: JSON.stringify({ id: data.user.id, email, full_name: fullName, company, service_line: serviceLine })
