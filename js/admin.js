@@ -84,8 +84,8 @@ async function openEditUser(userId) {
 
   const h = getHeaders();
   const [companies, serviceLines] = await Promise.all([
-    fetch(`${SUPABASE_URL}/api/companies?select=name&order=name`, { headers: h }).then(r => r.json()),
-    fetch(`${SUPABASE_URL}/api/service_lines?select=name&order=name`, { headers: h }).then(r => r.json())
+    fetch(getApiUrl('/api/companies?select=name&order=name'), { headers: h }).then(r => r.json()),
+    fetch(getApiUrl('/api/service_lines?select=name&order=name'), { headers: h }).then(r => r.json())
   ]);
 
   const cSel = document.getElementById('editCompany');
