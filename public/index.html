@@ -701,6 +701,12 @@ function showContractorTab(tab, el) {
 
 <!-- Supabase Client for Realtime -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // Wait for Supabase library to load and ensure it's globally accessible
+  if (!window.supabase && window.supabaseLib) {
+    window.supabase = window.supabaseLib;
+  }
+</script>
 
 <!-- PDF.js (lazy loaded when needed) -->
 <!-- <script src="/pdf.min.js" defer></script> -->
