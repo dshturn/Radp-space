@@ -6,6 +6,19 @@ const SUPABASE_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 Deno.serve(async (req: Request) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, Prefer',
+        'Access-Control-Max-Age': '86400',
+      },
+    });
+  }
+
   const url = new URL(req.url);
 
   // Extract the REST API path from the proxy URL
