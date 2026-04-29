@@ -164,7 +164,7 @@ async function register() {
     return;
   }
 
-  const { data, error } = await supabase.auth.signUp({
+  const { data, error } = await window.supabase.auth.signUp({
     email,
     password,
     options: {
