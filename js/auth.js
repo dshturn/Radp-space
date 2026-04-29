@@ -142,24 +142,22 @@ async function addNewCompany() {
 async function addNewServiceLine() {
   const name = document.getElementById('newServiceLineName').value.trim();
   const msg  = document.getElementById('newServiceLineMsg');
-  // The "+ Add custom" flow is only exposed to Aramco users, so we always
-  // write to aramco_departments here.
   const label = 'department';
   if (!name) { msg.style.color = '#fda4af'; msg.textContent = `Please enter a ${label} name.`; return; }
   msg.style.color = '#94a3b8'; msg.textContent = 'Adding...';
-  const res = await fetch(`${SUPABASE_URL}/api/aramco_departments`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${getToken() || SUPABASE_KEY}`, Prefer: 'return=minimal' },
-    body: JSON.stringify({ name })
-  });
-  if (res.ok || res.status === 201) {
+  try {
+    await apiCall(`/api/aramco_departments`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${getToken() || SUPABASE_KEY}`, Prefer: 'return=minimal' },
+      body: { name }
+    });
     msg.style.color = '#6ee7b7'; msg.textContent = `"${name}" added!`;
     document.getElementById('newServiceLineName').value = '';
     await loadRegisterOptions();
     document.getElementById('regServiceLine').value = name;
     document.getElementById('newServiceLineWrap').style.display = 'none';
     msg.textContent = '';
-  } else {
+  } catch (e) {
     msg.style.color = '#fda4af'; msg.textContent = 'Failed to add. It may already exist.';
   }
 }
