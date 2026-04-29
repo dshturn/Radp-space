@@ -6,8 +6,7 @@ async function login() {
   const msg      = document.getElementById('loginMsg');
   msg.className  = 'auth-msg';
 
-  const path1 = encodeURIComponent('/auth/v1/token?grant_type=password');
-  const res  = await fetch(`/api/proxy?path=${path1}&method=POST`, {
+  const res  = await fetch(`/api?endpoint=${encodeURIComponent('/auth/v1/token?grant_type=password')}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password })
@@ -20,8 +19,7 @@ async function login() {
     return;
   }
 
-  const path2 = encodeURIComponent(`/rest/v1/user_profiles?id=eq.${data.user.id}&select=status,full_name,company,service_line`);
-  const profileRes = await fetch(`/api/proxy?path=${path2}&method=GET`, {
+  const profileRes = await fetch(`/api?endpoint=${encodeURIComponent(`/rest/v1/user_profiles?id=eq.${data.user.id}&select=status,full_name,company,service_line`)}`, {
     headers: { Authorization: `Bearer ${data.access_token}` }
   });
   const profiles = await profileRes.json();
@@ -50,11 +48,9 @@ function logout() {
 }
 
 async function loadRegisterOptions() {
-  const path1 = encodeURIComponent('/rest/v1/companies?select=name&order=name');
-  const path2 = encodeURIComponent('/rest/v1/service_lines?select=name&order=name');
   const [c, s] = await Promise.all([
-    fetch(`/api/proxy?path=${path1}&method=GET`).then(r => r.json()),
-    fetch(`/api/proxy?path=${path2}&method=GET`).then(r => r.json())
+    fetch(`/api?endpoint=${encodeURIComponent('/rest/v1/companies?select=name&order=name')}`).then(r => r.json()),
+    fetch(`/api?endpoint=${encodeURIComponent('/rest/v1/service_lines?select=name&order=name')}`).then(r => r.json())
   ]);
   const sel     = document.getElementById('regCompany');
   const current = sel.value;
@@ -82,10 +78,9 @@ async function addNewCompany() {
   const msg  = document.getElementById('newCompanyMsg');
   if (!name) { msg.style.color = '#fda4af'; msg.textContent = 'Please enter a company name.'; return; }
   msg.style.color = '#94a3b8'; msg.textContent = 'Adding...';
-  const path = encodeURIComponent('/rest/v1/companies');
-  const res = await fetch(`/api/proxy?path=${path}&method=POST`, {
+  const res = await fetch(`/api?endpoint=${encodeURIComponent('/rest/v1/companies')}&Prefer=return=minimal`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name })
   });
   if (res.ok || res.status === 201) {
@@ -112,18 +107,16 @@ async function register() {
     msg.textContent = company === '__new__' ? 'Please finish adding your company first.' : 'Please fill all fields.';
     return;
   }
-  const path1 = encodeURIComponent('/auth/v1/signup');
-  const res  = await fetch(`/api/proxy?path=${path1}&method=POST`, {
+  const res  = await fetch(`/api?endpoint=${encodeURIComponent('/auth/v1/signup')}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password, options: { data: { full_name: fullName, company, service_line: serviceLine } } })
   });
   const data = await res.json();
   if (data.user) {
-    const path2 = encodeURIComponent('/rest/v1/user_profiles');
-    await fetch(`/api/proxy?path=${path2}&method=POST`, {
+    await fetch(`/api?endpoint=${encodeURIComponent('/rest/v1/user_profiles')}&Prefer=resolution=merge-duplicates`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: data.user.id, email, full_name: fullName, company, service_line: serviceLine })
     });
     msg.className = 'auth-msg success'; msg.textContent = 'Account created! Waiting for admin approval.';
