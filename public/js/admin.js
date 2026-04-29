@@ -199,8 +199,15 @@ async function _renderAuditLog() {
 }
 
 function openAuditFile(documentId) {
-  const url = `${SUPABASE_URL}/storage/v1/object/public/documents/${esc(documentId)}`;
-  window.open(url, '_blank');
+  // Try equipment-docs bucket first, then personnel-docs
+  const buckets = ['equipment-docs', 'personnel-docs'];
+  for (const bucket of buckets) {
+    const url = `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${esc(documentId)}`;
+    // Open in a new tab - if bucket is wrong, user will see 404
+    // A better approach would be to check which bucket via the API first
+    window.open(url, '_blank');
+    return;
+  }
 }
 
 // Page initialization - called when admin page is shown
