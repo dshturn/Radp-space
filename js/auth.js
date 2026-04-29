@@ -55,7 +55,7 @@ async function login() {
 
 async function logout() {
   stopNotifPolling();
-  await window.supabase.auth.signOut();
+  await getSupabaseClient().auth.signOut();
   localStorage.removeItem('radp_token');
   localStorage.removeItem('radp_user');
   showPage('login');
