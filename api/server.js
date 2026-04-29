@@ -53,23 +53,30 @@ app.get('/test-db', async (req, res) => {
 // ── Proxy: GET request to Supabase ──
 app.get('/api', async (req, res) => {
   try {
-    // Query parameter format: ?endpoint=/path
+    // Query parameter format: ?endpoint=/path?query=value
     if (!req.query.endpoint) {
       return res.status(400).json({ error: 'Missing endpoint parameter' });
     }
 
-    let path = req.query.endpoint;
+    let fullEndpoint = req.query.endpoint;
+
+    // Split endpoint into path and query parts
+    const [path, ...queryParts] = fullEndpoint.split('?');
+    const endpointQuery = queryParts.length > 0 ? '?' + queryParts.join('?') : '';
+
+    // Get other query parameters (from the main URL, not embedded in endpoint)
     const { endpoint, ...otherParams } = req.query;
-    const query = new URLSearchParams(otherParams).toString();
+    const otherQuery = new URLSearchParams(otherParams).toString();
+    const finalQuery = endpointQuery + (otherQuery ? (endpointQuery ? '&' : '?') + otherQuery : '');
 
     // Determine full URL based on path format
     let url;
     if (path.startsWith('/auth/')) {
-      url = `${SUPABASE_URL}${path}${query ? '?' + query : ''}`;
+      url = `${SUPABASE_URL}${path}${finalQuery}`;
     } else if (path.startsWith('/rest/v1/')) {
-      url = `${SUPABASE_URL}${path}${query ? '?' + query : ''}`;
+      url = `${SUPABASE_URL}${path}${finalQuery}`;
     } else {
-      url = `${SUPABASE_URL}/rest/v1/${path}${query ? '?' + query : ''}`;
+      url = `${SUPABASE_URL}/rest/v1/${path}${finalQuery}`;
     }
 
     const response = await axios.get(url, {
