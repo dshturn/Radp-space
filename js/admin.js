@@ -166,7 +166,11 @@ async function _renderAuditLog() {
   console.log('Current user:', getUser());
   const res = await fetch(url, { headers: { ...getHeaders(), Prefer: 'count=exact' } });
   console.log('Audit log response status:', res.status);
-  if (!res.ok) { showToast('Failed to load audit log', 'error'); return; }
+  if (!res.ok) {
+    console.warn('Failed to load audit log:', res.status);
+    document.getElementById('auditLogList').innerHTML = '<div class="empty">Audit log not available</div>';
+    return;
+  }
   const rows = await res.json();
 
   // Fetch user profiles for all actors
