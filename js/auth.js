@@ -2,8 +2,8 @@
 
 // Initialize Supabase client on first use
 function getSupabaseClient() {
-  if (!window._sbClient && window.supabase?.createClient) {
-    window._sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  if (!window._sbClient && window.supabaseLib?.createClient) {
+    window._sbClient = window.supabaseLib.createClient(SUPABASE_URL, SUPABASE_KEY);
   }
   return window._sbClient;
 }
