@@ -213,11 +213,9 @@ async function login() {
     }
 
     // Get user profile
-    const profileRes = await fetch(`${SUPABASE_URL}/rest/v1/user_profiles?id=eq.${data.user.id}&select=*`, {
-      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${data.access_token}` }
+    const profiles = await apiCall(`/user_profiles?id=eq.${data.user.id}&select=*`, {
+      headers: { Authorization: `Bearer ${data.access_token}` }
     });
-
-    const profiles = await profileRes.json();
     const profile = profiles[0];
 
     if (!profile || profile.status === 'pending') {
