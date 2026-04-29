@@ -195,6 +195,11 @@ async function _renderAuditLog() {
     </div>`;
 }
 
+function openAuditFile(documentId) {
+  const url = `${SUPABASE_URL}/storage/v1/object/public/documents/${esc(documentId)}`;
+  window.open(url, '_blank');
+}
+
 // Page initialization - called when admin page is shown
 async function adminInit() {
   await loadUsers();
