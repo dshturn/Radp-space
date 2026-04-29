@@ -1,7 +1,9 @@
 // ═══════════════════ AUTH ═══════════════════
 
-// Initialize Supabase client if not already loaded
-if (!window.supabase) window.supabase = window.supabaseLib?.createClient(SUPABASE_URL, SUPABASE_KEY);
+// Ensure Supabase client is initialized
+if (!window.supabase && window.supabase?.createClient) {
+  window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+}
 
 async function login() {
   const email    = document.getElementById('loginEmail').value;
