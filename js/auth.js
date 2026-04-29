@@ -19,11 +19,20 @@ async function login() {
     return;
   }
 
-  const profileRes = await fetch(`/api?endpoint=${encodeURIComponent(`/rest/v1/user_profiles?id=eq.${data.user.id}&select=status,full_name,company,service_line`)}`, {
-    headers: { Authorization: `Bearer ${data.access_token}` }
-  });
-  const profiles = await profileRes.json();
-  const profile  = profiles[0];
+  let profile;
+  try {
+    const profileRes = await fetch(`/api?endpoint=${encodeURIComponent(`/rest/v1/user_profiles?id=eq.${data.user.id}&select=status,full_name,company,service_line`)}`, {
+      headers: { Authorization: `Bearer ${data.access_token}` }
+    });
+    if (!profileRes.ok) throw new Error(`Profile fetch failed: ${profileRes.status}`);
+    const profiles = await profileRes.json();
+    profile = profiles[0];
+  } catch (err) {
+    msg.className = 'auth-msg error';
+    msg.textContent = 'Failed to load profile. Try again.';
+    console.error('Profile fetch error:', err);
+    return;
+  }
 
   if (!profile || profile.status === 'pending') {
     msg.className = 'auth-msg warning';
