@@ -111,7 +111,7 @@ async function saveEditUser() {
   const role        = document.getElementById('editRole')?.value || 'contractor';
   if (!full_name || !email) { showToast('Name and email are required', 'warn'); return; }
 
-  const res = await fetch(`${SUPABASE_URL}/api/user_profiles?id=eq.${id}`, {
+  const res = await fetch(getApiUrl(`/api/user_profiles?id=eq.${id}`), {
     method: 'PATCH',
     headers: { ...getHeaders(), Prefer: 'return=minimal' },
     body: JSON.stringify({ full_name, email, company, service_line, role })
@@ -122,7 +122,7 @@ async function saveEditUser() {
 }
 
 async function updateStatus(id, status) {
-  await fetch(`${SUPABASE_URL}/api/user_profiles?id=eq.${id}`, {
+  await fetch(getApiUrl(`/api/user_profiles?id=eq.${id}`), {
     method: 'PATCH',
     headers: { ...getHeaders(), Prefer: 'return=minimal' },
     body: JSON.stringify({ status })
@@ -133,7 +133,7 @@ async function updateStatus(id, status) {
 
 async function deleteUser(id) {
   if (!await showConfirm('Delete this user?')) return;
-  const _delRes = await fetch(`${SUPABASE_URL}/api/user_profiles?id=eq.${id}`, {
+  const _delRes = await fetch(getApiUrl(`/api/user_profiles?id=eq.${id}`), {
     method: 'DELETE',
     headers: { ...getHeaders(), Prefer: 'return=minimal' }
   });
