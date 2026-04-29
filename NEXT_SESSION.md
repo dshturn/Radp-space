@@ -1,87 +1,203 @@
-# Next Session Prompt: RADP LoR Backend Migration
+# Next Session Prompt: Phase 2 - Email-Based Assessment Workflow
 
-**Status**: Firewall compatibility testing complete. Ready for Phase 1 setup.
+**Status**: Architecture finalized (2026-04-28). Ready to implement three new modules.
 
-## Problem & Decision
-- **Blocker**: Aramco firewall blocks Supabase (supabase.co domain)
-- **Firewall Test Results** (2026-04-27):
-  - ✅ Whitelisted: Azure AD, Azure SQL, Firebase, Heroku
-  - ❌ Blocked: AWS, GCP, Vercel, Supabase
-- **Decision**: Migrate from Supabase → **Azure SQL + Heroku API**
-  - Why: Both whitelisted; Azure SQL is core Microsoft service (low future-block risk)
-  - Dual-stack approach: Keep Supabase for existing users; new LoR uses Heroku until full migration
+## Problem & Solution
 
-## Current State
-- ✅ LoR UI (index.html) — complete, tested locally
-- ✅ LoR logic (script.js) — complete, tested locally
-- ✅ Firewall compatibility tester (firewall-test.html) — verified working
-- ✅ Documentation updated (firewall results + migration plan)
-- ❌ Azure SQL Database — not yet created
-- ❌ Heroku API — not yet created
-- ❌ Database selector in script.js — not yet implemented
+**Firewall Constraints Discovered (2026-04-28):**
+- ❌ Web interfaces blocked: Storage websites, App Services, Azure Functions
+- ❌ Database connections blocked: SQL port 1433 blocked from Aramco
+- ✅ Email always works
+- ✅ Existing tools work: Supabase.com (UI), Azure Portal, Power BI
+- ✅ File transfer works: EFT (external file transfer service)
 
-## Files Ready
+**Solution: Email-Based Assessment Workflow**
+- No web proxies needed
+- No database connection issues
+- No IT involvement required
+- Uses email + PDF + existing tools
+
+## Workflow
+
 ```
-C:\Users\dshtu\Radp-space\
-├── aramco/sharepoint/assessment/
-│   ├── index.html         (LoR UI, ready)
-│   └── script.js          (LoR logic, ready for DB selector + API URL updates)
-├── firewall-test.html     (firewall test tool, ready)
-└── context/
-    ├── sharepoint-integration.md  (updated 2026-04-27)
-    └── project.md                 (updated 2026-04-27)
-```
+1. ARAMCO SHAREPOINT (generates request)
+   └→ Email: Assessment Request
+      (Assessment ID, Contractor ID, details)
 
-## Phase 1 Deliverables (Next Session)
-### Task 1: Create Azure SQL Database
-- [ ] Create Azure account (if needed)
-- [ ] Create SQL Server in appropriate region
-- [ ] Create database
-- [ ] Export PostgreSQL schema from Supabase
-- [ ] Import schema to Azure SQL
-- [ ] Test connectivity from local machine
+2. EXTERNAL RADP (receives via Email Analyzer)
+   └→ Creates Assessment Container in Supabase
+   └→ Awaits contractor input
 
-### Task 2: Create Heroku API Skeleton
-- [ ] Create Heroku account (if needed)
-- [ ] Create Node.js Express project
-- [ ] Deploy to Heroku (with placeholder endpoint)
-- [ ] Verify accessible from Aramco network (using firewall-test.html)
+3. CONTRACTOR (Supabase web interface)
+   └→ Adds Equipment + Manpower
+   └→ Uploads Certificates
+   └→ Clicks "Generate PDF"
 
-### Task 3: Update script.js for Dual-Stack
-- [ ] Add `RADP_CONFIG.backend` selector (default: 'azure', fallback: 'supabase')
-- [ ] Add `RADP_CONFIG.apis` object with both endpoints
-- [ ] Wrap API calls to use `RADP_CONFIG.apis[RADP_CONFIG.backend]`
-- [ ] Test both backends work independently
+4. PDF GENERATOR (creates hierarchical PDF)
+   └→ Table of Contents (Equipment → Manpower → Certs)
+   └→ Each TOC item is a clickable link
+   └→ Links point to certificate pages
+   └→ Professional formatting
 
-### Task 4: Verify Phase 1
-- [ ] Azure SQL accessible from Aramco network
-- [ ] Heroku API accessible from Aramco network
-- [ ] script.js switches between backends without errors
+5. CONTRACTOR (submits)
+   └→ Downloads PDF from system
+   └→ Uploads PDF to EFT
 
-## Architecture (Phase 1 Result)
-```
-SharePoint (iframe)
-├── script.js (dual-stack: selects backend)
-│
-├─→ [Supabase] (existing users, unaffected)
-│   └─ Supabase Edge Functions + PostgreSQL
-│
-└─→ [Heroku API] (new LoR access, Aramco firewall compatible)
-    └─ Node.js Express + Azure SQL PostgreSQL
+6. ASSESSOR (Aramco, reviews offline)
+   └→ Downloads PDF from EFT
+   └→ Reviews hierarchical structure + certificates
+   └→ Makes decision
+
+7. ASSESSOR (generates decision via SharePoint)
+   └→ SharePoint Email Generator
+   └→ Email: Assessment Decision
+      (Assessment ID, Decision, Comments)
+
+8. EXTERNAL RADP (receives via Email Analyzer)
+   └→ Updates Assessment Status in Supabase
+   └→ Contractor sees updated status
+
+9. CONTRACTOR (Supabase)
+   └→ Views assessment approval/rejection
+   └→ Workflow complete
 ```
 
-## Full Migration Timeline
-- Phase 1 (Week 1): Azure + Heroku setup, dual-stack configuration
-- Phase 2 (Week 1): Export/import Supabase data → Azure SQL
-- Phase 3 (Week 2): Build API endpoints, migrate RLS logic
-- Phase 4 (Week 2): Test end-to-end from SharePoint
-- Phase 5 (Week 3): Cutover (flip default backend to 'azure', keep Supabase as fallback)
+## Three Modules to Build
 
-## References
-- Firewall test tool: `firewall-test.html`
-- Architecture docs: `context/sharepoint-integration.md`
-- Project roadmap: `context/project.md`
+### Module 1: Email Analyzer (Node.js, External RADP)
+**Purpose**: Receive and parse emails from Aramco SharePoint
+
+**Functionality**:
+- Listens for incoming emails (request + decision)
+- Parses structured email body
+- Creates assessment containers (request emails)
+- Updates assessment status (decision emails)
+- Updates Supabase records
+
+**Inputs**:
+- Assessment request email (from SharePoint)
+- Assessment decision email (from SharePoint)
+
+**Outputs**:
+- Assessment records in Supabase
+- Status updates in Supabase
+
+**Tech Stack**: Node.js + email service (SMTP/Webhook/IMAP)
 
 ---
-**Last Updated**: 2026-04-27  
-**Next Session Focus**: Create Azure SQL + Heroku accounts and complete Phase 1
+
+### Module 2: PDF Generator (JavaScript, Contractor Interface - Supabase)
+**Purpose**: Generate hierarchical PDF with internal links
+
+**Functionality**:
+- Reads assessment data from Supabase (equipment, manpower, certificates)
+- Generates PDF with:
+  - Cover page (assessment details)
+  - Table of Contents (hierarchical: Equipment Type → Item → Certificate)
+  - Each TOC entry is a clickable link (internal PDF links)
+  - Detailed pages for each section (equipment specs, personnel info, cert images)
+- Returns PDF for contractor download
+- PDF ready for EFT upload
+
+**Inputs**:
+- Assessment ID from Supabase
+- Equipment list, manpower list, certificates
+
+**Outputs**:
+- PDF file (for download/EFT upload)
+
+**Tech Stack**: JavaScript (PDF library: PDFKit, jsPDF, or similar) + Supabase API
+
+---
+
+### Module 3: SharePoint Email Generator Code (SharePoint System)
+**Purpose**: Generate structured emails for assessment workflow
+
+**Functionality**:
+- Triggered when assessor makes decision in SharePoint
+- Generates two email types:
+  - **Request Email**: Assessment ID, contractor info, assessment details
+  - **Decision Email**: Assessment ID, decision (Approved/Rejected/Conditional), comments/notes
+- Email format must be parseable by Email Analyzer
+- Sends to RADP email address
+
+**Tech Stack**: SharePoint customization (Power Automate, custom web part, or REST call)
+
+---
+
+## Critical Questions (Answer Before Implementation)
+
+1. **Email Service Infrastructure:**
+   - How will RADP receive emails? (Dedicated email account? Webhook service? IMAP polling?)
+   - Email address for receiving assessments?
+   - Can we set up mail forwarding or use a service like Zapier/IFTT?
+
+2. **PDF Hierarchy Structure:**
+   - Proposed: Equipment Type → Equipment Item → Component → Certificate?
+   - Or: Equipment Items (with nested certificates)?
+   - Should there be a summary/cover page with assessment overview?
+   - What info on each certificate page? (certificate type, expiry, issuer, etc.)
+
+3. **SharePoint Email Template:**
+   - What format for request email? (structured fields or free-form?)
+   - Can we control/standardize email subject line?
+   - Example: "RADP Assessment Request - ID:123 - Contractor:ABC"?
+
+4. **Assessment Status Values:**
+   - Status hierarchy: Pending → Submitted → Under Review → Approved/Rejected/Conditional?
+   - Should contractor get notified on each status change?
+   - Approval fields: approved_by, approved_at, approved_notes?
+
+5. **PDF Link Strategy:**
+   - Internal PDF page links only, or also external links to EFT documents?
+   - Should PDF be self-contained (all certs embedded) or reference external files?
+   - File size considerations?
+
+6. **Email Parsing Edge Cases:**
+   - What if email client wraps/reformats the body?
+   - Should we require a specific email template format (HTML vs plain text)?
+   - How do we handle reply-to vs new email?
+
+## Implementation Order (Next Session)
+
+1. **Clarify Critical Questions** (above) - 15 min
+2. **Design Email Parser** - define email format/structure - 30 min
+3. **Build Email Analyzer** - SMTP listener + Supabase integration - 2 hours
+4. **Build PDF Generator** - hierarchical PDF with TOC links - 3 hours
+5. **Build SharePoint Email Code** - request + decision email templates - 1 hour
+6. **Test End-to-End** - send test emails, generate PDFs, verify status updates - 1 hour
+7. **UAT with Assessor** - test from Aramco network with real assessments - TBD
+
+## Files to Create/Modify
+
+```
+C:\Users\dshtu\Radp-space\
+├── api/
+│   ├── email-analyzer.js       (NEW - receives and parses emails)
+│   └── [connection logic]       (modify to connect to Supabase instead of Azure SQL)
+│
+├── js/
+│   └── pdf-generator.js         (NEW - generates hierarchical PDF)
+│
+├── aramco/sharepoint/
+│   └── [email-generator code]   (NEW - SharePoint customization for emails)
+│
+└── context/
+    ├── project.md              (UPDATED - Phase 2 workflow)
+    └── tasks.md                (UPDATED - module breakdown)
+```
+
+## Architecture Decision Log
+- **2026-04-27**: Heroku proxy → Rejected (domain blocked)
+- **2026-04-28**: Azure Storage static site → Rejected (domain blocked)
+- **2026-04-28**: Power BI + database connections → Rejected (SQL blocked)
+- **2026-04-28**: Email-based workflow ✅ → Approved (firewall-friendly)
+
+## References
+- Phase 2 Assessment Workflow: context/project.md
+- Task Breakdown: context/tasks.md
+- Firewall Test Results: conversation (2026-04-28)
+
+---
+**Last Updated**: 2026-04-28
+**Next Session Focus**: Answer critical questions, build Email Analyzer + PDF Generator
