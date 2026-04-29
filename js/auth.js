@@ -1,12 +1,21 @@
 // ═══════════════════ AUTH ═══════════════════
 
+// Initialize Supabase client on first use
+function getSupabaseClient() {
+  if (!window._sbClient && window.supabase?.createClient) {
+    window._sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  }
+  return window._sbClient;
+}
+
 async function login() {
   const email    = document.getElementById('loginEmail').value;
   const password = document.getElementById('loginPassword').value;
   const msg      = document.getElementById('loginMsg');
   msg.className  = 'auth-msg';
 
-  const { data, error } = await window.supabase.auth.signInWithPassword({ email, password });
+  const sb = getSupabaseClient();
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
 
   if (error || !data.user) {
     msg.className = 'auth-msg error';
