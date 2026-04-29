@@ -1,5 +1,20 @@
 // ═══════════════════ AUTH ═══════════════════
 
+async function apiCall(path, options = {}) {
+  const body = options.body ? JSON.stringify(options.body) : undefined;
+  const encodedPath = encodeURIComponent(path);
+  const url = `${window.RADP_PROXY_URL || '/api/proxy'}?endpoint=${encodedPath}`;
+
+  const res = await fetch(url, {
+    method: options.method || 'GET',
+    headers: { 'Content-Type': 'application/json', ...options.headers },
+    body
+  });
+
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  return res.json();
+}
+
 async function login() {
   const email    = document.getElementById('loginEmail').value;
   const password = document.getElementById('loginPassword').value;
@@ -19,10 +34,9 @@ async function login() {
     return;
   }
 
-  const profileRes = await fetch(`${SUPABASE_URL}/api/user_profiles?id=eq.${data.user.id}&select=status,role,full_name,company,service_line`, {
-    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${data.access_token}` }
+  const profiles = await apiCall(`/api/user_profiles?id=eq.${data.user.id}&select=status,role,full_name,company,service_line`, {
+    headers: { Authorization: `Bearer ${data.access_token}` }
   });
-  const profiles = await profileRes.json();
   const profile  = profiles[0];
 
   if (!profile || profile.status === 'pending') {
