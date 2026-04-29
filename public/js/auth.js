@@ -59,16 +59,15 @@ function logout() {
 async function loadRegisterOptions() {
   const role         = sessionStorage.getItem('radp_reg_role') || 'contractor';
   const isContractor = role === 'contractor';
-  const anonH        = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` };
 
   // Contractors pick from service_lines; Aramco users pick from aramco_departments.
-  const optionsUrl = isContractor
-    ? `${SUPABASE_URL}/rest/v1/service_lines?select=name&order=name`
-    : `${SUPABASE_URL}/rest/v1/aramco_departments?select=name&order=name`;
+  const optionsPath = isContractor
+    ? '/service_lines?select=name&order=name'
+    : '/aramco_departments?select=name&order=name';
 
   const [companies, options] = await Promise.all([
-    fetch(`${SUPABASE_URL}/rest/v1/companies?select=name&order=name`, { headers: anonH }).then(r => r.json()),
-    fetch(optionsUrl, { headers: anonH }).then(r => r.json())
+    apiCall('/companies?select=name&order=name'),
+    apiCall(optionsPath)
   ]);
 
   // Company dropdown: contractor variant is the only case that uses this
