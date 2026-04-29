@@ -58,19 +58,26 @@ function logout() {
 }
 
 async function loadRegisterOptions() {
-  const [c, s] = await Promise.all([
-    fetch(`/api?endpoint=${encodeURIComponent('/rest/v1/companies?select=name&order=name')}`).then(r => r.json()),
-    fetch(`/api?endpoint=${encodeURIComponent('/rest/v1/service_lines?select=name&order=name')}`).then(r => r.json())
-  ]);
-  const sel     = document.getElementById('regCompany');
-  const current = sel.value;
-  sel.innerHTML = '<option value="">Select company...</option>'
-    + c.map(x => `<option value="${x.name}">${x.name}</option>`).join('')
-    + '<option value="__new__">+ Add new company...</option>';
-  if (current) sel.value = current;
-  const svcSel = document.getElementById('regServiceLine');
-  svcSel.innerHTML = '<option value="">Select service line...</option>'
-    + s.map(x => `<option value="${x.name}">${x.name}</option>`).join('');
+  try {
+    const [cRes, sRes] = await Promise.all([
+      fetch(`/api?endpoint=${encodeURIComponent('/rest/v1/companies?select=name&order=name')}`),
+      fetch(`/api?endpoint=${encodeURIComponent('/rest/v1/service_lines?select=name&order=name')}`)
+    ]);
+    if (!cRes.ok || !sRes.ok) throw new Error('Failed to load options');
+    const c = await cRes.json();
+    const s = await sRes.json();
+    const sel     = document.getElementById('regCompany');
+    const current = sel.value;
+    sel.innerHTML = '<option value="">Select company...</option>'
+      + c.map(x => `<option value="${x.name}">${x.name}</option>`).join('')
+      + '<option value="__new__">+ Add new company...</option>';
+    if (current) sel.value = current;
+    const svcSel = document.getElementById('regServiceLine');
+    svcSel.innerHTML = '<option value="">Select service line...</option>'
+      + s.map(x => `<option value="${x.name}">${x.name}</option>`).join('');
+  } catch (err) {
+    console.error('Failed to load register options:', err);
+  }
 }
 
 function onCompanyChange(sel) {
