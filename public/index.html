@@ -209,24 +209,14 @@
         <button class="btn-ghost-sm" onclick="showList()">← Back</button>
       </div>
       <div class="app-card" id="assessmentInfo"></div>
-      <div class="tabs" id="detailTabs">
-        <button class="tab active" onclick="showDetailTab('personnel', this)">Personnel</button>
-        <button class="tab" onclick="showDetailTab('equipment', this)">Equipment</button>
-      </div>
-      <div id="personnelTab">
-        <div class="row-between mb-sm">
-          <div class="section-label">Selected Personnel</div>
-          <button class="btn-primary" onclick="openPersonnelSelector()">+ Add Personnel</button>
+      <div class="row-between mb-sm" style="margin-top:20px;">
+        <div class="section-label">Assessment Hierarchy</div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn-primary" onclick="openPersonnelSelector()">+ Personnel</button>
+          <button class="btn-primary" onclick="openEquipmentSelector()">+ Equipment</button>
         </div>
-        <div id="selectedPersonnel"></div>
       </div>
-      <div id="equipmentTab" style="display:none;">
-        <div class="row-between mb-sm">
-          <div class="section-label">Selected Equipment</div>
-          <button class="btn-primary" onclick="openEquipmentSelector()">+ Add Equipment</button>
-        </div>
-        <div id="selectedEquipment"></div>
-      </div>
+      <div id="assessmentHierarchy" class="assessment-tree"></div>
       <div class="lor-section">
         <button class="lor-btn" onclick="generateLoR()">📄 Generate LoR</button>
       </div>
