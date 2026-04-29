@@ -185,7 +185,7 @@ async function register() {
     ? { id: data.user.id, email, full_name: fullName, company, service_line: choice, role }
     : { id: data.user.id, email, full_name: fullName, company, ...(choice ? { aramco_department: choice } : {}), role };
 
-  const { error: profileError } = await supabase.from('user_profiles').upsert(profile);
+  const { error: profileError } = await window.supabase.from('user_profiles').upsert(profile);
   if (profileError) {
     msg.className = 'auth-msg error'; msg.textContent = 'Profile creation failed.';
     return;
