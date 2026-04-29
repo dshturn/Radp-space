@@ -50,9 +50,11 @@ function logout() {
 }
 
 async function loadRegisterOptions() {
+  const path1 = encodeURIComponent('/rest/v1/companies?select=name&order=name');
+  const path2 = encodeURIComponent('/rest/v1/service_lines?select=name&order=name');
   const [c, s] = await Promise.all([
-    fetch(`/api/proxy?path=/rest/v1/companies?select=name&order=name&method=GET`).then(r => r.json()),
-    fetch(`/api/proxy?path=/rest/v1/service_lines?select=name&order=name&method=GET`).then(r => r.json())
+    fetch(`/api/proxy?path=${path1}&method=GET`).then(r => r.json()),
+    fetch(`/api/proxy?path=${path2}&method=GET`).then(r => r.json())
   ]);
   const sel     = document.getElementById('regCompany');
   const current = sel.value;
