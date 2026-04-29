@@ -156,28 +156,108 @@ async function loadAssessmentDetail(id) {
   loadSelectedPersonnel(id);
 }
 
-async function loadSelectedEquipment(id) {
-  const items = await apiFetch(`${SUPABASE_URL}/rest/v1/assessment_equipment?assessment_id=eq.${id}&select=*,equipment_items(serial_number,model,equipment_template_id,equipment_templates(name))`, { headers: getHeaders() });
-  if (!items) return;
-  const el = document.getElementById('selectedEquipment');
-  if (!items.length) { el.innerHTML = '<div class="empty">No equipment selected</div>'; return; }
-  el.innerHTML = items.map(i => `
-    <div class="item-row">
-      <div class="item-info"><div class="item-name">${esc(i.equipment_items?.equipment_templates?.name || i.equipment_items?.model || '—')}</div><div class="item-detail">S/N: ${esc(i.equipment_items?.serial_number || '—')}</div></div>
-      <button class="btn-danger" onclick="removeEquipment(${parseInt(i.id)})">Remove</button>
-    </div>`).join('');
+async function loadAssessmentHierarchy(id) {
+  const h = getHeaders();
+  const [personnel, equipment, allEquip] = await Promise.all([
+    apiFetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?assessment_id=eq.${id}&select=*,personnel(full_name,position,national_id)`, { headers: h }),
+    apiFetch(`${SUPABASE_URL}/rest/v1/assessment_equipment?assessment_id=eq.${id}&select=*,equipment_items(id,serial_number,model,name,parent_id,equipment_template_id,equipment_templates(name))`, { headers: h }),
+    apiFetch(`${SUPABASE_URL}/rest/v1/equipment_items?dismissed=is.false&select=id,parent_id`, { headers: h })
+  ]);
+
+  const el = document.getElementById('assessmentHierarchy');
+  let html = '<div class="assessment-tree-content">';
+
+  // Personnel section
+  html += '<div class="tree-section"><div class="tree-section-title">👥 Personnel</div>';
+  if (personnel?.length) {
+    personnel.forEach(p => {
+      const per = p.personnel;
+      const html2 = `
+        <div class="tree-item">
+          <div class="tree-item-header">
+            <div class="tree-item-content">
+              <div class="tree-item-main">
+                <div class="tree-item-name">${esc(per?.full_name || '—')}</div>
+                ${per?.position ? `<div class="tree-item-meta">Position: ${esc(per.position)} · ID: ${esc(per.national_id || '—')}</div>` : ''}
+              </div>
+            </div>
+          </div>
+          <button class="btn-danger btn-small" onclick="removePersonnel(${parseInt(p.id)})" style="margin-left:auto;">Remove</button>
+        </div>`;
+      html += html2;
+    });
+  } else {
+    html += '<div class="empty">No personnel selected</div>';
+  }
+  html += '</div>';
+
+  // Equipment section with hierarchy
+  html += '<div class="tree-section"><div class="tree-section-title">⚙️ Equipment</div>';
+  if (equipment?.length) {
+    // Build parent→children map
+    const childrenMap = {};
+    if (allEquip) {
+      allEquip.forEach(e => {
+        if (e.parent_id) {
+          if (!childrenMap[e.parent_id]) childrenMap[e.parent_id] = [];
+          childrenMap[e.parent_id].push(e.id);
+        }
+      });
+    }
+
+    equipment.forEach(e => {
+      const eq = e.equipment_items;
+      const equipName = esc(eq?.equipment_templates?.name || eq?.name || eq?.model || '—');
+      const equipSN = esc(eq?.serial_number || '—');
+      const children = childrenMap[eq.id] || [];
+      const hasChildren = children.length > 0;
+
+      html += `
+        <div class="tree-item">
+          <div class="tree-item-header">
+            ${hasChildren ? `<div class="tree-toggle" onclick="toggleTreeItem(this)">▶</div>` : '<div style="width:20px;"></div>'}
+            <div class="tree-item-content">
+              <div class="tree-item-main">
+                <div class="tree-item-name">${equipName}</div>
+                <div class="tree-item-meta">S/N: ${equipSN}</div>
+              </div>
+            </div>
+          </div>
+          <button class="btn-danger btn-small" onclick="removeEquipment(${parseInt(e.id)})" style="margin-left:auto;">Remove</button>`;
+
+      if (hasChildren) {
+        html += `<div class="tree-children">`;
+        children.forEach(childId => {
+          const child = allEquip?.find(x => x.id === childId);
+          if (child) {
+            html += `
+              <div class="tree-child-item">
+                <div style="flex:1;">
+                  <div class="tree-child-name">${esc(child.name || child.model || '—')}</div>
+                </div>
+              </div>`;
+          }
+        });
+        html += `</div>`;
+      }
+
+      html += `</div>`;
+    });
+  } else {
+    html += '<div class="empty">No equipment selected</div>';
+  }
+  html += '</div></div>';
+
+  el.innerHTML = html;
 }
 
-async function loadSelectedPersonnel(id) {
-  const items = await apiFetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?assessment_id=eq.${id}&select=*,personnel(full_name,position,national_id)`, { headers: getHeaders() });
-  if (!items) return;
-  const el = document.getElementById('selectedPersonnel');
-  if (!items.length) { el.innerHTML = '<div class="empty">No personnel selected</div>'; return; }
-  el.innerHTML = items.map(i => `
-    <div class="item-row">
-      <div class="item-info"><div class="item-name">${esc(i.personnel?.full_name || '—')}</div><div class="item-detail">${esc(i.personnel?.position || '')} · ID: ${esc(i.personnel?.national_id || '—')}</div></div>
-      <button class="btn-danger" onclick="removePersonnel(${parseInt(i.id)})">Remove</button>
-    </div>`).join('');
+function toggleTreeItem(toggle) {
+  const item = toggle.closest('.tree-item');
+  const children = item.querySelector('.tree-children');
+  if (!children) return;
+
+  toggle.textContent = toggle.textContent === '▶' ? '▼' : '▶';
+  children.style.display = children.style.display === 'none' ? 'block' : 'none';
 }
 
 async function openEquipmentSelector() {
