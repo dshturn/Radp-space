@@ -356,7 +356,7 @@ async function addPersonnelItem(persId) {
     body: JSON.stringify({ assessment_id: currentAssessmentId, personnel_id: persId })
   });
   if (!r.ok) { showToast('Add failed: ' + r.status, 'error'); return; }
-  loadSelectedPersonnel(currentAssessmentId);
+  loadAssessmentHierarchy(currentAssessmentId);
   openPersonnelSelector();
 }
 
@@ -445,13 +445,13 @@ async function addSelectedPersonnel() {
     })
   ));
   document.getElementById('asPersModal').classList.remove('open');
-  loadSelectedPersonnel(currentAssessmentId);
+  loadAssessmentHierarchy(currentAssessmentId);
 }
 
 async function removePersonnel(id, fromSelector) {
   const r = await fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
   if (!r.ok) { showToast('Remove failed: ' + r.status, 'error'); return; }
-  loadSelectedPersonnel(currentAssessmentId);
+  loadAssessmentHierarchy(currentAssessmentId);
   if (fromSelector) openPersonnelSelector();
 }
 
