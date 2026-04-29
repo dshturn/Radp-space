@@ -16,6 +16,14 @@ const getHeaders = () => {
   return { apikey: SUPABASE_KEY, Authorization: token ? `Bearer ${token}` : '', 'Content-Type': 'application/json' };
 };
 
+// Helper to route Supabase API calls through proxy on localhost
+function getApiUrl(endpoint) {
+  if (window.location.hostname === 'localhost') {
+    return `/api?endpoint=${encodeURIComponent(endpoint)}`;
+  }
+  return `${SUPABASE_URL}${endpoint}`;
+}
+
 // ─── Date utilities (UTC normalized) ───
 function todayUTC() {
   const d = new Date();
