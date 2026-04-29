@@ -198,16 +198,12 @@ async function _renderAuditLog() {
   }
 }
 
-function openAuditFile(documentId) {
-  // Try equipment-docs bucket first, then personnel-docs
-  const buckets = ['equipment-docs', 'personnel-docs'];
-  for (const bucket of buckets) {
-    const url = `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${esc(documentId)}`;
-    // Open in a new tab - if bucket is wrong, user will see 404
-    // A better approach would be to check which bucket via the API first
-    window.open(url, '_blank');
-    return;
-  }
+function openAuditFile(documentId, entityType) {
+  // Determine bucket based on entity type from the label (Equipment doc or Personnel doc)
+  // For now, default to trying equipment-docs first
+  let bucket = entityType && entityType.includes('Equipment') ? 'equipment-docs' : 'personnel-docs';
+  const url = `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${esc(documentId)}`;
+  window.open(url, '_blank');
 }
 
 // Page initialization - called when admin page is shown
