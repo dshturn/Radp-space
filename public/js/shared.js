@@ -68,6 +68,19 @@ function esc(str) {
 // ─── API fetch with 401 guard and error surfacing ───
 async function apiFetch(url, options = {}) {
   try {
+    // Route Supabase REST API calls through proxy
+    if (url.includes('/rest/v1/')) {
+      const urlObj = new URL(url);
+      const path = urlObj.pathname.replace('/rest/v1', '') + urlObj.search;
+      const data = await apiCall(path, {
+        method: options.method,
+        body: options.body ? (typeof options.body === 'string' ? JSON.parse(options.body) : options.body) : undefined,
+        headers: options.headers
+      });
+      return Array.isArray(data) ? data : (data ? [data] : []);
+    }
+
+    // Non-Supabase URLs: use fetch directly
     const res = await fetch(url, options);
     if (res.status === 401) {
       localStorage.removeItem('radp_token');
@@ -82,8 +95,9 @@ async function apiFetch(url, options = {}) {
       return null;
     }
     return Array.isArray(data) ? data : (data ? [data] : []);
-  } catch {
+  } catch (err) {
     showToast('Network error — check your connection and try again.', 'error');
+    console.error('apiFetch error:', err);
     return null;
   }
 }
