@@ -200,9 +200,14 @@ async function _renderAuditLog() {
 
 async function openAuditFile(documentId, entityType) {
   try {
-    const doc = await apiCall(`/documents?id=eq.${documentId}&select=file_url`);
-    if (doc && doc[0] && doc[0].file_url) {
-      window.open(doc[0].file_url, '_blank');
+    const h = getHeaders();
+    const [equipDocs, persDocs] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/documents?id=eq.${documentId}&select=file_url`, { headers: h }).then(r => r.json()).catch(() => []),
+      fetch(`${SUPABASE_URL}/rest/v1/personnel_documents?id=eq.${documentId}&select=file_url`, { headers: h }).then(r => r.json()).catch(() => [])
+    ]);
+    const doc = (equipDocs && equipDocs[0]) || (persDocs && persDocs[0]);
+    if (doc && doc.file_url) {
+      window.open(doc.file_url, '_blank');
     } else {
       showToast('Document not found', 'error');
     }
