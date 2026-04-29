@@ -23,7 +23,7 @@ async function apiCall(path, options = {}) {
   };
 
   const method = options.method || 'GET';
-  const proxyUrl = `${SUPABASE_URL}/functions/v1/api-proxy?path=${encodeURIComponent(path)}&method=${encodeURIComponent(method)}`;
+  const proxyUrl = `/api/proxy?path=${encodeURIComponent(path)}&method=${encodeURIComponent(method)}`;
 
   console.log('[apiCall] Proxying:', method, path);
 
