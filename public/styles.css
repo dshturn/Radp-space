@@ -544,3 +544,22 @@ input[type="file"] { display: none; }
 .bulk-bar { display:flex; align-items:center; gap:12px; padding:8px 0; flex-wrap:wrap; }
 .bulk-count { font-size:13px; color:var(--text-3); }
 .bulk-check { width:18px; height:18px; accent-color:var(--accent,#f59e0b); cursor:pointer; }
+
+/* ── Assessment Tree Hierarchy ── */
+.assessment-tree { margin:12px 0; }
+.assessment-tree-content { display:flex; flex-direction:column; gap:16px; }
+.tree-section { background:var(--surface); border-radius:8px; padding:12px; border:1px solid var(--border); }
+.tree-section-title { font-size:13px; font-weight:600; color:var(--accent); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+.tree-item { display:flex; align-items:center; padding:8px 10px; border-bottom:1px solid var(--border); gap:8px; }
+.tree-item:last-child { border-bottom:none; }
+.tree-item-header { display:flex; align-items:center; flex:1; gap:8px; cursor:default; }
+.tree-toggle { width:20px; cursor:pointer; color:var(--accent); font-weight:bold; user-select:none; }
+.tree-item-content { flex:1; display:flex; align-items:center; gap:8px; }
+.tree-item-main { flex:1; }
+.tree-item-name { font-size:13px; font-weight:600; color:var(--text-0); }
+.tree-item-meta { font-size:11px; color:var(--text-3); margin-top:2px; }
+.tree-children { display:none; margin-top:8px; padding-top:8px; border-top:1px solid var(--border); }
+.tree-children.expanded { display:block; }
+.tree-child-item { padding:6px 10px 6px 30px; font-size:12px; color:var(--text-2); display:flex; align-items:center; gap:8px; border-radius:4px; margin-bottom:4px; background:var(--surface-2); }
+.tree-child-name { flex:1; font-weight:500; }
+.btn-small { padding:4px 8px; font-size:11px; }
