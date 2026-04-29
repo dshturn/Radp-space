@@ -174,7 +174,9 @@ async function _renderAuditLog() {
   let userMap = {};
   if (actorIds.length > 0) {
     const h = getHeaders();
-    const users = await apiFetch(`${SUPABASE_URL}/api/user_profiles?id=in.(${actorIds.join(',')})&select=id,full_name,service_line`, { headers: h }) || [];
+    const endpoint = `/api/user_profiles?id=in.(${actorIds.join(',')})&select=id,full_name,service_line`;
+    const url = getApiUrl(endpoint);
+    const users = await apiFetch(url, { headers: h }) || [];
     userMap = Object.fromEntries(users.map(u => [u.id, u]));
   }
   // Add user data to rows
