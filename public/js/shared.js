@@ -15,23 +15,25 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
 
 // API proxy function to bypass CORS
 async function apiCall(path, options = {}) {
-  const method = options.method || 'GET';
-  const body = options.body ? JSON.stringify(options.body) : undefined;
   const token = getToken();
   const headers = {
     'Content-Type': 'application/json',
     ...(token && { 'Authorization': `Bearer ${token}` })
   };
 
-  const proxyUrl = `${SUPABASE_URL}/functions/v1/api-proxy?path=${encodeURIComponent(path)}&method=${method}`;
+  const proxyUrl = `${SUPABASE_URL}/functions/v1/api-proxy?path=${encodeURIComponent(path)}`;
+
+  console.log('[apiCall] Proxying:', path, 'via:', proxyUrl);
 
   const res = await fetch(proxyUrl, {
     method: 'POST',
     headers,
-    body
+    body: options.body ? JSON.stringify(options.body) : undefined
   });
 
   if (!res.ok) {
+    const text = await res.text();
+    console.error('[apiCall] Error:', res.status, text);
     throw new Error(`API error: ${res.status}`);
   }
 
