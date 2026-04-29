@@ -191,7 +191,7 @@ async function fetchAssessment() {
     const [assessment, personnel, equipment] = await Promise.all([
       fetchFromRadp(`/assessments?id=eq.${assessmentId}`),
       fetchFromRadp(`/assessment_personnel?assessment_id=eq.${assessmentId}&select=*,personnel(id,full_name,position,national_id)`),
-      fetchFromRadp(`/assessment_equipment?assessment_id=eq.${assessmentId}&select=*,equipment_items(id,name,serial_number,model)`)
+      fetchFromRadp(`/assessment_equipment?assessment_id=eq.${assessmentId}&select=*,equipment_items(id,name,serial_number,model,parent_id)`)
     ]);
 
     if (!assessment || assessment.length === 0) {
@@ -220,12 +220,34 @@ async function fetchAssessment() {
       }
     }
 
-    // Fetch documents for equipment
+    // Fetch equipment hierarchy + documents
+    let equipmentHierarchy = {};
     let equipmentDocs = {};
     if (equipment && equipment.length > 0) {
-      const equipIds = equipment.map(e => e.equipment_item_id).filter(Boolean).join(',');
-      if (equipIds) {
-        const docs = await fetchFromRadp(`/documents?equipment_item_id=in.(${equipIds})`);
+      // Get all equipment IDs (parent + children)
+      const equipIds = equipment.map(e => e.equipment_item_id).filter(Boolean);
+
+      // Fetch all children for these equipment items
+      if (equipIds.length > 0) {
+        const childEquip = await fetchFromRadp(`/equipment_items?parent_id=in.(${equipIds.join(',')})`);
+        if (childEquip) {
+          childEquip.forEach(child => {
+            if (!equipmentHierarchy[child.parent_id]) {
+              equipmentHierarchy[child.parent_id] = [];
+            }
+            equipmentHierarchy[child.parent_id].push(child);
+          });
+        }
+      }
+
+      // Fetch documents for parent + all child equipment
+      const allEquipIds = [
+        ...equipIds,
+        ...Object.values(equipmentHierarchy).flat().map(e => e.id)
+      ];
+
+      if (allEquipIds.length > 0) {
+        const docs = await fetchFromRadp(`/documents?equipment_item_id=in.(${allEquipIds.join(',')})`);
         if (docs) {
           docs.forEach(doc => {
             if (!equipmentDocs[doc.equipment_item_id]) {
@@ -238,7 +260,7 @@ async function fetchAssessment() {
     }
 
     // Display the LoR
-    displayLor(assessData, personnel, equipment, personnelDocs, equipmentDocs);
+    displayLor(assessData, personnel, equipment, personnelDocs, equipmentHierarchy, equipmentDocs);
     showMessage('Assessment loaded successfully', 'success');
 
   } catch (error) {
