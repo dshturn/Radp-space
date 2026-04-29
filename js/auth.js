@@ -23,7 +23,7 @@ async function login() {
     return;
   }
 
-  const { data: profiles, error: profileError } = await window.supabase
+  const { data: profiles, error: profileError } = await sb
     .from('user_profiles')
     .select('status,role,full_name,company,service_line')
     .eq('id', data.user.id)
