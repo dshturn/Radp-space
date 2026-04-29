@@ -7,7 +7,7 @@ async function apiCall(path, options = {}) {
 
   const res = await fetch(url, {
     method: options.method || 'GET',
-    headers: { 'Content-Type': 'application/json', ...options.headers },
+    headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, ...options.headers },
     body
   });
 
