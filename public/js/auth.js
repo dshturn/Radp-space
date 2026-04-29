@@ -1,4 +1,5 @@
 // ═══════════════════ AUTH ═══════════════════
+// TEST: Using apiCall() proxy for CORS bypass
 
 async function login() {
   const email    = document.getElementById('loginEmail').value;
