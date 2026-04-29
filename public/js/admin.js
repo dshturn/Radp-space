@@ -171,7 +171,7 @@ async function _renderAuditLog() {
           ${rows.map(r => {
             const isDocument = r.entity_type === 'document' && r.entity_id;
             const labelHtml = isDocument
-              ? `<a href="javascript:openAuditFile('${esc(r.entity_id)}')" style="color:var(--primary);text-decoration:underline;cursor:pointer;">${esc(r.label || '—')}</a>`
+              ? `<a href="javascript:openAuditFile('${esc(r.entity_id)}', '${esc(r.label || '')}')" style="color:var(--primary);text-decoration:underline;cursor:pointer;">${esc(r.label || '—')}</a>`
               : `<span style="color:var(--text-2);">${esc(r.label || '—')}</span>`;
             return `
             <tr style="border-bottom:1px solid var(--border);">
