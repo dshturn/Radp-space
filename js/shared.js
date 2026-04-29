@@ -42,7 +42,15 @@ function esc(str) {
 // ─── API fetch with 401 guard and error surfacing ───
 async function apiFetch(url, options = {}) {
   try {
-    const res = await fetch(url, options);
+    // Route Supabase calls through local proxy for localhost development
+    let fetchUrl = url;
+    if (url.includes('supabase.co') && window.location.hostname === 'localhost') {
+      const endpoint = url.replace(SUPABASE_URL, '').split('?')[0];
+      const queryPart = url.includes('?') ? url.split('?')[1] : '';
+      fetchUrl = `/api?endpoint=${encodeURIComponent(endpoint)}${queryPart ? '&' + queryPart : ''}`;
+    }
+
+    const res = await fetch(fetchUrl, options);
     if (res.status === 401) {
       localStorage.removeItem('radp_token');
       localStorage.removeItem('radp_user');
