@@ -1,6 +1,6 @@
-// Configuration
+// Configuration - proxyUrl set via environment or window object at runtime
 const RADP_CONFIG = {
-  proxyUrl: 'https://radp-b73e8e73c2e5.herokuapp.com/api'
+  proxyUrl: window.RADP_PROXY_URL || ''
 };
 
 let currentUser = null;
