@@ -24,6 +24,20 @@ function getApiUrl(endpoint) {
   return `${SUPABASE_URL}${endpoint}`;
 }
 
+// Wrapper fetch that routes Supabase calls through proxy on localhost
+const originalFetch = window.fetch;
+window.fetch = function(url, options) {
+  let finalUrl = url;
+
+  // Route Supabase API calls through localhost proxy
+  if (typeof url === 'string' && url.includes('supabase.co') && window.location.hostname === 'localhost') {
+    const endpoint = url.replace(SUPABASE_URL, '');
+    finalUrl = `http://localhost:5000/api?endpoint=${encodeURIComponent(endpoint)}`;
+  }
+
+  return originalFetch.call(this, finalUrl, options);
+};
+
 // ─── Date utilities (UTC normalized) ───
 function todayUTC() {
   const d = new Date();
