@@ -111,7 +111,7 @@ async function addNewCompany() {
   if (!name) { msg.style.color = '#fda4af'; msg.textContent = 'Please enter a company name.'; return; }
   msg.style.color = '#94a3b8'; msg.textContent = 'Adding...';
   try {
-    const { error } = await supabase.from('companies').insert({ name });
+    const { error } = await window.supabase.from('companies').insert({ name });
     if (error) throw error;
     msg.style.color = '#6ee7b7'; msg.textContent = `"${name}" added!`;
     document.getElementById('newCompanyName').value = '';
