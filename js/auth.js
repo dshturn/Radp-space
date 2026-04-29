@@ -26,7 +26,7 @@ async function login() {
 
   let profile;
   try {
-    const profileRes = await fetch((window.location.hostname === 'localhost' ? 'http://localhost:5000' : '') + `/api?endpoint=${encodeURIComponent(`/rest/v1/user_profiles?id=eq.${data.user.id}&select=status,full_name,company,service_line`)}`, {
+    const profileRes = await fetch((window.location.hostname === 'localhost' ? 'http://localhost:5000' : '') + `/api?endpoint=${encodeURIComponent(`/rest/v1/user_profiles?id=eq.${data.user.id}&select=status,full_name,company,service_line,role`)}`, {
       headers: { Authorization: `Bearer ${data.access_token}` }
     });
     if (!profileRes.ok) throw new Error(`Profile fetch failed: ${profileRes.status}`);
