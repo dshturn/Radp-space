@@ -156,11 +156,12 @@ async function _renderAuditLog() {
   const dateFrom     = document.getElementById('auditDateFrom')?.value || '';
   const dateTo       = document.getElementById('auditDateTo')?.value || '';
 
-  let url = `${SUPABASE_URL}/api/audit_log?order=created_at.desc&offset=${_auditPage * _AUDIT_PAGE_SIZE}&limit=${_AUDIT_PAGE_SIZE}`;
-  if (entityFilter) url += `&entity_type=eq.${encodeURIComponent(entityFilter)}`;
-  if (dateFrom)     url += `&created_at=gte.${encodeURIComponent(dateFrom)}T00:00:00Z`;
-  if (dateTo)       url += `&created_at=lte.${encodeURIComponent(dateTo)}T23:59:59Z`;
+  let endpoint = `/api/audit_log?order=created_at.desc&offset=${_auditPage * _AUDIT_PAGE_SIZE}&limit=${_AUDIT_PAGE_SIZE}`;
+  if (entityFilter) endpoint += `&entity_type=eq.${encodeURIComponent(entityFilter)}`;
+  if (dateFrom)     endpoint += `&created_at=gte.${encodeURIComponent(dateFrom)}T00:00:00Z`;
+  if (dateTo)       endpoint += `&created_at=lte.${encodeURIComponent(dateTo)}T23:59:59Z`;
 
+  const url = getApiUrl(endpoint);
   console.log('Loading audit log from:', url);
   console.log('Current user:', getUser());
   const res = await fetch(url, { headers: { ...getHeaders(), Prefer: 'count=exact' } });
