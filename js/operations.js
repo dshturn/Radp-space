@@ -4,6 +4,10 @@ let currentSiteId = null;
 let _sitesPage = 0;
 const _SITES_PAGE_SIZE = 25;
 
+function operationsInit() {
+  loadOperations();
+}
+
 // ── Helpers ──────────────────────────────────────────────
 
 function daysUntil(dateStr) {
