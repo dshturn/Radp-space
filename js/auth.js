@@ -60,10 +60,10 @@ async function loadRegisterOptions() {
   const isContractor = role === 'contractor';
 
   const [companiesResult, optionsResult] = await Promise.all([
-    supabase.from('companies').select('name').order('name'),
+    window.supabase.from('companies').select('name').order('name'),
     isContractor
-      ? supabase.from('service_lines').select('name').order('name')
-      : supabase.from('aramco_departments').select('name').order('name')
+      ? window.supabase.from('service_lines').select('name').order('name')
+      : window.supabase.from('aramco_departments').select('name').order('name')
   ]);
 
   const companies = companiesResult.data || [];
