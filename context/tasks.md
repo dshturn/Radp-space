@@ -19,21 +19,43 @@
 
 ## P0: Critical (In Progress)
 
-### Heroku Proxy Layer for Supabase (Phase 2)
-- **Status**: API scaffold created; Heroku deployment NEXT
-- **Completed**: 
-  - Node.js API scaffold (Express + pg client ready)
-  - Firewall testing: Heroku ✅ whitelisted, Supabase ❌ blocked
-  - Decision: proxy architecture, no migration
-- **Remaining**:
-  - Update API to proxy requests to Supabase (not Azure DB)
-  - Create Heroku app + deploy
-  - Test SharePoint → Heroku connectivity
-  - Update script.js to call Heroku endpoints
-  - Deactivate direct Supabase calls from frontend
-- **Estimate**: 1–2 days
-- **Owner**: Tech Lead
-- **Benefit**: Zero data migration risk, instant rollback, existing Supabase schema intact
+### Email-Based Assessment Workflow (Phase 2)
+- **Status**: Architecture designed; implementation begins next session
+- **Completed (2026-04-28)**: 
+  - Firewall analysis complete
+  - Email-based workflow designed
+  - PDF interface approach validated
+  - Three new modules identified
+- **Modules to Build**:
+  1. **Email Analyzer** (RADP external)
+     - Receives emails from Aramco SharePoint (requests + decisions)
+     - Parses email body for assessment ID, contractor ID, decision
+     - Creates assessment containers in Supabase
+     - Updates assessment status from decision emails
+     - Estimate: 2–3 days
+  
+  2. **PDF Generator** (Contractor interface, Supabase)
+     - Generates hierarchical PDF from assessment data
+     - TOC with internal links (equipment → manpower → certificates)
+     - Each certificate page linked from TOC
+     - Professional formatting, ready for EFT upload
+     - Estimate: 3–4 days
+  
+  3. **SharePoint Email Generator** (Aramco SP system)
+     - Assessment request email (triggered by assessor)
+     - Decision email (triggered after assessment approval)
+     - Structured format for Email Analyzer parsing
+     - Estimate: 1–2 days (SP customization)
+
+- **Total Estimate**: 1 week
+- **Owner**: Tech Lead + SP Developer
+- **Benefit**: 
+  - ✅ Firewall-friendly (email always accessible)
+  - ✅ Zero web interface conflicts
+  - ✅ No database connection issues
+  - ✅ No IT/server involvement needed
+  - ✅ Audit trail via emails
+  - ✅ Offline-friendly (PDF)
 
 ## P1: High (Next 2–3 weeks)
 
