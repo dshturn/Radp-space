@@ -18,10 +18,10 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
 
 // ── Middleware ──
 app.use(cors({
-  origin: ['https://sharek.aramco.com.sa', 'http://localhost:3000', 'http://localhost:5000'],
+  origin: ['https://sharek.aramco.com.sa', 'https://www.radp.space', 'https://radp.space', 'http://localhost:3000', 'http://localhost:5000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'apikey']
+  allowedHeaders: ['Content-Type', 'Authorization', 'apikey', 'Prefer']
 }));
 app.use(express.json());
 
