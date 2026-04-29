@@ -196,10 +196,10 @@ async function register() {
   });
   const data = await res.json();
   if (data.user) {
-    await fetch(`${SUPABASE_URL}/api/user_profiles`, {
+    await apiCall(`/api/user_profiles`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Prefer: 'resolution=merge-duplicates' },
-      body: JSON.stringify({ id: data.user.id, ...profile })
+      headers: { Authorization: `Bearer ${SUPABASE_KEY}`, Prefer: 'resolution=merge-duplicates' },
+      body: { id: data.user.id, ...profile }
     });
     sessionStorage.removeItem('radp_reg_role');
     msg.className = 'auth-msg success'; msg.textContent = 'Account created! Waiting for admin approval.';
