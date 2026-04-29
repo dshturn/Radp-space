@@ -7,6 +7,11 @@ const getToken   = () => localStorage.getItem('radp_token');
 const getUser    = () => JSON.parse(localStorage.getItem('radp_user') || '{}');
 const getHeaders = () => ({ apikey: SUPABASE_KEY, Authorization: `Bearer ${getToken()}`, 'Content-Type': 'application/json' });
 
+// Supabase client (handles CORS automatically)
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: { persistSession: false }
+});
+
 // ─── Date utilities (UTC normalized) ───
 function todayUTC() {
   const d = new Date();
