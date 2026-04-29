@@ -19,7 +19,7 @@ async function login() {
     return;
   }
 
-  const profileRes = await fetch(`${SUPABASE_URL}/api/user_profiles?id=eq.${data.user.id}&select=status,role,full_name,company,service_line`, {
+  const profileRes = await fetch(`${SUPABASE_URL}/rest/v1/user_profiles?id=eq.${data.user.id}&select=status,role,full_name,company,service_line`, {
     headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${data.access_token}` }
   });
   const profiles = await profileRes.json();
@@ -178,7 +178,7 @@ async function register() {
   });
   const data = await res.json();
   if (data.user) {
-    await fetch(`${SUPABASE_URL}/api/user_profiles`, {
+    await fetch(`${SUPABASE_URL}/rest/v1/user_profiles`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Prefer: 'resolution=merge-duplicates' },
       body: JSON.stringify({ id: data.user.id, ...profile })
