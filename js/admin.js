@@ -6,6 +6,10 @@ function adminInit() {
   loadUsers();
 }
 
+function auditInit() {
+  loadAuditLog();
+}
+
 async function loadUsers() {
   let url = `${SUPABASE_URL}/api/user_profiles?select=*&order=status.asc,created_at.desc`;
   const roleFilter = document.getElementById('usersRoleFilter')?.value;
