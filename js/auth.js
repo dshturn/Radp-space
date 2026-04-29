@@ -56,11 +56,11 @@ async function loadRegisterOptions() {
   const anonH        = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` };
 
   const optionsUrl = isContractor
-    ? `${SUPABASE_URL}/api/service_lines?select=name&order=name`
-    : `${SUPABASE_URL}/api/aramco_departments?select=name&order=name`;
+    ? `${SUPABASE_URL}/rest/v1/service_lines?select=name&order=name`
+    : `${SUPABASE_URL}/rest/v1/aramco_departments?select=name&order=name`;
 
   const [companies, options] = await Promise.all([
-    fetch(`${SUPABASE_URL}/api/companies?select=name&order=name`, { headers: anonH }).then(r => r.json()),
+    fetch(`${SUPABASE_URL}/rest/v1/companies?select=name&order=name`, { headers: anonH }).then(r => r.json()),
     fetch(optionsUrl, { headers: anonH }).then(r => r.json())
   ]);
 
@@ -106,7 +106,7 @@ async function addNewCompany() {
   if (!name) { msg.style.color = '#fda4af'; msg.textContent = 'Please enter a company name.'; return; }
   msg.style.color = '#94a3b8'; msg.textContent = 'Adding...';
   try {
-    const res = await fetch(`${SUPABASE_URL}/api/companies`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/companies`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${getToken() || SUPABASE_KEY}`, Prefer: 'return=minimal' },
       body: JSON.stringify({ name })
@@ -130,7 +130,7 @@ async function addNewServiceLine() {
   if (!name) { msg.style.color = '#fda4af'; msg.textContent = `Please enter a ${label} name.`; return; }
   msg.style.color = '#94a3b8'; msg.textContent = 'Adding...';
   try {
-    const res = await fetch(`${SUPABASE_URL}/api/aramco_departments`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/aramco_departments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${getToken() || SUPABASE_KEY}`, Prefer: 'return=minimal' },
       body: JSON.stringify({ name })
