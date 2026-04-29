@@ -82,6 +82,16 @@ function onCompanyChange(sel) {
   }
 }
 
+function onServiceLineChange(sel) {
+  const wrap = document.getElementById('newServiceLineWrap');
+  if (sel.value === '__new__') {
+    wrap.style.display = 'block';
+    document.getElementById('newServiceLineName').focus();
+  } else {
+    wrap.style.display = 'none';
+  }
+}
+
 async function addNewCompany() {
   const name = document.getElementById('newCompanyName').value.trim();
   const msg  = document.getElementById('newCompanyMsg');
