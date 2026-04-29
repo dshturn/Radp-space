@@ -30,7 +30,7 @@ async function apiCall(path, options = {}) {
   const res = await fetch(proxyUrl, {
     method: 'POST',
     headers,
-    body: options.body ? JSON.stringify(options.body) : undefined
+    body: (method !== 'GET' && method !== 'HEAD') ? JSON.stringify(options.body) : undefined
   });
 
   if (!res.ok) {
