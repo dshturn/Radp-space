@@ -9,7 +9,7 @@ async function login() {
   const msg      = document.getElementById('loginMsg');
   msg.className  = 'auth-msg';
 
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await window.supabase.auth.signInWithPassword({ email, password });
 
   if (error || !data.user) {
     msg.className = 'auth-msg error';
