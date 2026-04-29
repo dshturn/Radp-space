@@ -44,7 +44,7 @@ async function login() {
 function logout() {
   localStorage.removeItem('radp_token');
   localStorage.removeItem('radp_user');
-  showPage('home');
+  showPage('login');
 }
 
 async function loadRegisterOptions() {
