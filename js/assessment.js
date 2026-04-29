@@ -4,6 +4,10 @@ let currentAssessmentId = null;
 let _assessPage = 0;
 const _ASSESS_PAGE_SIZE = 25;
 
+function assessmentInit() {
+  loadAssessments();
+}
+
 // ── Mini dashboard: assessments tile ──
 async function loadDashAssessments() {
   const u = getUser();
