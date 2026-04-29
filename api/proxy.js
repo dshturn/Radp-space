@@ -3,17 +3,24 @@ export default async (req, res) => {
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Prefer');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Prefer, apikey');
     res.setHeader('Access-Control-Max-Age', '86400');
     return res.status(204).end();
   }
 
-  const { path, method } = req.query;
   const supabaseUrl = process.env.SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
-  if (!path || !supabaseUrl || !supabaseKey) {
-    return res.status(400).json({ error: 'Missing required parameters' });
+  if (!supabaseUrl || !supabaseKey) {
+    return res.status(400).json({ error: 'Missing Supabase configuration' });
+  }
+
+  // Support both ?endpoint= (frontend format) and ?path= (legacy format)
+  let path = req.query.endpoint || req.query.path;
+  const method = req.query.method || req.method;
+
+  if (!path) {
+    return res.status(400).json({ error: 'Missing endpoint or path parameter' });
   }
 
   try {
@@ -32,11 +39,20 @@ export default async (req, res) => {
       headers['Prefer'] = req.headers.prefer;
     }
 
-    const restUrl = path.startsWith('/auth/') ? `${supabaseUrl}${path}` : `${supabaseUrl}/rest/v1${path}`;
+    // Determine full URL based on path format
+    let restUrl;
+    if (path.startsWith('/auth/')) {
+      restUrl = `${supabaseUrl}${path}`;
+    } else if (path.startsWith('/rest/v1/')) {
+      restUrl = `${supabaseUrl}${path}`;
+    } else {
+      restUrl = `${supabaseUrl}/rest/v1${path}`;
+    }
+
     const body = method !== 'GET' && method !== 'HEAD' ? JSON.stringify(req.body) : undefined;
 
     const response = await fetch(restUrl, {
-      method: method || 'GET',
+      method,
       headers,
       body,
     });
@@ -49,6 +65,7 @@ export default async (req, res) => {
     return res.status(response.status).send(responseBody);
   } catch (error) {
     res.setHeader('Access-Control-Allow-Origin', '*');
+    console.error('Proxy error:', error);
     return res.status(500).json({ error: error.message });
   }
 };
