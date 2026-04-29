@@ -182,14 +182,27 @@ Audit Log (immutable, forever)
 
 **Phase 2 (4–6 weeks, in progress)**:
 - [x] LoR module UI + logic (complete, deployed locally)
-- [ ] **Heroku Proxy Layer for Supabase** (firewall compatibility solution)
-  - **Architecture**: SharePoint → Heroku API (whitelisted) → Supabase (no migration)
-  - **Firewall test (2026-04-27)**: Heroku ✅, Supabase ❌, Azure App Service ❌
-  - [ ] Update Node.js API to proxy to Supabase (not Azure)
-  - [ ] Deploy API to Heroku
-  - [ ] Test SharePoint → Heroku connectivity
-  - [ ] Update script.js endpoints to call Heroku instead of supabase.co
-  - **Decision (2026-04-27)**: Zero-migration proxy approach. Keep Supabase data intact, use Heroku as firewall-accessible gateway.
+- [x] Firewall analysis complete (2026-04-28)
+  - Discovered: Web interfaces accessible, SQL connections blocked, email always works
+  - Solution: Email-based assessment workflow with PDF interface
+- [ ] **Email-Based Assessment Workflow** (firewall-friendly solution)
+  - **Architecture**: Email ↔ PDF ↔ EFT (no web interfaces, no database connections)
+  - **Firewall test results (2026-04-28)**:
+    - ✅ supabase.com (web UI accessible, but UI not suitable for assessments)
+    - ✅ Azure Portal (accessible)
+    - ✅ Power BI (accessible)
+    - ✅ Email (accessible)
+    - ❌ Database connections (blocked - SQL port 1433)
+    - ❌ Storage websites (blocked)
+    - ❌ App Services (blocked)
+  - **Workflow**:
+    1. Aramco SharePoint generates assessment request → emails external RADP
+    2. RADP Email Analyzer receives → creates assessment container in Supabase
+    3. Contractor fills assessment + uploads certs → PDF Generator creates hierarchical PDF
+    4. PDF with internal links (TOC → certificate pages) → EFT upload
+    5. Assessor downloads PDF from EFT → reviews offline → SharePoint generates decision email
+    6. RADP Email Analyzer receives decision → updates assessment status in Supabase
+  - **Decision (2026-04-28)**: Email transport + PDF interface solves firewall constraints without IT involvement, external servers, or web proxies
 - [ ] Audit log export (PDF/CSV with date range filtering)
 - [ ] Audit log search (by user, action, entity type)
 - [ ] Reduce AI token burn (~50 tokens/assessment)
