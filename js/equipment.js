@@ -618,12 +618,16 @@ async function deleteEquipItem(id) {
 async function deleteDoc(id) {
   if (!await showConfirm('Delete this document?')) return;
   const el = document.querySelector(`[data-doc-id="${id}"]`);
+  const docName = el?.querySelector('.doc-name')?.textContent || 'Document';
+  const itemCard = el?.closest('.sub-child-body,.sub-card-body,.card-body');
+  const itemName = itemCard?.querySelector('.card-title')?.textContent || 'Equipment';
+  const label = `${itemName} - ${docName}`;
   // Start API call immediately so it runs in parallel with the animation
   const deletePromise = fetch(`${SUPABASE_URL}/rest/v1/documents?id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
   animateRemoveEl(el, async () => {
     const r = await deletePromise;
     if (!r.ok) { showToast('Delete failed: ' + r.status, 'error'); }
-    else { logAudit('document', id, 'deleted', 'Equipment document'); }
+    else { logAudit('document', id, 'deleted', label); }
     loadEquipment(true);
   });
 }
