@@ -849,35 +849,19 @@ async function deleteAssessment(id) {
     return;
   }
 
-  // Notify all admins of the deletion request (best effort, doesn't block deletion)
-  try {
-    const admins = await apiFetch(`${SUPABASE_URL}/rest/v1/user_profiles?role=eq.admin&select=id`, { headers: getHeaders() });
-    if (admins && admins.length > 0) {
-      admins.forEach(admin => {
-        // Fire-and-forget notification - don't wait for result
-        fetch(`${SUPABASE_URL}/rest/v1/notifications`, {
-          method: 'POST',
-          headers: { ...getHeaders() },
-          body: JSON.stringify({
-            contractor_id: admin.id,
-            entity_type: 'assessment_deletion_request',
-            entity_id: id,
-            entity_label: `Assessment deletion requested (ID: ${id})`,
-            type: 'deletion_request',
-            read: false
-          })
-        })
-          .then(res => {
-            if (!res.ok) {
-              res.text().then(err => console.warn('Notification error (non-critical):', res.status, err));
-            }
-          })
-          .catch(err => console.warn('Notification failed (non-critical):', err));
-      });
-    }
-  } catch (err) {
-    console.warn('Could not send admin notifications:', err);
-  }
+  // Log event - notifications auto-created by trigger
+  const u = getUser();
+  await fetch(`${SUPABASE_URL}/rest/v1/notification_events`, {
+    method: 'POST',
+    headers: { ...getHeaders(), Prefer: 'return=minimal' },
+    body: JSON.stringify({
+      event_type: 'deletion_requested',
+      entity_type: 'assessment',
+      entity_id: id,
+      triggered_by: u.id,
+      metadata: { contractor_email: u.email }
+    })
+  }).catch(err => console.warn('Event logging failed:', err));
 
   logAudit('assessment', id, 'deletion_requested', `Deletion request created by ${u.email}`);
   showToast('Deletion request submitted. Awaiting admin approval.', 'success');
