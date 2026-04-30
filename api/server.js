@@ -456,74 +456,22 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
       byType[type].forEach(item => renderItem(item, 0));
     });
 
-    // Generate LoR PDF using pdfkit with proper internal links
-    console.log('[PDF] Generating LoR with pdfkit...');
-    const lorDoc = new PDFDocument({ size: 'A4', margin: 20, bufferPages: true });
-    const lorChunks = [];
+    // Generate simple LoR HTML
+    const lorHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>LoR</title><style>body{font-family:Arial;font-size:11px;margin:20px}</style></head><body><h2>List of Readiness</h2><p>Assessment ${assessment.id}</p><p><strong>Provider:</strong> ${esc(assessment.company_name||'—')}</p><p><strong>Field:</strong> ${esc(assessment.field_well||'—')}</p><h3>Personnel Documents</h3>${Object.keys(byRole).sort().map(role => `<div><strong>${esc(role)}</strong><ul>${byRole[role].map(p => {const per = p.personnel; const docs = docsByPersonnel[per.id] || []; return `<li>${esc(per.full_name)}<ul>${docs.map(d => `<li><a href="#doc-${d.id}" style="color:blue">${esc(d.doc_type_name)}</a></li>`).join('')}</ul></li>`;}).join('')}</ul></div>`).join('')}<h3>Equipment Documents</h3>${Object.keys(byType).sort().map(type => `<div><strong>${esc(type)}</strong><ul>${byType[type].map(item => {const docs = item?.documents || []; return `<li>${esc(item?.equipment_templates?.name || item?.name)}<ul>${docs.map(d => `<li><a href="#doc-${d.id}" style="color:blue">${esc(d.document_types?.document_name || d.doc_type_name)}</a></li>`).join('')}</ul></li>`;}).join('')}</ul></div>`).join('')}</body></html>`;
 
-    lorDoc.on('data', chunk => lorChunks.push(chunk));
-
-    // Title and info
-    lorDoc.fontSize(16).text('List of Readiness (LoR)', { align: 'center' });
-    lorDoc.fontSize(10).text('Attachment to SMS Process 07.01', { align: 'center' });
-    lorDoc.moveDown(0.5);
-
-    lorDoc.fontSize(10).text(`Service Provider: ${assessment.company_name||'—'}`);
-    lorDoc.text(`Field/Well: ${assessment.field_well||'—'}`);
-    lorDoc.text(`Type of Job: ${assessment.type_of_job||'—'}`);
-    lorDoc.text(`Date: ${todayStr}`);
-    lorDoc.moveDown(0.5);
-
-    // Personnel section
-    lorDoc.fontSize(11).font('Helvetica-Bold').text('PERSONNEL', { underline: true });
-    lorDoc.fontSize(9).font('Helvetica');
-
-    for (const role of Object.keys(byRole).sort()) {
-      lorDoc.text(`• ${role}`, { indent: 10 });
-      for (const p of byRole[role]) {
-        const per = p.personnel;
-        const docs = docsByPersonnel[per.id] || [];
-        lorDoc.text(`  ${per.full_name} (${per.position})`, { indent: 20 });
-        for (const d of docs) {
-          const destPage = docPageMap[d.id] || 1;
-          lorDoc.fillColor('#0066cc').text(`    ${d.doc_type_name}`, { indent: 30, link: { page: destPage - 1, y: 0 } });
-          lorDoc.fillColor('#000000');
-        }
-      }
-    }
-
-    lorDoc.moveDown(0.5);
-
-    // Equipment section
-    lorDoc.fontSize(11).font('Helvetica-Bold').text('EQUIPMENT', { underline: true });
-    lorDoc.fontSize(9).font('Helvetica');
-
-    for (const type of Object.keys(byType).sort()) {
-      lorDoc.text(`• ${type}`, { indent: 10 });
-      for (const item of byType[type]) {
-        const docs = item?.documents || [];
-        lorDoc.text(`  ${item?.equipment_templates?.name || item?.name || '—'}`, { indent: 20 });
-        for (const d of docs) {
-          const destPage = actualPageMap[d.id] || docPageMap[d.id] || 1;
-          lorDoc.fillColor('#0066cc').text(`    ${d.document_types?.document_name || d.doc_type_name}`, { indent: 30, link: { page: destPage - 1, y: 0 } });
-          lorDoc.fillColor('#000000');
-        }
-      }
-    }
-
-    lorDoc.end();
-
+    // Generate LoR PDF from HTML
+    console.log('[PDF] Generating LoR PDF...');
     const lorPdfBuffer = await new Promise((resolve, reject) => {
-      lorDoc.on('end', () => {
-        resolve(Buffer.concat(lorChunks));
+      pdf.create(lorHtml, { format: 'A4' }).toBuffer((err, buffer) => {
+        if (err) return reject(err);
+        resolve(buffer);
       });
-      lorDoc.on('error', reject);
     });
 
-    console.log(`[PDF] LoR PDF generated (${lorPdfBuffer.length} bytes), loading into pdf-lib...`);
+    console.log(`[PDF] LoR PDF generated (${lorPdfBuffer.length} bytes)`);
 
     // Load LoR PDF into pdf-lib for merging with documents
-    const mergedPdf = await PDFLibDocument.load(lorPdfBuffer);
+    const mergedPdf = await PDFDocument.load(lorPdfBuffer);
     const lorPageCount = mergedPdf.getPageCount();
     console.log(`[PDF] LoR occupies ${lorPageCount} pages. Documents start at page ${lorPageCount + 1}`);
     console.log(`[PDF] Processing ${allDocs.length} documents...`);
