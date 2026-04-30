@@ -2,10 +2,6 @@ const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 const pdf = require('html-pdf');
-const PDFImage = require('pdf-image').PDFImage;
-const fs = require('fs');
-const path = require('path');
-const os = require('os');
 require('dotenv').config();
 
 const app = express();
