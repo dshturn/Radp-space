@@ -458,6 +458,27 @@ function closeDocViewer() {
   });
 })();
 
+// ─── Notification Events ───
+async function logNotificationEvent(eventType, entityType, entityId, metadata = {}) {
+  const u = getUser();
+  if (!u?.id) return;
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/notification_events`, {
+      method: 'POST',
+      headers: { ...getHeaders(), Prefer: 'return=minimal' },
+      body: JSON.stringify({
+        event_type: eventType,
+        entity_type: entityType,
+        entity_id: entityId,
+        triggered_by: u.id,
+        metadata
+      })
+    });
+  } catch (err) {
+    console.warn('Event logging failed:', err);
+  }
+}
+
 // ─── Notifications ───
 let _notifPanelOpen = false;
 let _notifInterval  = null;
