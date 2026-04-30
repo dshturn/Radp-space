@@ -426,8 +426,9 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
           persRows += `<tr><td>${pNum++}</td><td>${esc(per?.full_name||'—')}</td><td>${esc(String(per?.years_experience||'—'))}</td><td>${esc(per?.position||'—')}</td><td>—</td><td>—</td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td></tr>`;
         } else {
           docs.forEach((d, idx) => {
-            const docLink = `<a href="#doc-${d.id}" style="color:#0066cc;text-decoration:underline;cursor:pointer;">${esc(d.doc_type_name || '—')}</a>`;
-            persRows += `<tr><td>${idx === 0 ? pNum++ : ''}</td><td>${idx === 0 ? esc(per?.full_name||'—') : ''}</td><td>${idx === 0 ? esc(String(per?.years_experience||'—')) : ''}</td><td>${idx === 0 ? esc(per?.position||'—') : ''}</td><td>${docLink}</td><td>${esc(d.expiry_date || '—')}</td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td></tr>`;
+            const pageNum = actualPageMap[d.id] || docPageMap[d.id] || '?';
+            const docName = `${esc(d.doc_type_name || '—')} <span style="color:#666;font-size:9px;">(p. ${pageNum})</span>`;
+            persRows += `<tr><td>${idx === 0 ? pNum++ : ''}</td><td>${idx === 0 ? esc(per?.full_name||'—') : ''}</td><td>${idx === 0 ? esc(String(per?.years_experience||'—')) : ''}</td><td>${idx === 0 ? esc(per?.position||'—') : ''}</td><td>${docName}</td><td>${esc(d.expiry_date || '—')}</td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td></tr>`;
           });
         }
       });
