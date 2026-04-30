@@ -155,8 +155,13 @@ app.post('/api', async (req, res) => {
         apikey: SUPABASE_ANON_KEY,
         Authorization: req.headers.authorization || `Bearer ${SUPABASE_ANON_KEY}`,
         'Content-Type': 'application/json',
+        Prefer: req.headers.prefer || '',
       },
     });
+    // Forward critical response headers
+    if (response.headers['content-range']) {
+      res.set('Content-Range', response.headers['content-range']);
+    }
     res.json(response.data);
   } catch (err) {
     console.error('Proxy error:', err.message);
