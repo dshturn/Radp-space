@@ -302,21 +302,24 @@ app.post('/api', async (req, res) => {
 app.post('/api/generate-html-pdf', async (req, res) => {
   try {
     const { html } = req.body;
-    if (!html) return res.status(400).json({ error: 'Missing HTML content' });
+    if (!html) {
+      console.error('[PDF] Missing HTML content in request body');
+      return res.status(400).json({ error: 'Missing HTML content' });
+    }
 
-    console.log('[PDF] Converting HTML to PDF...');
+    console.log('[PDF] Converting HTML to PDF, size:', html.length, 'bytes');
     pdf.create(html, { format: 'A4', orientation: 'landscape' }).toBuffer((err, buffer) => {
       if (err) {
-        console.error('[PDF] Error:', err.message);
+        console.error('[PDF] PDF generation error:', err.message, err.stack);
         return res.status(500).json({ error: err.message });
       }
-      console.log('[PDF] Generated', buffer.length, 'bytes');
+      console.log('[PDF] Generated PDF', buffer.length, 'bytes');
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="LoR_${new Date().toISOString().split('T')[0]}.pdf"`);
       res.send(buffer);
     });
   } catch (err) {
-    console.error('[PDF] Error:', err.message, err.stack);
+    console.error('[PDF] Error in /api/generate-html-pdf:', err.message, err.stack);
     res.status(500).json({ error: err.message });
   }
 });
