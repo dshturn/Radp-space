@@ -185,7 +185,10 @@ function toggleGroup(header) {
 }
 
 function toggleDocGroup(header) {
-  header.closest('.doc-group').classList.toggle('collapsed');
+  const group = header.closest('.doc-group');
+  group.classList.toggle('collapsed');
+  const toggle = header.querySelector('.doc-group-toggle');
+  if (toggle) toggle.setAttribute('aria-expanded', !group.classList.contains('collapsed'));
 }
 
 // ─── Group status badges ───
