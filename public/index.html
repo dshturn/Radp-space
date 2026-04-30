@@ -308,29 +308,33 @@ navigator.serviceWorker.getRegistrations().then(regs => {
 <section id="admin-page" class="page">
   <div class="container">
     <h1 class="sr-only">User Management</h1>
-    <div class="page-header-row" style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
-      <h2 style="margin:0;">Users</h2>
-      <div style="display:flex;gap:8px;flex:1;flex-wrap:wrap;">
-        <select id="usersRoleFilter" onchange="loadUsers()" style="padding:6px 10px;font-size:13px;border-radius:6px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-1);">
-          <option value="">All roles</option>
-          <option value="contractor">Contractor</option>
-          <option value="operations">Operations</option>
-          <option value="assessor">Assessor</option>
-          <option value="admin">Admin</option>
-        </select>
-        <input type="text" id="usersSearch" placeholder="Search name / email…" oninput="loadUsers()" style="flex:1;min-width:160px;padding:6px 10px;font-size:13px;border-radius:6px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-1);">
-      </div>
-    </div>
 
-    <div id="deletionRequestsSection" style="display:none;margin-bottom:24px;">
-      <div class="section-title" style="color:var(--bad);">🗑 Pending Deletion Requests</div>
+    <!-- Assessment Deletion Requests -->
+    <div id="deletionRequestsSection" style="display:none;margin-bottom:32px;">
+      <div class="section-title" style="color:var(--bad);">🗑 Assessment Deletion Requests</div>
       <div id="deletionRequestsList"></div>
     </div>
 
-    <div id="pendingSection">
-      <div class="section-title" style="color:var(--warn);">⚠ Pending User Approval</div>
-      <div id="pendingList"></div>
-    </div>
+    <!-- User Management -->
+    <div style="margin-top:32px;">
+      <div class="page-header-row" style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+        <h2 style="margin:0;">Users</h2>
+        <div style="display:flex;gap:8px;flex:1;flex-wrap:wrap;">
+          <select id="usersRoleFilter" onchange="loadUsers()" style="padding:6px 10px;font-size:13px;border-radius:6px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-1);">
+            <option value="">All roles</option>
+            <option value="contractor">Contractor</option>
+            <option value="operations">Operations</option>
+            <option value="assessor">Assessor</option>
+            <option value="admin">Admin</option>
+          </select>
+          <input type="text" id="usersSearch" placeholder="Search name / email…" oninput="loadUsers()" style="flex:1;min-width:160px;padding:6px 10px;font-size:13px;border-radius:6px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-1);">
+        </div>
+      </div>
+
+      <div id="pendingSection">
+        <div class="section-title" style="color:var(--warn);">⚠ Pending User Approval</div>
+        <div id="pendingList"></div>
+      </div>
 
     <div style="margin-top:20px;">
       <div class="section-title">Active Users</div>
