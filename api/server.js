@@ -86,9 +86,10 @@ app.get('/api', async (req, res) => {
         Prefer: req.headers.prefer || '',
       },
     });
-    // Forward critical response headers
-    if (response.headers['content-range']) {
-      res.set('Content-Range', response.headers['content-range']);
+    // Forward critical response headers (check both cases)
+    const contentRange = response.headers['content-range'] || response.headers['Content-Range'];
+    if (contentRange) {
+      res.set('Content-Range', contentRange);
     }
     res.json(response.data);
   } catch (err) {
@@ -119,9 +120,10 @@ app.get('/api/*', async (req, res) => {
         Prefer: req.headers.prefer || '',
       },
     });
-    // Forward critical response headers
-    if (response.headers['content-range']) {
-      res.set('Content-Range', response.headers['content-range']);
+    // Forward critical response headers (check both cases)
+    const contentRange = response.headers['content-range'] || response.headers['Content-Range'];
+    if (contentRange) {
+      res.set('Content-Range', contentRange);
     }
     res.json(response.data);
   } catch (err) {
@@ -168,9 +170,10 @@ app.post('/api', async (req, res) => {
         Prefer: req.headers.prefer || '',
       },
     });
-    // Forward critical response headers
-    if (response.headers['content-range']) {
-      res.set('Content-Range', response.headers['content-range']);
+    // Forward critical response headers (check both cases)
+    const contentRange = response.headers['content-range'] || response.headers['Content-Range'];
+    if (contentRange) {
+      res.set('Content-Range', contentRange);
     }
     res.json(response.data);
   } catch (err) {
@@ -202,9 +205,10 @@ app.post('/api/*', async (req, res) => {
         Prefer: req.headers.prefer || '',
       },
     });
-    // Forward critical response headers
-    if (response.headers['content-range']) {
-      res.set('Content-Range', response.headers['content-range']);
+    // Forward critical response headers (check both cases)
+    const contentRange = response.headers['content-range'] || response.headers['Content-Range'];
+    if (contentRange) {
+      res.set('Content-Range', contentRange);
     }
     res.json(response.data);
   } catch (err) {
