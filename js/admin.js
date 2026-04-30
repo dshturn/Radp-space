@@ -246,6 +246,57 @@ async function _renderAuditLog() {
     </div>`;
 }
 
+// ── Assessment Deletion Requests ──
+async function loadDeletionRequests() {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/assessment_deletion_requests?status=eq.pending&order=requested_at.asc`, {
+    headers: getHeaders()
+  });
+  if (!res.ok) return [];
+  return await res.json();
+}
+
+async function approveDeletion(requestId, assessmentId) {
+  const u = getUser();
+  const [updateReqRes, deleteRes] = await Promise.all([
+    fetch(`${SUPABASE_URL}/rest/v1/assessment_deletion_requests?id=eq.${requestId}`, {
+      method: 'PATCH',
+      headers: { ...getHeaders(), Prefer: 'return=minimal' },
+      body: JSON.stringify({ status: 'approved', approved_by: u.id, approved_at: new Date().toISOString() })
+    }),
+    fetch(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${assessmentId}`, {
+      method: 'DELETE',
+      headers: { ...getHeaders(), Prefer: 'return=minimal' }
+    })
+  ]);
+
+  if (!updateReqRes.ok || !deleteRes.ok) {
+    showToast('Failed to process deletion approval', 'error');
+    return;
+  }
+
+  logAudit('assessment', assessmentId, 'deletion_approved', `Assessment deleted by admin approval of request ${requestId}`);
+  showToast('Assessment deleted', 'success');
+  loadUsers();
+}
+
+async function rejectDeletion(requestId, reason) {
+  const u = getUser();
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/assessment_deletion_requests?id=eq.${requestId}`, {
+    method: 'PATCH',
+    headers: { ...getHeaders(), Prefer: 'return=minimal' },
+    body: JSON.stringify({ status: 'rejected', approved_by: u.id, approved_at: new Date().toISOString(), rejection_reason: reason || 'Rejected by admin' })
+  });
+
+  if (!res.ok) {
+    showToast('Failed to reject deletion request', 'error');
+    return;
+  }
+
+  logAudit('assessment_deletion_request', requestId, 'rejected', reason || 'Deletion request rejected');
+  showToast('Deletion request rejected', 'success');
+  loadUsers();
+}
+
 // Page initialization - called when admin page is shown
 async function adminInit() {
   await loadUsers();
