@@ -204,41 +204,6 @@ app.post('/api', async (req, res) => {
   }
 });
 
-app.post('/api/*', async (req, res) => {
-  try {
-    let path = req.params[0];
-    let query = new URLSearchParams(req.query).toString();
-
-    // Handle query parameter format: ?endpoint=/assessments?...
-    if (req.query.endpoint) {
-      path = req.query.endpoint;
-      // Remove 'endpoint' from query params
-      const { endpoint, ...otherParams } = req.query;
-      query = new URLSearchParams(otherParams).toString();
-    }
-
-    const url = `${SUPABASE_URL}/rest/v1/${path}${query ? '?' + query : ''}`;
-
-    const response = await axios.post(url, req.body, {
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: req.headers.authorization || `Bearer ${SUPABASE_ANON_KEY}`,
-        'Content-Type': 'application/json',
-        Prefer: req.headers.prefer || '',
-      },
-    });
-    // Forward critical response headers (check both cases)
-    const contentRange = response.headers['content-range'] || response.headers['Content-Range'];
-    if (contentRange) {
-      res.set('Content-Range', contentRange);
-    }
-    res.json(response.data);
-  } catch (err) {
-    console.error('Proxy error:', err.message);
-    res.status(err.response?.status || 500).json({ error: err.message });
-  }
-});
-
 // ── LoR PDF Generation ──
 app.post('/api/generate-lor-pdf', async (req, res) => {
   try {
