@@ -215,9 +215,9 @@ navigator.serviceWorker.getRegistrations().then(regs => {
       </div>
       <div class="app-card" id="assessmentInfo"></div>
       <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:20px; margin-bottom:12px; align-items:center;">
-        <div id="detailTabs" style="display:flex; gap:2px;">
-          <button class="tab active" onclick="showDetailTab('personnel', this)" style="padding:6px 12px; border:1px solid #ddd; background:#f5f5f5; cursor:pointer; font-weight:500; border-radius:4px 0 0 4px; color:#333; font-size:13px;">Personnel</button>
-          <button class="tab" onclick="showDetailTab('equipment', this)" style="padding:6px 12px; border:1px solid #ddd; border-left:none; background:#fff; cursor:pointer; font-weight:500; border-radius:0 4px 4px 0; color:#666; font-size:13px;">Equipment</button>
+        <div id="detailTabs" class="tabs" style="gap:0; margin-bottom:0;">
+          <button class="tab active" onclick="showDetailTab('personnel', this)">Personnel</button>
+          <button class="tab" onclick="showDetailTab('equipment', this)">Equipment</button>
         </div>
         <button class="btn-primary" onclick="openPersonnelSelector()">+ Personnel</button>
         <button class="btn-primary" onclick="openEquipmentSelector()">+ Equipment</button>
