@@ -535,9 +535,8 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
 
     // Add document pages (images and PDFs)
     for (const doc of allDocs) {
-      console.log(`[PDF] Processing: ${doc.type} - ${doc.ownerName} - ${doc.docName} (page ${currentPageNum})`);
+      console.log(`[PDF] Processing: ${doc.type} - ${doc.ownerName} - ${doc.docName} (page ${docPageMap[doc.id]})`);
       if (!doc.fileUrl) continue;
-      docPageMap[doc.id] = currentPageNum;
 
       try {
         const docResponse = await axios.get(doc.fileUrl, { responseType: 'arraybuffer', timeout: 10000 });
@@ -563,14 +562,13 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
             height: imgHeight
           });
 
-          // Add label with page number
+          // Add label
           page.drawText(`[${doc.type.toUpperCase()}] ${doc.ownerName} — ${doc.docName}`, {
             x: 20,
             y: 800,
             size: 10,
             color: { r: 0, g: 0, b: 0 }
           });
-          currentPageNum++;
         } else if (doc.fileUrl.match(/\.pdf$/i)) {
           // Merge PDF pages
           try {
@@ -578,7 +576,6 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
             const pageIndices = srcPdf.getPageIndices();
             const srcPages = await mergedPdf.copyPages(srcPdf, pageIndices);
             srcPages.forEach(page => mergedPdf.addPage(page));
-            currentPageNum += pageIndices.length;
           } catch (pdfErr) {
             console.warn(`Failed to merge PDF ${doc.fileUrl}:`, pdfErr.message);
           }
