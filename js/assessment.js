@@ -237,17 +237,7 @@ async function loadAssessmentDetail(id) {
   const user = getUser();
   let aramcoHtml = '';
 
-  // Show sync status if available
   let syncHtml = '';
-  if (a.sharepoint_sync_status) {
-    const syncIcon = a.sharepoint_sync_status === 'synced' ? '✓' : a.sharepoint_sync_status === 'failed' ? '✗' : '⏳';
-    const syncColor = a.sharepoint_sync_status === 'synced' ? 'color:var(--success);' : a.sharepoint_sync_status === 'failed' ? 'color:var(--error);' : 'color:var(--warn);';
-    syncHtml = `
-      <div style="margin-top:12px;${syncColor}font-size:12px;">
-        ${syncIcon} SharePoint Sync: ${a.sharepoint_sync_status}${a.sharepoint_sync_at ? ` (${new Date(a.sharepoint_sync_at).toLocaleDateString()})` : ''}
-        ${a.sharepoint_sync_error ? `<br/>Error: ${esc(a.sharepoint_sync_error)}` : ''}
-      </div>`;
-  }
 
   // Approval buttons for assessors/admins
   let approvalHtml = '';
