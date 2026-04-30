@@ -6,6 +6,7 @@ const _adminUserMap = new Map();
 
 function adminInit() {
   loadUsers();
+  loadAdminNotifications();
 }
 
 async function loadUsers() {
