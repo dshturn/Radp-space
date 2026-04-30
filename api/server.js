@@ -474,12 +474,6 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
     const mergedPdf = await PDFDocument.load(lorPdfBuffer);
     const lorPageCount = mergedPdf.getPageCount();
     console.log(`[PDF] LoR occupies ${lorPageCount} pages. Documents start at page ${lorPageCount + 1}`);
-
-    // Create named destinations for each document so we can link to them
-    const docDestinations = {};
-    for (const doc of allDocs) {
-      docDestinations[doc.id] = null; // Will be assigned when pages are added
-    }
     console.log(`[PDF] Processing ${allDocs.length} documents...`);
 
     // Track actual pages added (some PDFs have multiple pages)
