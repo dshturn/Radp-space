@@ -866,6 +866,24 @@ async function saveEditAssessment() {
   loadAssessments();
 }
 
+async function cancelDeletionRequest(id) {
+  if (!confirm('Cancel deletion request for this assessment?')) return;
+
+  const u = getUser();
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/assessment_deletion_requests?assessment_id=eq.${id}&status=eq.pending`, {
+    method: 'DELETE',
+    headers: { ...getHeaders(), Prefer: 'return=minimal' }
+  });
+  if (!res.ok) {
+    showToast('Failed to cancel deletion request', 'error');
+    return;
+  }
+  logAudit('assessment_deletion_request', id, 'cancelled', `Deletion request cancelled by ${u.email}`);
+  showToast('Deletion request cancelled.', 'success');
+  loadAssessmentDetail(id);
+  loadAssessments();
+}
+
 async function deleteAssessment(id) {
   const u = getUser();
   const isAdmin = u.role === 'admin';
