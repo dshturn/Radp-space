@@ -12,7 +12,11 @@ function assessmentInit() {
 // ── Mini dashboard: assessments tile ──
 async function loadDashAssessments() {
   const u = getUser();
-  const assessments = await apiFetch(`${SUPABASE_URL}/rest/v1/assessments?contractor_id=eq.${u.id}&select=id,status`, { headers: getHeaders() });
+  const isAdmin = u.role === 'admin' || u.role === 'assessor';
+  const endpoint = isAdmin
+    ? `/rest/v1/assessments?select=id,status`
+    : `/rest/v1/assessments?contractor_id=eq.${u.id}&select=id,status`;
+  const assessments = await apiFetch(`${SUPABASE_URL}${endpoint}`, { headers: getHeaders() });
   const aEl   = document.getElementById('dashAssessments');
   const aSub  = document.getElementById('dashAssessmentsSub');
   const aTile = aEl.closest('.dash-tile');
