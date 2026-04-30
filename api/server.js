@@ -396,7 +396,7 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
 
     // Build personnel rows with document links
     let persRows = '';
-    personnel.forEach((p, idx) => {
+    uniquePersonnel.forEach((p, idx) => {
       const per = p.personnel;
       const docs = docsByPersonnel[per.id] || [];
       if (!docs.length) {
