@@ -851,17 +851,7 @@ async function deleteAssessment(id) {
 
   // Log event - notifications auto-created by trigger
   const u = getUser();
-  await fetch(`${SUPABASE_URL}/rest/v1/notification_events`, {
-    method: 'POST',
-    headers: { ...getHeaders(), Prefer: 'return=minimal' },
-    body: JSON.stringify({
-      event_type: 'deletion_requested',
-      entity_type: 'assessment',
-      entity_id: id,
-      triggered_by: u.id,
-      metadata: { contractor_email: u.email }
-    })
-  }).catch(err => console.warn('Event logging failed:', err));
+  await logNotificationEvent('deletion_requested', 'assessment', id, { contractor_email: u.email });
 
   logAudit('assessment', id, 'deletion_requested', `Deletion request created by ${u.email}`);
   showToast('Deletion request submitted. Awaiting admin approval.', 'success');
