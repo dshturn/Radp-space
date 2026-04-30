@@ -417,55 +417,9 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
       doc.moveDown(0.2);
     });
 
-    // Add document pages
-    console.log('[PDF] Adding document pages...');
-
-    const allDocs = [];
-    if (docType === 'personnel' || docType === 'both') {
-      personnel.forEach(p => {
-        const per = p.personnel;
-        const docs = docsByPersonnel[per.id] || [];
-        docs.forEach(d => {
-          allDocs.push({ type: 'personnel', ownerName: per.full_name, docName: d.doc_type_name, fileUrl: d.file_url, id: d.id });
-        });
-      });
-    }
-    if (docType === 'equipment' || docType === 'both') {
-      const renderEquip = (item) => {
-        const docs = item?.documents || [];
-        const name = item?.equipment_templates?.name || item?.name || item?.model || '—';
-        docs.forEach(d => {
-          allDocs.push({ type: 'equipment', ownerName: name, docName: d.document_types?.document_name || d.doc_type_name || '—', fileUrl: d.file_url, id: d.id });
-        });
-        (kidsByParent[item.id] || []).forEach(child => renderEquip(child));
-      };
-      rootItems.forEach(item => renderEquip(item));
-    }
-
-    for (const d of allDocs) {
-      if (!d.fileUrl) continue;
-      try {
-        const resp = await axios.get(d.fileUrl, { responseType: 'arraybuffer', timeout: 10000 });
-        if (d.fileUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-          doc.addPage();
-          doc.fontSize(9).text(`[${d.type.toUpperCase()}] ${d.ownerName} — ${d.docName}`, { y: 20 });
-          doc.image(resp.data, { x: 20, y: 50, width: 555 });
-        } else if (d.fileUrl.match(/\.pdf$/i)) {
-          try {
-            const srcPdf = await PdfLibDocument.load(resp.data);
-            const pageCount = srcPdf.getPageCount();
-            for (let i = 0; i < pageCount; i++) {
-              doc.addPage();
-              doc.fontSize(9).text(`[${d.type.toUpperCase()}] ${d.ownerName} — ${d.docName} (page ${i + 1}/${pageCount})`, { y: 20 });
-            }
-          } catch (e) {
-            console.warn(`Failed to process PDF ${d.fileUrl}:`, e.message);
-          }
-        }
-      } catch (e) {
-        console.warn(`Failed to fetch ${d.fileUrl}:`, e.message);
-      }
-    }
+    // Note: Document pages not added yet (future enhancement)
+    // For now, just return the LoR table
+    console.log('[PDF] LoR table complete, finalizing...');
 
     doc.end();
 
