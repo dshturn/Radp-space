@@ -291,25 +291,79 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
 
     const lorHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>LoR</title><style>body{font-family:Arial,sans-serif;font-size:11px;margin:16px;color:#000}h1{font-size:15px;text-align:center;margin-bottom:2px}.subtitle{text-align:center;font-size:10px;color:#444;margin-bottom:10px}h2{font-size:13px;margin:12px 0 8px;background:#1e3a5f;color:white;padding:8px 10px}.info-table{width:100%;border-collapse:collapse;margin-bottom:10px}.info-table td{padding:4px 8px;border:1px solid #bbb;font-size:11px}.info-table .lbl{font-weight:bold;background:#e8edf2;width:130px}table{width:100%;border-collapse:collapse;margin-bottom:12px}th{padding:5px 4px;text-align:left;font-size:10px;border:1px solid #bbb}th.sp{background:#1e3a5f;color:white}th.as{background:#2d4a1e;color:white}td{padding:4px 4px;border:1px solid #ddd;font-size:10px}tr:nth-child(even) td{background:#f7f9f7}.ac{background:#f0f7ee}img{max-width:95%;height:auto;}@media print{body{margin:0}@page{size:A4 landscape;margin:8mm}}</style></head><body><h1>List of Readiness (LoR)</h1><div class="subtitle">Attachment to SMS Process 07.01</div><table class="info-table"><tr><td class="lbl">Service Provider</td><td><strong>${esc(assessment.company_name||'—')}</strong></td><td class="lbl">Date</td><td>${todayStr}</td></tr><tr><td class="lbl">Field/Well</td><td colspan="3">${esc(assessment.field_well||'—')}</td></tr><tr><td class="lbl">Type of Job</td><td colspan="3">${esc(assessment.type_of_job||'—')}</td></tr></table><table><thead><tr><th class="sp" colspan="6">Manpower</th><th class="as" colspan="5">Assessor</th></tr><tr><th class="sp">#</th><th class="sp">Name</th><th class="sp">Yrs Exp</th><th class="sp">Role</th><th class="sp">Doc</th><th class="sp">Expiry</th><th class="as">Unit</th><th class="as">Auditor</th><th class="as">Date</th><th class="as">Ready</th><th class="as">Comment</th></tr></thead><tbody>${persRows}<tr><th class="sp" colspan="6">Equipment</th><th class="as" colspan="5">Assessor</th></tr><tr><th class="sp">#</th><th class="sp">S/N</th><th class="sp">Description</th><th class="sp">Type</th><th class="sp">Issue</th><th class="sp">Expiry</th><th class="as">Unit</th><th class="as">Auditor</th><th class="as">Date</th><th class="as">Ready</th><th class="as">Comment</th></tr>${equipRows}</tbody></table></body></html>`;
 
-    // Convert HTML to PDF using html-pdf
-    const pdfOptions = {
-      format: 'A4',
-      orientation: 'landscape',
-      margin: { top: '0.5in', bottom: '0.5in', left: '0.5in', right: '0.5in' }
-    };
-
-    return new Promise((resolve, reject) => {
+    // Generate LoR PDF from HTML
+    const lorPdfPromise = new Promise((resolve, reject) => {
+      const pdfOptions = {
+        format: 'A4',
+        orientation: 'landscape',
+        margin: { top: '0.5in', bottom: '0.5in', left: '0.5in', right: '0.5in' }
+      };
       pdf.create(lorHtml, pdfOptions).toBuffer((err, buffer) => {
-        if (err) {
-          console.error('PDF creation error:', err);
-          return reject(err);
-        }
-
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename="LoR_${assessment.field_well || 'Assessment'}_${todayStr}.pdf"`);
-        res.send(buffer);
+        if (err) return reject(err);
+        resolve(buffer);
       });
     });
+
+    const lorPdfBuffer = await lorPdfPromise;
+
+    // Load LoR PDF into pdf-lib
+    const mergedPdf = await PDFDocument.load(lorPdfBuffer);
+
+    // Add document pages (images and PDFs)
+    for (const doc of allDocs) {
+      if (!doc.fileUrl) continue;
+
+      try {
+        const docResponse = await axios.get(doc.fileUrl, { responseType: 'arraybuffer', timeout: 10000 });
+        const docBuffer = Buffer.from(docResponse.data);
+
+        if (doc.fileUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+          // Embed image
+          let embeddedImage;
+          if (doc.fileUrl.match(/\.png$/i)) {
+            embeddedImage = await mergedPdf.embedPng(docBuffer);
+          } else {
+            embeddedImage = await mergedPdf.embedJpg(docBuffer);
+          }
+
+          const page = mergedPdf.addPage([595, 842]); // A4 portrait
+          const { width, height } = embeddedImage.scale(1);
+          const imgWidth = Math.min(width, 550);
+          const imgHeight = (height * imgWidth) / width;
+          page.drawImage(embeddedImage, {
+            x: 20,
+            y: Math.max(20, 842 - imgHeight - 20),
+            width: imgWidth,
+            height: imgHeight
+          });
+
+          // Add label
+          page.drawText(`[${doc.type.toUpperCase()}] ${doc.ownerName} — ${doc.docName}`, {
+            x: 20,
+            y: 800,
+            size: 10,
+            color: { r: 0, g: 0, b: 0 }
+          });
+        } else if (doc.fileUrl.match(/\.pdf$/i)) {
+          // Merge PDF pages
+          try {
+            const srcPdf = await PDFDocument.load(docBuffer);
+            const srcPages = await mergedPdf.copyPages(srcPdf, srcPdf.getPageIndices());
+            srcPages.forEach(page => mergedPdf.addPage(page));
+          } catch (pdfErr) {
+            console.warn(`Failed to merge PDF ${doc.fileUrl}:`, pdfErr.message);
+          }
+        }
+      } catch (fetchErr) {
+        console.warn(`Failed to fetch document ${doc.fileUrl}:`, fetchErr.message);
+      }
+    }
+
+    // Save merged PDF and send
+    const finalPdfBytes = await mergedPdf.save();
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="LoR_${assessment.field_well || 'Assessment'}_${todayStr}.pdf"`);
+    res.send(Buffer.from(finalPdfBytes));
 
   } catch (err) {
     console.error('PDF generation error:', err.message);
