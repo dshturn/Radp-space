@@ -413,11 +413,7 @@ async function loadAdminNotifications() {
 }
 
 async function toggleNotifReadStatus(notifId, shouldBeRead) {
-  const endpoint = `/rest/v1/notifications?id=eq.${notifId}`;
-  const url = window.location.hostname === 'localhost'
-    ? `http://localhost:5000/api?endpoint=${encodeURIComponent(endpoint)}`
-    : `${SUPABASE_URL}${endpoint}`;
-  const res = await fetch(url, {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/notifications?id=eq.${notifId}`, {
     method: 'PATCH',
     headers: { ...getHeaders(), Prefer: 'return=minimal' },
     body: JSON.stringify({ read: shouldBeRead })
@@ -425,6 +421,7 @@ async function toggleNotifReadStatus(notifId, shouldBeRead) {
   if (res.ok) {
     loadAdminNotifications();
   } else {
+    console.error('Toggle failed:', res.status, res.statusText);
     showToast('Failed to update notification', 'error');
   }
 }
