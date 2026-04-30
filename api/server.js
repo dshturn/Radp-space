@@ -478,8 +478,7 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
     lorDoc.fontSize(11).font('Helvetica-Bold').text('PERSONNEL', { underline: true });
     lorDoc.fontSize(9).font('Helvetica');
 
-    const roles = Object.keys(byRole).sort();
-    for (const role of roles) {
+    for (const role of Object.keys(byRole).sort()) {
       lorDoc.text(`• ${role}`, { indent: 10 });
       for (const p of byRole[role]) {
         const per = p.personnel;
