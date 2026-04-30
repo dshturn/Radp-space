@@ -156,7 +156,7 @@ async function _renderAuditLog() {
   const dateFrom     = document.getElementById('auditDateFrom')?.value || '';
   const dateTo       = document.getElementById('auditDateTo')?.value || '';
 
-  let endpoint = `/rest/v1/audit_log?order=created_at.desc&offset=${_auditPage * _AUDIT_PAGE_SIZE}&limit=${_AUDIT_PAGE_SIZE}`;
+  let endpoint = `/rest/v1/audit_log?select=*&order=created_at.desc&offset=${_auditPage * _AUDIT_PAGE_SIZE}&limit=${_AUDIT_PAGE_SIZE}`;
   if (entityFilter) endpoint += `&entity_type=eq.${encodeURIComponent(entityFilter)}`;
   if (dateFrom)     endpoint += `&created_at=gte.${encodeURIComponent(dateFrom)}T00:00:00Z`;
   if (dateTo)       endpoint += `&created_at=lte.${encodeURIComponent(dateTo)}T23:59:59Z`;
