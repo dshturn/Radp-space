@@ -281,7 +281,7 @@ async function logAudit(entityType, entityId, action, label, metadata = {}) {
   const u = getUser();
   if (!u?.id) return; // not logged in, skip
   // Fire-and-forget: audit failures must never block the user action
-  fetch(`${SUPABASE_URL}/api/audit_log`, {
+  fetch(`${SUPABASE_URL}/rest/v1/audit_log`, {
     method: 'POST',
     headers: { ...getHeaders(), Prefer: 'return=minimal' },
     body: JSON.stringify({
@@ -467,7 +467,7 @@ async function loadNotifUnreadCount() {
   const u = getUser();
   if (!u?.id) return;
   const res = await fetch(
-    `${SUPABASE_URL}/api/notifications?contractor_id=eq.${u.id}&read=eq.false&select=id`,
+    `${SUPABASE_URL}/rest/v1/notifications?contractor_id=eq.${u.id}&read=eq.false&select=id`,
     { headers: { ...getHeaders(), Prefer: 'count=exact' } }
   );
   if (!res.ok) return;
@@ -482,7 +482,7 @@ async function loadNotifications() {
   const u = getUser();
   if (!u?.id) return;
   const res = await fetch(
-    `${SUPABASE_URL}/api/notifications?contractor_id=eq.${u.id}&order=created_at.desc&limit=30`,
+    `${SUPABASE_URL}/rest/v1/notifications?contractor_id=eq.${u.id}&order=created_at.desc&limit=30`,
     { headers: getHeaders() }
   );
   if (!res.ok) return;
@@ -502,7 +502,7 @@ async function loadNotifications() {
 
 async function markNotifRead(id, el) {
   el?.classList.remove('unread');
-  await fetch(`${SUPABASE_URL}/api/notifications?id=eq.${parseInt(id)}`, {
+  await fetch(`${SUPABASE_URL}/rest/v1/notifications?id=eq.${parseInt(id)}`, {
     method: 'PATCH', headers: { ...getHeaders(), Prefer: 'return=minimal' },
     body: JSON.stringify({ read: true })
   });
@@ -512,7 +512,7 @@ async function markNotifRead(id, el) {
 async function markAllNotifsRead() {
   const u = getUser();
   if (!u?.id) return;
-  await fetch(`${SUPABASE_URL}/api/notifications?contractor_id=eq.${u.id}&read=eq.false`, {
+  await fetch(`${SUPABASE_URL}/rest/v1/notifications?contractor_id=eq.${u.id}&read=eq.false`, {
     method: 'PATCH', headers: { ...getHeaders(), Prefer: 'return=minimal' },
     body: JSON.stringify({ read: true })
   });
