@@ -657,6 +657,12 @@ async function generateLoR() {
   window.open(blobUrl, '_blank');
   setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
 }
+
+async function generateLoRWithDocs() {
+  // TODO: Implement LoR + Docs generation
+  showToast('Feature coming soon', 'info');
+}
+
 // Page initialization
 async function assessmentInit() {
   await loadAssessments();
