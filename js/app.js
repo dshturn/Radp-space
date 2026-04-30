@@ -142,9 +142,13 @@ function showContractorTab(tab, el) {
   const current    = document.querySelector('#contractor-page .ct-section.active')?.id?.replace('ct-', '') || 'equipment';
   const goingRight = CT_ORDER[tab] > CT_ORDER[current];
   const animClass  = goingRight ? 'slide-in-right' : 'slide-in-left';
-  document.querySelectorAll('#contractor-page .tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('#contractor-page .tab').forEach(t => {
+    t.classList.remove('active');
+    t.setAttribute('aria-selected', 'false');
+  });
   document.querySelectorAll('#contractor-page .ct-section').forEach(s => s.classList.remove('active', 'slide-in-right', 'slide-in-left'));
   el.classList.add('active');
+  el.setAttribute('aria-selected', 'true');
   const section = document.getElementById('ct-' + tab);
   section.classList.add('active', animClass);
   section.addEventListener('animationend', () => section.classList.remove(animClass), { once: true });
