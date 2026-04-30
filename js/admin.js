@@ -257,7 +257,7 @@ async function loadDeletionRequests() {
 
 async function approveDeletion(requestId, assessmentId) {
   const u = getUser();
-  const [updateReqRes, deleteRes, notifRes] = await Promise.all([
+  const [updateReqRes, deleteRes] = await Promise.all([
     fetch(`${SUPABASE_URL}/rest/v1/assessment_deletion_requests?id=eq.${requestId}`, {
       method: 'PATCH',
       headers: { ...getHeaders(), Prefer: 'return=minimal' },
@@ -266,12 +266,7 @@ async function approveDeletion(requestId, assessmentId) {
     fetch(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${assessmentId}`, {
       method: 'DELETE',
       headers: { ...getHeaders(), Prefer: 'return=minimal' }
-    }),
-    fetch(`${SUPABASE_URL}/rest/v1/notifications?entity_type=eq.assessment_deletion_request&entity_id=eq.${assessmentId}`, {
-      method: 'PATCH',
-      headers: { ...getHeaders(), Prefer: 'return=minimal' },
-      body: JSON.stringify({ read: true })
-    }).catch(() => {})
+    })
   ]);
 
   if (!updateReqRes.ok || !deleteRes.ok) {
@@ -279,9 +274,16 @@ async function approveDeletion(requestId, assessmentId) {
     return;
   }
 
+  // Mark notification as read (best effort, doesn't block approval)
+  fetch(`${SUPABASE_URL}/rest/v1/notifications?entity_type=eq.assessment_deletion_request&entity_id=eq.${assessmentId}`, {
+    method: 'PATCH',
+    headers: { ...getHeaders(), Prefer: 'return=minimal' },
+    body: JSON.stringify({ read: true })
+  }).catch(() => {});
+
   logAudit('assessment', assessmentId, 'deletion_approved', `Assessment deleted by admin approval of request ${requestId}`);
   showToast('Assessment deleted', 'success');
-  loadUsers();
+  renderDeletionRequests();
 }
 
 async function rejectDeletion(requestId, assessmentId, reason) {
