@@ -368,6 +368,16 @@ async function loadAdminNotifications() {
     return;
   }
   const notifications = await res.json();
+
+  // Fetch user emails
+  const userEndpoint = `/rest/v1/user_profiles?select=id,email`;
+  const userUrl = window.location.hostname === 'localhost'
+    ? `http://localhost:5000/api?endpoint=${encodeURIComponent(userEndpoint)}`
+    : `${SUPABASE_URL}${userEndpoint}`;
+  const userRes = await fetch(userUrl, { headers: getHeaders() });
+  const users = userRes.ok ? await userRes.json() : [];
+  const emailMap = new Map(users.map(u => [u.id, u.email]));
+
   const list = document.getElementById('adminNotificationsList');
 
   if (!notifications.length) {
