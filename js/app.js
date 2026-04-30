@@ -80,6 +80,9 @@ function showPage(name, replace = false) {
   page.classList.add('active', animClass);
   page.addEventListener('animationend', () => page.classList.remove(animClass), { once: true });
 
+  // Load notification count on every page
+  if (typeof loadNotifUnreadCount === 'function') loadNotifUnreadCount();
+
   const nav = document.getElementById('mainNav');
   nav.style.display = NAV_PAGES.has(name) ? 'flex' : 'none';
   if (NAV_PAGES.has(name)) {
