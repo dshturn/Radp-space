@@ -820,7 +820,12 @@ async function saveEditAssessment() {
     headers: { ...getHeaders(), Prefer: 'return=minimal' },
     body: JSON.stringify({ field_well: fieldWell, type_of_job: typeOfJob, objective, date_of_issue: dateOfIssue })
   });
-  if (!res.ok) { showToast('Failed to update assessment', 'error'); return; }
+  if (!res.ok) {
+    const err = await res.text().catch(() => '');
+    console.error('Update failed:', res.status, err);
+    showToast(`Failed to update assessment (${res.status})`, 'error');
+    return;
+  }
 
   logAudit('assessment', id, 'updated', `Assessment updated: ${fieldWell}`);
   showToast('Assessment updated', 'success');
