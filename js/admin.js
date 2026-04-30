@@ -6,18 +6,6 @@ const _adminUserMap = new Map();
 
 function adminInit() {
   loadUsers();
-  loadAdminNotifications();
-}
-
-function showAdminTab(tab, el) {
-  document.querySelectorAll('#admin-page .tab').forEach(t => {
-    t.classList.remove('active');
-    t.setAttribute('aria-selected', 'false');
-  });
-  document.querySelectorAll('#admin-page .admin-section').forEach(s => s.classList.remove('active'));
-  el.classList.add('active');
-  el.setAttribute('aria-selected', 'true');
-  document.getElementById('admin-' + tab).classList.add('active');
 }
 
 async function loadUsers() {
