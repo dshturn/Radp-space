@@ -16,7 +16,7 @@ async function loadUsers() {
   if (roleFilter) endpoint += `&role=eq.${encodeURIComponent(roleFilter)}`;
 
   const url = window.location.hostname === 'localhost'
-    ? `/api?endpoint=${encodeURIComponent(endpoint)}`
+    ? `http://localhost:5000/api?endpoint=${encodeURIComponent(endpoint)}`
     : `${SUPABASE_URL}${endpoint}`;
 
   const rows = await apiFetch(url, { headers: getHeaders() });
