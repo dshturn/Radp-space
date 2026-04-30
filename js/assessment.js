@@ -232,6 +232,7 @@ async function loadAssessmentDetail(id) {
   const data = await apiFetch(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${id}`, { headers: getHeaders() });
   if (!data) return;
   const a = data[0];
+  _currentAssessment = a;
   const validStatuses = new Set(['draft', 'approved', 'pending', 'rejected']);
   const safeStatus = validStatuses.has(a.status) ? a.status : 'draft';
 
