@@ -350,12 +350,6 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
     const kidsByParent = {};
     [...childItems, ...grandItems].forEach(c => { (kidsByParent[c.parent_id] = kidsByParent[c.parent_id] || []).push(c); });
 
-    console.log(`[PDF] byRole keys: ${Object.keys(byRole).join(', ')}`);
-    console.log(`[PDF] byType keys: ${Object.keys(byType).join(', ')}`);
-    console.log(`[PDF] docsByPersonnel count: ${Object.keys(docsByPersonnel).length}`);
-    console.log(`[PDF] persRows length: ${persRows?.length || 0}`);
-    console.log(`[PDF] equipRows length: ${equipRows?.length || 0}`);
-
     const today = new Date();
     const todayStr = today.toLocaleDateString('en-GB');
     const esc = s => (s || '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
