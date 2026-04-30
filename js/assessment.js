@@ -117,13 +117,18 @@ async function loadAssessments() {
   const validStatuses = new Set(['draft', 'approved', 'pending', 'rejected']);
   list.innerHTML = assessments.map(a => {
     const safeStatus = validStatuses.has(a.status) ? a.status : 'draft';
+    const isEditable = a.status === 'draft';
     return `
     <div class="assessment-card" onclick="showDetail(${parseInt(a.id)})">
       <div>
         <div class="assessment-title">${esc(a.field_well) || 'Untitled'}</div>
         <div class="assessment-meta">${esc(a.type_of_job) || ''} · ${esc(a.date_of_issue) || ''}</div>
       </div>
-      <span class="badge ${safeStatus}">${safeStatus}</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        ${isEditable ? `<button class="btn-edit btn-sm" onclick="openEditAssessment(${parseInt(a.id)});event.stopPropagation();" aria-label="Edit assessment">✏</button>` : ''}
+        ${isEditable ? `<button class="btn-danger btn-sm" onclick="deleteAssessment(${parseInt(a.id)});event.stopPropagation();" aria-label="Delete assessment">✕</button>` : ''}
+        <span class="badge ${safeStatus}">${safeStatus}</span>
+      </div>
     </div>`;
   }).join('');
 
