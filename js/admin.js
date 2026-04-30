@@ -402,7 +402,7 @@ async function loadAdminNotifications() {
         <tbody>
           ${notifications.map(n => `
             <tr style="border-bottom:1px solid var(--border);">
-              <td style="padding:12px;color:var(--text-2);">${esc(n.contractor_id?.substring(0, 8) || '?')}</td>
+              <td style="padding:12px;color:var(--text-2);">${esc(emailMap.get(n.contractor_id) || '?')}</td>
               <td style="padding:12px;"><span style="font-size:11px;padding:2px 6px;border-radius:4px;background:var(--surface-3);color:var(--text-2);">${esc(n.type)}</span></td>
               <td style="padding:12px;color:var(--text-1);">${esc(n.entity_label || '—')}</td>
               <td style="padding:12px;">
