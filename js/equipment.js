@@ -116,7 +116,7 @@ async function loadEquipment(preserveState = false) {
           <div class="group-header" onclick="toggleGroup(this)">
             <span class="group-title">${esc(type)}</span>
             ${grpBadges(_exp, _expir, _ok, _missing, _review)}
-            <span class="group-toggle">▾</span>
+            <span class="group-toggle" aria-expanded="false">▾</span>
           </div>
           <div class="group-body"><div class="group-body-inner">${cardsHtml}</div></div>
         </div>`;
