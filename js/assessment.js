@@ -580,9 +580,18 @@ async function generateLoR() {
   const todayStr = today.toLocaleDateString('en-GB');
   const allExpiries = [];
 
+  // Deduplicate documents (remove exact duplicates)
+  const seenDocs = new Set();
+  const uniqueDocs = allPersonnelDocs.filter(d => {
+    const key = `${d.personnel_id}:${d.doc_type_name}`;
+    if (seenDocs.has(key)) return false;
+    seenDocs.add(key);
+    return true;
+  });
+
   // Build map of documents by personnel_id
   const docsByPersonnel = {};
-  allPersonnelDocs.forEach(d => {
+  uniqueDocs.forEach(d => {
     if (!docsByPersonnel[d.personnel_id]) docsByPersonnel[d.personnel_id] = [];
     docsByPersonnel[d.personnel_id].push(d);
   });
