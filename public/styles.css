@@ -201,7 +201,7 @@ input[type="file"] { display: none; }
 .eq-group.collapsed .group-body { grid-template-rows: 0fr; opacity: 0; }
 .group-body > .group-body-inner { overflow: hidden; min-height: 0; padding: 10px; }
 .doc-group { margin-bottom: 0; }
-.doc-group-header { display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: var(--surface-2); border-radius: 6px; cursor: pointer; user-select: none; transition: background 0.2s; margin-top: 4px; min-height: 32px; box-sizing: border-box; }
+.doc-group-header { display: flex; align-items: center; gap: var(--space-sm); padding: var(--space-sm) var(--space-md); background: var(--surface-2); border-radius: 6px; cursor: pointer; user-select: none; transition: background 0.2s; margin-top: var(--space-sm); min-height: 32px; box-sizing: border-box; }
 .doc-group-header:hover { background: color-mix(in oklch, var(--surface-2) 82%, white 18%); }
 .doc-group-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-3); flex: 1; }
 .doc-group-count { font-size: 10px; color: var(--text-4); background: var(--bg); padding: 1px 6px; border-radius: 8px; }
