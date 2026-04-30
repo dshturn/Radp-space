@@ -583,3 +583,26 @@ input[type="file"] { display: none; }
 .tree-child-item { padding:6px 10px 6px 30px; font-size:12px; color:var(--text-2); display:flex; align-items:center; gap:8px; border-radius:4px; margin-bottom:4px; background:var(--surface-2); }
 .tree-child-name { flex:1; font-weight:500; }
 .btn-small { padding:4px 8px; font-size:11px; }
+
+/* === Tier 2: Equipment Nesting Reduction === */
+/* Flatten nested card hierarchy using indentation + left accent bar */
+.eq-item-depth-1 { padding-left: var(--space-lg); border-left: 2px solid var(--border); }
+.eq-item-depth-2 { padding-left: calc(var(--space-lg) * 2); border-left: 2px solid var(--info); }
+.eq-item-depth-3 { padding-left: calc(var(--space-lg) * 3); border-left: 2px solid rgba(147,197,253,0.5); }
+
+/* === Tier 2: Mobile Button Layout === */
+/* Stack button groups vertically on small screens for better touch targets */
+@media (max-width: 480px) {
+  .modal-btns { flex-direction: column; }
+  .modal-btns button { width: 100%; min-height: 44px; }
+
+  .admin-actions { flex-direction: column; gap: 6px; }
+  .admin-actions button { width: 100%; }
+
+  .ops-detail-actions { flex-wrap: wrap; }
+  .ops-detail-actions button { flex: 1 1 calc(50% - 4px); min-height: 44px; }
+
+  /* Improve button spacing in assessment views */
+  .assessment-actions { display: flex; flex-direction: column; gap: 8px; }
+  .assessment-actions button { width: 100%; min-height: 44px; }
+}
