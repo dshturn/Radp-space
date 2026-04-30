@@ -392,7 +392,7 @@ function equipItemCard(item, name, docs, subs = [], docsByItem = {}, subsByParen
       <div class="row-wrap">
         ${isAdmin ? `<button class="btn-edit" onclick="openEditEquipment(${parseInt(item.id)})" aria-label="Edit ${safeName}" style="padding:6px 10px;border:1px solid var(--border);border-radius:4px;background:var(--surface-2);color:var(--text-1);cursor:pointer;font-size:12px;">Edit</button>` : ''}
         <button class="btn-reassign" onclick="openReassignModal(${parseInt(item.id)}, this.dataset.name, null)" data-name="${safeName}" aria-label="Change assignment of ${safeName}">⇄</button>
-        <button class="btn-toggle" onclick="toggleCard(this)" aria-label="Expand ${safeName}">▾</button>
+        <button class="btn-toggle" onclick="toggleCard(this)" aria-label="Expand ${safeName}" aria-expanded="false">▾</button>
         <button class="btn-danger" onclick="deleteEquipItem(${parseInt(item.id)})" aria-label="Delete ${safeName}">✕</button>
       </div>
     </div>
