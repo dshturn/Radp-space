@@ -708,7 +708,7 @@ async function downloadPDF(btn) {
   }
 }
 </script>`;
-  const downloadBtn = `<div style="margin-top:12px;"><button onclick="downloadPDF()" style="background:#1e3a5f;color:white;border:none;padding:7px 18px;border-radius:6px;cursor:pointer;font-size:11px;margin-right:8px;">⬇️ Download as PDF</button><button onclick="window.print()" style="background:#666;color:white;border:none;padding:7px 18px;border-radius:6px;cursor:pointer;font-size:11px;">🖨️ Print</button></div>`;
+  const downloadBtn = `<div style="margin-top:12px;"><button onclick="downloadPDF(this)" style="background:#1e3a5f;color:white;border:none;padding:7px 18px;border-radius:6px;cursor:pointer;font-size:11px;margin-right:8px;">⬇️ Download as PDF</button><button onclick="window.print()" style="background:#666;color:white;border:none;padding:7px 18px;border-radius:6px;cursor:pointer;font-size:11px;">🖨️ Print</button></div>`;
   const htmlWithBtn = lorHtml.replace('</body>', `${downloadBtn}${downloadScript}</body>`);
   const blob = new Blob([htmlWithBtn], { type: 'text/html' });
   const blobUrl = URL.createObjectURL(blob);
