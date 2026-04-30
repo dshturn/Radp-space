@@ -665,7 +665,10 @@ async function generateLoRWithDocs() {
 
   showToast('Generating PDF...', 'info');
   try {
-    const response = await fetch('/api/generate-lor-pdf', {
+    const apiUrl = typeof window !== 'undefined' && window.location.port === '3001'
+      ? 'http://localhost:5000/api/generate-lor-pdf'
+      : '/api/generate-lor-pdf';
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
