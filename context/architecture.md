@@ -154,6 +154,7 @@ Fallback on network fail:
 Proxies browser requests from localhost:3001 (Vercel dev) to Supabase REST API:
 - **GET /api?endpoint=/rest/v1/audit_log...** → forwards to Supabase, returns JSON
 - **GET /api?endpoint=/storage/v1/object/public/...** → forwards to Supabase, returns binary (PDF/image)
+- **POST /api?endpoint=/functions/v1/function-name** → forwards to Supabase Edge Function
 - **POST /api?endpoint=/rest/v1/assessments** → forwards with user's JWT auth header
 
 Key features:
@@ -161,6 +162,7 @@ Key features:
 - **Response headers**: Content-Range (pagination), Content-Type (file type)
 - **Binary handling**: Storage requests use `responseType: 'arraybuffer'` to avoid JSON parsing
 - **CORS exposure**: Content-Range header exposed to browser for pagination support
+- **Edge Function routing**: /auth/, /storage/, /functions/ paths forwarded directly without /rest/v1/ prepend
 
 ## Audit Log & Document Links
 
