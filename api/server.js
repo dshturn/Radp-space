@@ -447,8 +447,8 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
           equipRows += `<tr><td>${numCell}</td><td>${sn}</td><td>${label}</td><td>—</td><td>—</td><td>—</td><td></td><td></td><td></td><td></td><td></td></tr>`;
         } else {
           docs.forEach((d, idx) => {
-            const pageRef = docPageMap[d.id] ? ` (p.${docPageMap[d.id]})` : '';
-            equipRows += `<tr><td>${idx === 0 ? numCell : ''}</td><td>${idx === 0 ? sn : ''}</td><td>${idx === 0 ? label : ''}</td><td>${esc(d.document_types?.document_name || d.doc_type_name || '—')}${pageRef}</td><td>${esc(d.issue_date || '—')}</td><td>${esc(d.expiry_date || '—')}</td><td></td><td></td><td></td><td></td><td></td></tr>`;
+            const docLink = `<a href="#doc-${d.id}" style="color:#0066cc;text-decoration:underline;cursor:pointer;">${esc(d.document_types?.document_name || d.doc_type_name || '—')}</a>`;
+            equipRows += `<tr><td>${idx === 0 ? numCell : ''}</td><td>${idx === 0 ? sn : ''}</td><td>${idx === 0 ? label : ''}</td><td>${docLink}</td><td>${esc(d.issue_date || '—')}</td><td>${esc(d.expiry_date || '—')}</td><td></td><td></td><td></td><td></td><td></td></tr>`;
           });
         }
         (kidsByParent[it.id] || []).forEach(child => renderItem(child, depth + 1));
