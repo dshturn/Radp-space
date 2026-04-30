@@ -352,8 +352,9 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
 
     // Create PDF with pdfkit
     const doc = new PDFDocument({ size: 'A4', margin: 20 });
-    const buffers = [];
-    doc.on('data', buffers.push.bind(buffers));
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="LoR_${assessment.field_well || 'Assessment'}_${today}.pdf"`);
+    doc.pipe(res);
 
     const today = new Date().toLocaleDateString('en-GB');
 
