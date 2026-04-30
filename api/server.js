@@ -371,10 +371,13 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
     }
 
     // Save merged PDF and send
+    console.log('[PDF] Saving merged PDF...');
     const finalPdfBytes = await mergedPdf.save();
+    console.log(`[PDF] Final PDF size: ${finalPdfBytes.length} bytes`);
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="LoR_${assessment.field_well || 'Assessment'}_${todayStr}.pdf"`);
     res.send(Buffer.from(finalPdfBytes));
+    console.log('[PDF] PDF sent successfully');
 
   } catch (err) {
     console.error('PDF generation error:', err.message);
