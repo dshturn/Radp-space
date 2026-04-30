@@ -181,7 +181,10 @@ function toggleSubCard(card) {
 }
 
 function toggleGroup(header) {
-  header.closest('.eq-group').classList.toggle('collapsed');
+  const group = header.closest('.eq-group');
+  group.classList.toggle('collapsed');
+  const toggle = header.querySelector('.group-toggle');
+  if (toggle) toggle.setAttribute('aria-expanded', !group.classList.contains('collapsed'));
 }
 
 function toggleDocGroup(header) {
