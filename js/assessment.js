@@ -91,14 +91,8 @@ function showDetailTab(tab, el) {
   const current    = perVisible ? 'personnel' : 'equipment';
   const goingRight = DT_ORDER[tab] > DT_ORDER[current];
   const animClass  = goingRight ? 'slide-in-right' : 'slide-in-left';
-  document.querySelectorAll('#detailTabs .tab').forEach(t => {
-    t.classList.remove('active');
-    t.style.background = '#fff';
-    t.style.color = '#666';
-  });
+  document.querySelectorAll('#detailTabs .tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
-  el.style.background = '#f5f5f5';
-  el.style.color = '#333';
   const target = tab === 'equipment' ? document.getElementById('equipmentTab') : document.getElementById('personnelTab');
   const other  = tab === 'equipment' ? document.getElementById('personnelTab')  : document.getElementById('equipmentTab');
   other.style.display = 'none';
