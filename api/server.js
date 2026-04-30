@@ -286,15 +286,19 @@ app.post('/api', async (req, res) => {
         'Content-Type': 'application/json',
       },
     });
+    if (response.status >= 400) {
+      console.warn(`[API] POST returned ${response.status}:`, fullEndpoint, response.data);
+    }
     res.status(response.status).json(response.data || {});
   } catch (err) {
+    const status = err.response?.status;
     console.error('[API] POST error:', {
+      path: fullEndpoint,
       message: err.message,
-      status: err.response?.status,
+      status,
       data: err.response?.data,
-      url: err.config?.url
     });
-    res.status(err.response?.status || 500).json({ error: err.message, details: err.response?.data });
+    res.status(status || 500).json({ error: err.message, details: err.response?.data });
   }
 });
 
