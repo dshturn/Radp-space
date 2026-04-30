@@ -99,9 +99,9 @@ body { font-family: 'Barlow', Arial, sans-serif; background: var(--bg); color: v
 
 /* === Shared app === */
 .container { padding: 24px; max-width: 900px; margin: 0 auto; padding-top: calc(44px + 24px); }
-.app-card { background: var(--surface); border-radius: 10px; padding: 10px; margin-bottom: 12px; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.app-card { background: var(--surface); border-radius: 10px; padding: var(--space-md); margin-bottom: var(--space-md); transition: transform 0.2s ease, box-shadow 0.2s ease; }
 .group-body-inner .app-card:last-child { margin-bottom: 0; }
-.app-card:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+.app-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
 .app-card h2 { color: var(--accent); font-size: 16px; margin-bottom: 16px; }
 .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0; flex-wrap: wrap; gap: 8px; padding-top: 0; }
 .card-title { font-size: 15px; font-weight: bold; }
