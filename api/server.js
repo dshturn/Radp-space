@@ -153,8 +153,13 @@ app.get('/api/*', async (req, res) => {
       res.json(response.data);
     }
   } catch (err) {
-    console.error('[API] GET error:', err.message, err.response?.status, err.response?.data);
-    res.status(err.response?.status || 500).json({ error: err.message });
+    console.error('[API] GET error:', {
+      message: err.message,
+      status: err.response?.status,
+      data: err.response?.data,
+      url: err.config?.url
+    });
+    res.status(err.response?.status || 500).json({ error: err.message, details: err.response?.data });
   }
 });
 
