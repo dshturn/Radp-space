@@ -209,14 +209,29 @@ Simplicity: No AI per-request; pre-computed checklists only
 2. AI token burn: ~50 tokens per assessment generation (pre-computation needed) (see context/tasks.md P0)
 3. N+1 queries: Some lists fetch one-by-one instead of batch
 
+## LoR (Letter of Readiness) Generation
+
+Assessment tab includes two LoR generation options:
+- **Generate LoR**: Full readiness document with grouped personnel (by job role) and equipment (by type)
+  - Personnel section: Shows each person's name, experience, position, and all certificates with expiry dates
+  - Equipment section: Shows items hierarchically (root → sub-components) with integrity check dates and certs
+  - Both sections grouped with role/type headers for clarity
+- **Generate LoR + Docs**: Enhanced version with embedded documents (awaiting implementation)
+
+Structure:
+- Manpower section: Personnel grouped by job role (● Operator, ● Righand, etc.), each showing their documents
+- Equipment section: Equipment grouped by type (● Slickline Unit, ● CT Unit), with hierarchy and documents
+- Assessor section: Empty checkboxes for audit/readiness sign-off
+- Valid Till calculation: Minimum expiry date across all personnel/equipment certs, color-coded (red=expired, amber=<14 days, green=valid)
+
 ## SharePoint Integration (Phase 3)
 
 See [sharepoint-integration.md](sharepoint-integration.md) for:
 - Three-phase integration plan (Phase 1 & 2 complete, Phase 3 in development)
-- Assessment LoR module: assessors login → view tree-structured assessment with personnel/equipment docs
+- Email-based assessment workflow (firewall-friendly solution, no SharePoint Get Contractor function)
 - Current CORS authentication challenge and solutions
 - Security considerations (RLS, JWT tokens, service account credentials)
 
 ---
 
-Owner: Tech Lead | Last updated: 2026-04-26 | Reference: context/rules.md (coding standards), context/project.md (business metrics), context/sharepoint-integration.md (SharePoint integration)
+Owner: Tech Lead | Last updated: Current Session (LoR Grouping, Edge Function Routing, SharePoint Cleanup) | Reference: context/rules.md (coding standards), context/project.md (business metrics), context/sharepoint-integration.md (SharePoint integration)
