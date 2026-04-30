@@ -88,6 +88,7 @@ app.get('/api', async (req, res) => {
     });
     // Forward critical response headers (check both cases)
     const contentRange = response.headers['content-range'] || response.headers['Content-Range'];
+    console.log('[PROXY] Response headers:', { contentRange, allHeaders: Object.keys(response.headers) });
     if (contentRange) {
       res.set('Content-Range', contentRange);
     }
