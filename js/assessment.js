@@ -685,13 +685,13 @@ async function downloadPDF(btn) {
     btn.disabled = true;
     btn.textContent = '⬇️ Converting...';
 
-    const response = await fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/generate-html-pdf', {
+    const response = await fetch('http://localhost:5000/api/generate-html-pdf', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ html: document.documentElement.outerHTML })
     });
 
-    if (!response.ok) throw new Error('PDF conversion failed');
+    if (!response.ok) throw new Error('PDF conversion failed: ' + response.status);
     const blob = await response.blob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
