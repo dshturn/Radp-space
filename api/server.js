@@ -352,91 +352,21 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
 
     const today = new Date().toLocaleDateString('en-GB');
 
-    // Create PDF with pdfkit
-    const doc = new PDFDocument({ size: 'A4', margin: 20 });
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="LoR_${assessment.field_well || 'Assessment'}_${today}.pdf"`);
+    // Simple HTML LoR for PDF generation
+    const lorHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;font-size:11px;margin:16px}h1{font-size:14px;margin:0 0 5px 0}h2{font-size:11px;margin:10px 0 3px 0;background:#1e3a5f;color:white;padding:5px}h3{font-size:11px;margin:8px 0 3px 0;background:#2d4a1e;color:white;padding:5px}ul{margin:3px 0;padding-left:20px}li{margin:2px 0}</style></head><body><h1>List of Readiness</h1><p>Assessment: ${assessment.id} | ${assessment.company_name || '—'} | ${today}</p><h2>Personnel</h2><ul>${personnel.map(p => `<li>${p.personnel.full_name} (${p.personnel.position})</li>`).join('')}</ul><h2>Equipment</h2><ul>${rootItems.map(e => `<li>${e.equipment_templates?.name || e.name || '—'}</li>`).join('')}</ul></body></html>`;
 
-    doc.on('error', (err) => {
-      console.error('[PDF] Doc error:', err.message);
-      if (!res.headersSent) res.status(500).json({ error: 'PDF error' });
+    console.log('[PDF] Generating LoR PDF from HTML...');
+    pdf.create(lorHtml, { format: 'A4' }).toBuffer((err, buffer) => {
+      if (err) {
+        console.error('[PDF] Error:', err.message);
+        return res.status(500).json({ error: err.message });
+      }
+      console.log('[PDF] Generated', buffer.length, 'bytes');
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="LoR_${assessment.field_well || 'Assessment'}_${today}.pdf"`);
+      res.send(buffer);
+      console.log('[PDF] PDF sent');
     });
-
-    res.on('error', (err) => {
-      console.error('[PDF] Response error:', err.message);
-    });
-
-    doc.pipe(res);
-
-    // LoR Header
-    console.log('[PDF] Drawing header...');
-    doc.fontSize(16).font('Helvetica-Bold').text('List of Readiness', { align: 'center' });
-    doc.fontSize(10).font('Helvetica').text(`Assessment: ${assessment.id} | ${assessment.company_name || '—'} | Field: ${assessment.field_well || '—'} | ${today}`, { align: 'left' });
-    doc.moveDown(0.3);
-
-    // Personnel section
-    console.log('[PDF] Drawing personnel section. Count:', personnel.length);
-    doc.fontSize(12).font('Helvetica-Bold').text('Personnel');
-    doc.moveDown(0.2);
-
-    const roles = {};
-    personnel.forEach(p => {
-      const role = p.personnel?.position || 'Unassigned';
-      if (!roles[role]) roles[role] = [];
-      roles[role].push(p);
-    });
-
-    console.log('[PDF] Roles:', Object.keys(roles));
-    let pNum = 1;
-    Object.keys(roles).sort().forEach(role => {
-      console.log('[PDF] Drawing role:', role, 'with', roles[role].length, 'people');
-      doc.fontSize(10).font('Helvetica-Bold').fillColor('#1e3a5f').text(`● ${role}`, { underline: false });
-      doc.fillColor('black').fontSize(9).font('Helvetica');
-
-      roles[role].forEach(p => {
-        const per = p.personnel;
-        const docs = docsByPersonnel[per.id] || [];
-        const docText = docs.length ? docs.map(d => d.doc_type_name).join(', ') : '—';
-        console.log('[PDF] Drawing person:', per.full_name);
-        doc.text(`${pNum++}. ${per.full_name} (${per.position}) — ${docText}`);
-      });
-      doc.moveDown(0.2);
-    });
-
-    doc.moveDown(0.3);
-
-    // Equipment section
-    doc.fontSize(12).font('Helvetica-Bold').text('Equipment');
-    doc.moveDown(0.2);
-
-    const types = {};
-    rootItems.forEach(item => {
-      const type = item.equipment_templates?.name || 'Equipment';
-      if (!types[type]) types[type] = [];
-      types[type].push(item);
-    });
-
-    let eNum = 1;
-    Object.keys(types).sort().forEach(type => {
-      doc.fontSize(10).font('Helvetica-Bold').fillColor('#2d4a1e').text(`● ${type}`, { underline: false });
-      doc.fillColor('black').fontSize(9).font('Helvetica');
-
-      const renderItem = (it, depth) => {
-        const docs = it?.documents || [];
-        const name = it?.equipment_templates?.name || it?.name || it?.model || '—';
-        const indent = '  '.repeat(depth);
-        const docText = docs.length ? docs.map(d => d.document_types?.document_name || d.doc_type_name).join(', ') : '—';
-        doc.text(`${indent}${depth === 0 ? eNum++ + '. ' : ''}${name} (${it?.serial_number || '—'}) — ${docText}`);
-        (kidsByParent[it.id] || []).forEach(child => renderItem(child, depth + 1));
-      };
-      types[type].forEach(item => renderItem(item, 0));
-      doc.moveDown(0.2);
-    });
-
-    // Note: Document pages not added yet (future enhancement)
-    console.log('[PDF] LoR table complete, ending document...');
-    doc.end();
-    console.log('[PDF] PDF piped to response');
 
   } catch (err) {
     console.error('[PDF] Error:', err.message, err.stack);
