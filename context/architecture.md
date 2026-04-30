@@ -149,8 +149,9 @@ Fallback on network fail:
 - Show cached crew + equipment data (read-only)
 - Cannot submit assessments offline (requires auth + server validation)
 
-## API Proxy (localhost:5000, Express)
+## API Server (localhost:5000, Express)
 
+### Supabase Proxy
 Proxies browser requests from localhost:3001 (Vercel dev) to Supabase REST API:
 - **GET /api?endpoint=/rest/v1/audit_log...** → forwards to Supabase, returns JSON
 - **GET /api?endpoint=/storage/v1/object/public/...** → forwards to Supabase, returns binary (PDF/image)
@@ -163,6 +164,22 @@ Key features:
 - **Binary handling**: Storage requests use `responseType: 'arraybuffer'` to avoid JSON parsing
 - **CORS exposure**: Content-Range header exposed to browser for pagination support
 - **Edge Function routing**: /auth/, /storage/, /functions/ paths forwarded directly without /rest/v1/ prepend
+- **Payload size limit**: 5MB (increased from default 100KB for large HTML payloads)
+
+### PDF Generation
+- **POST /api/generate-html-pdf** → Converts HTML to PDF
+  - Input: JSON body with `html` field (string, max 5MB)
+  - Output: Binary PDF with proper `Content-Type: application/pdf` header
+  - Implementation: Uses `html-pdf` library (wkhtmltopdf backend)
+  - Link handling: `<a href="...">` tags convert to clickable PDF annotations
+  - Error handling: Returns 400 if missing HTML, 500 if conversion fails
+
+- **POST /api/generate-lor-pdf** → Assessment-specific LoR PDF
+  - Input: JSON body with `assessmentId` and optional `docType` (both/personnel/equipment)
+  - Output: Binary PDF with LoR table + document links
+  - Data fetching: Queries assessment, personnel, equipment, documents from Supabase
+  - Deduplication: Removes duplicate personnel and documents before rendering
+  - Error handling: Returns 404 if assessment not found, 500 if generation fails
 
 ## Audit Log & Document Links
 
