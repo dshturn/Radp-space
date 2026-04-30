@@ -131,7 +131,6 @@ async function loadAssessments() {
   const list = document.getElementById('assessmentList');
   if (!assessments.length) { list.innerHTML = '<div class="empty">No assessments yet. Create your first one.</div>'; return; }
   const validStatuses = new Set(['draft', 'approved', 'pending', 'rejected', 'awaiting_deletion']);
-  const u = getUser();
   list.innerHTML = assessments.map(a => {
     let safeStatus = validStatuses.has(a.status) ? a.status : 'draft';
     if (pendingDeletionIds.has(a.id)) safeStatus = 'awaiting_deletion';
