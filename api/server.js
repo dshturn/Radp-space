@@ -354,6 +354,16 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
     const doc = new PDFDocument({ size: 'A4', margin: 20 });
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="LoR_${assessment.field_well || 'Assessment'}_${today}.pdf"`);
+
+    doc.on('error', (err) => {
+      console.error('[PDF] Doc error:', err.message);
+      if (!res.headersSent) res.status(500).json({ error: 'PDF error' });
+    });
+
+    res.on('error', (err) => {
+      console.error('[PDF] Response error:', err.message);
+    });
+
     doc.pipe(res);
 
     const today = new Date().toLocaleDateString('en-GB');
