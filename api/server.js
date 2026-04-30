@@ -240,6 +240,222 @@ app.post('/api/*', async (req, res) => {
   }
 });
 
+// ── LoR PDF Generation ──
+app.post('/api/generate-lor-pdf', async (req, res) => {
+  try {
+    const { assessmentId } = req.body;
+    const headers = {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: req.headers.authorization || `Bearer ${SUPABASE_ANON_KEY}`,
+    };
+
+    // Fetch assessment + personnel + equipment data (same as generateLoR)
+    const [aRes, eRes, pRes, pDocsRes] = await Promise.all([
+      axios.get(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${assessmentId}`, { headers }),
+      axios.get(`${SUPABASE_URL}/rest/v1/assessment_equipment?assessment_id=eq.${assessmentId}&select=*,equipment_items(id,serial_number,model,name,parent_id,equipment_templates(name),documents(*,document_types(document_name)))`, { headers }),
+      axios.get(`${SUPABASE_URL}/rest/v1/assessment_personnel?assessment_id=eq.${assessmentId}&select=*,personnel(*)`, { headers }),
+      axios.get(`${SUPABASE_URL}/rest/v1/personnel_documents?select=*`, { headers })
+    ]);
+
+    const assessment = aRes.data[0];
+    const equipment = eRes.data;
+    const personnel = pRes.data;
+    const allPersonnelDocs = pDocsRes.data || [];
+
+    if (!assessment) {
+      return res.status(404).json({ error: 'Assessment not found' });
+    }
+
+    // Fetch equipment sub-components
+    const rootItems = equipment.map(e => e.equipment_items).filter(Boolean);
+    const rootIds = rootItems.map(i => i.id);
+    let childItems = [];
+    if (rootIds.length) {
+      const cRes = await axios.get(
+        `${SUPABASE_URL}/rest/v1/equipment_items?dismissed=is.false&parent_id=in.(${rootIds.join(',')})&select=id,parent_id,serial_number,model,name,equipment_templates(name),documents(*,document_types(document_name))`,
+        { headers }
+      );
+      childItems = cRes.data;
+    }
+    const childIds = childItems.map(i => i.id);
+    let grandItems = [];
+    if (childIds.length) {
+      const gcRes = await axios.get(
+        `${SUPABASE_URL}/rest/v1/equipment_items?dismissed=is.false&parent_id=in.(${childIds.join(',')})&select=id,parent_id,serial_number,model,name,equipment_templates(name),documents(*,document_types(document_name))`,
+        { headers }
+      );
+      grandItems = gcRes.data;
+    }
+
+    // Build document map by person/equipment
+    const docsByPersonnel = {};
+    allPersonnelDocs.forEach(d => {
+      if (!docsByPersonnel[d.personnel_id]) docsByPersonnel[d.personnel_id] = [];
+      docsByPersonnel[d.personnel_id].push(d);
+    });
+
+    // Create PDF
+    const doc = new PDFDocument({ size: 'A4', margin: 16 });
+    const pdfStream = res;
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="LoR_${assessment.field_well || 'Assessment'}_${new Date().toISOString().split('T')[0]}.pdf"`);
+    doc.pipe(pdfStream);
+
+    // ── TOC placeholders (will update later) ──
+    const tocEntries = [];
+
+    // ── Title ──
+    doc.fontSize(18).font('Helvetica-Bold').text('List of Readiness (LoR)', { align: 'center' });
+    doc.fontSize(10).font('Helvetica').text('Attachment to SMS Process 07.01', { align: 'center' });
+    doc.moveDown(0.5);
+
+    // ── Assessment Info ──
+    doc.fontSize(11).font('Helvetica-Bold').text('Assessment Details', { underline: true });
+    doc.fontSize(10).font('Helvetica');
+    doc.text(`Service Provider: ${assessment.company_name || '—'}`);
+    doc.text(`Field / Well: ${assessment.field_well || '—'}`);
+    doc.text(`Type of Job: ${assessment.type_of_job || '—'}`);
+    doc.text(`Date Issued: ${new Date().toLocaleDateString('en-GB')}`);
+    doc.moveDown(1);
+
+    // ── Personnel Section ──
+    const perPage = doc.y;
+    tocEntries.push({ title: 'Personnel', page: null }); // Will update
+    doc.fontSize(12).font('Helvetica-Bold').text('Personnel Roster', { underline: true });
+    doc.moveDown(0.3);
+
+    const byRole = {};
+    personnel.forEach(p => {
+      const role = p.personnel?.position || 'Unassigned';
+      if (!byRole[role]) byRole[role] = [];
+      byRole[role].push(p);
+    });
+
+    const roles = Object.keys(byRole).sort();
+    doc.fontSize(9);
+    roles.forEach(role => {
+      doc.font('Helvetica-Bold').text(`● ${role}`, { underline: true });
+      byRole[role].forEach(p => {
+        const per = p.personnel;
+        const docs = docsByPersonnel[per.id] || [];
+        doc.font('Helvetica');
+        doc.text(`${per?.full_name || '—'} (${per?.position || '—'}, ${per?.years_experience || 0} yrs)`);
+        if (docs.length) {
+          docs.forEach(d => {
+            doc.text(`  • ${d.doc_type_name || '—'} (expires: ${d.expiry_date || '—'})`, { indent: 20 });
+          });
+        } else {
+          doc.text('  (no documents)', { indent: 20, color: '#666' });
+        }
+      });
+      doc.moveDown(0.2);
+    });
+    doc.moveDown(0.5);
+
+    // ── Equipment Section ──
+    tocEntries.push({ title: 'Equipment', page: null });
+    doc.fontSize(12).font('Helvetica-Bold').text('Equipment Roster', { underline: true });
+    doc.moveDown(0.3);
+
+    const kidsByParent = {};
+    [...childItems, ...grandItems].forEach(c => {
+      (kidsByParent[c.parent_id] = kidsByParent[c.parent_id] || []).push(c);
+    });
+
+    const byType = {};
+    rootItems.forEach(item => {
+      const type = item.equipment_templates?.name || 'Equipment';
+      if (!byType[type]) byType[type] = [];
+      byType[type].push(item);
+    });
+
+    const types = Object.keys(byType).sort();
+    doc.fontSize(9);
+    types.forEach(type => {
+      doc.font('Helvetica-Bold').text(`● ${type}`, { underline: true });
+      byType[type].forEach(item => {
+        const renderItem = (it, depth) => {
+          const indent = depth * 15;
+          const docs = it?.documents || [];
+          const name = it?.equipment_templates?.name || it?.name || it?.model || '—';
+          doc.font('Helvetica').text(`${name} (S/N: ${it?.serial_number || '—'})`, { indent });
+          if (docs.length) {
+            docs.forEach(d => {
+              doc.text(`  • ${d.document_types?.document_name || d.doc_type_name || '—'} (expires: ${d.expiry_date || '—'})`, { indent: indent + 20 });
+            });
+          }
+          (kidsByParent[it.id] || []).forEach(child => renderItem(child, depth + 1));
+        };
+        renderItem(item, 0);
+      });
+      doc.moveDown(0.2);
+    });
+    doc.moveDown(1);
+
+    // ── Documents Section ──
+    tocEntries.push({ title: 'Certificate Documents', page: null });
+    doc.addPage();
+    doc.fontSize(12).font('Helvetica-Bold').text('Certificate Documents', { underline: true });
+    doc.moveDown(0.5);
+
+    // Collect all documents
+    const allDocs = [];
+    personnel.forEach(p => {
+      const per = p.personnel;
+      const docs = docsByPersonnel[per.id] || [];
+      docs.forEach(d => {
+        allDocs.push({
+          type: 'personnel',
+          ownerName: per.full_name,
+          docName: d.doc_type_name,
+          fileUrl: d.file_url,
+          id: d.id
+        });
+      });
+    });
+
+    rootItems.forEach(item => {
+      const renderItem = (it) => {
+        const docs = it?.documents || [];
+        const name = it?.equipment_templates?.name || it?.name || it?.model || '—';
+        docs.forEach(d => {
+          allDocs.push({
+            type: 'equipment',
+            ownerName: name,
+            docName: d.document_types?.document_name || d.doc_type_name || '—',
+            fileUrl: d.file_url,
+            id: d.id
+          });
+        });
+        (kidsByParent[it.id] || []).forEach(child => renderItem(child));
+      };
+      renderItem(item);
+    });
+
+    // List documents with links (embedded or referenced)
+    if (allDocs.length) {
+      doc.fontSize(9).font('Helvetica');
+      allDocs.forEach((d, idx) => {
+        const docLabel = `${idx + 1}. [${d.type.toUpperCase()}] ${d.ownerName} — ${d.docName}`;
+        if (d.fileUrl) {
+          doc.fillColor('blue').text(docLabel, { link: d.fileUrl, underline: true });
+          doc.fillColor('black');
+        } else {
+          doc.text(docLabel);
+        }
+      });
+    } else {
+      doc.fontSize(9).text('No documents attached.', { color: '#666' });
+    }
+
+    // Finalize PDF
+    doc.end();
+  } catch (err) {
+    console.error('PDF generation error:', err.message);
+    res.status(500).json({ error: 'Failed to generate PDF' });
+  }
+});
+
 // ── Error Handler ──
 app.use((err, req, res, next) => {
   console.error('Error:', err);
