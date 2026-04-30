@@ -63,6 +63,7 @@ export default async (req, res) => {
       }
     }
 
+    console.log('[PROXY] Forwarding request:', { method, path: restUrl.split('?')[0], hasAuth: !!headers['Authorization'] });
     const response = await fetch(restUrl, {
       method,
       headers,
