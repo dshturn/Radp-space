@@ -210,4 +210,4 @@ Before deploying:
 
 ---
 
-Owner: Tech Lead | Last updated: 2026-04-24
+Owner: Tech Lead | Last updated: 2026-04-30 (Added PDF generation and deduplication patterns)
