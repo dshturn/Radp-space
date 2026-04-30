@@ -220,7 +220,12 @@ navigator.serviceWorker.getRegistrations().then(regs => {
         <button class="lor-btn" onclick="generateLoR()">📄 Generate LoR</button>
         <button class="lor-btn" onclick="generateLoRWithDocs()">📋 Generate LoR + Docs</button>
       </div>
-      <div id="assessmentHierarchy" class="assessment-tree"></div>
+      <div id="detailTabs" style="display:flex; gap:0; border-bottom:2px solid #ddd; margin-bottom:16px;">
+        <button class="tab active" onclick="showDetailTab('personnel', this)" style="padding:10px 16px; border:none; background:none; cursor:pointer; font-weight:500; border-bottom:3px solid #1e3a5f; color:#1e3a5f;">Personnel</button>
+        <button class="tab" onclick="showDetailTab('equipment', this)" style="padding:10px 16px; border:none; background:none; cursor:pointer; font-weight:500; border-bottom:3px solid transparent; color:#666;">Equipment</button>
+      </div>
+      <div id="personnelTab" class="assessment-tree"></div>
+      <div id="equipmentTab" class="assessment-tree" style="display:none;"></div>
     </div>
   </div>
 </div>
