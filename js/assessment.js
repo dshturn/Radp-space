@@ -261,11 +261,17 @@ async function loadAssessmentDetail(id) {
   const a = data[0];
   _currentAssessment = a;
   const validStatuses = new Set(['draft', 'approved', 'pending', 'rejected']);
-  const safeStatus = validStatuses.has(a.status) ? a.status : 'draft';
+  let safeStatus = validStatuses.has(a.status) ? a.status : 'draft';
 
   const user = getUser();
-  let aramcoHtml = '';
 
+  // Check for pending deletion request
+  const delReqRes = await fetch(`${SUPABASE_URL}/rest/v1/assessment_deletion_requests?assessment_id=eq.${id}&status=eq.pending&select=id`,
+    { headers: getHeaders() });
+  const hasPendingDeletion = delReqRes.ok && (await delReqRes.json()).length > 0;
+  if (hasPendingDeletion) safeStatus = 'awaiting_deletion';
+
+  let aramcoHtml = '';
   let syncHtml = '';
 
   // Approval buttons for assessors/admins
@@ -278,11 +284,20 @@ async function loadAssessmentDetail(id) {
       </div>`;
   }
 
+  // Cancel deletion button for contractors with pending deletion
+  let cancelDeletionHtml = '';
+  if (hasPendingDeletion && user.role === 'contractor') {
+    cancelDeletionHtml = `
+      <div style="margin-top:12px;">
+        <button class="btn-warning" onclick="cancelDeletionRequest(${parseInt(id)})">⎌ Cancel Deletion Request</button>
+      </div>`;
+  }
+
   document.getElementById('assessmentInfo').innerHTML = `
     <h2 style="margin-bottom:12px;">${esc(a.field_well)}</h2>
     <div class="detail-info">Type: ${esc(a.type_of_job)}</div>
     <div class="detail-info">Objective: ${esc(a.objective) || '—'}</div>
-    <div class="detail-info" style="margin-bottom:0;">Date: ${esc(a.date_of_issue)} · Status: <span class="badge ${safeStatus}">${safeStatus}</span></div>${aramcoHtml}${syncHtml}${approvalHtml}`;
+    <div class="detail-info" style="margin-bottom:0;">Date: ${esc(a.date_of_issue)} · Status: <span class="badge ${safeStatus}">${safeStatus}</span></div>${aramcoHtml}${syncHtml}${approvalHtml}${cancelDeletionHtml}`;
   loadSelectedEquipment(id);
   loadSelectedPersonnel(id);
 }
