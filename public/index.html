@@ -685,20 +685,6 @@ window.SUPABASE_CONFIG = {
   url: 'https://fslleuedqlxpjnerruzt.supabase.co',
   key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzbGxldWVkcWx4cGpuZXJydXp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5OTMxMTksImV4cCI6MjA5MDU2OTExOX0.H1narO5BF5uF2KwlKtKvioz3mun2ecxb1Lg_xVDLdt4'
 };
-
-// Local development bypass: create test session
-if (window.location.hostname === 'localhost') {
-  const testToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzbGxldWVkcWx4cGpuZXJydXp0Iiwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJpc3N1ZWRfYXQiOjE3NzQ5OTMxMTksInVzZXJfaWQiOiJ0ZXN0LXVzZXItaWQiLCJleHAiOjIwOTA1NjkxMTl9.test';
-  const testUser = {
-    id: 'test-user-id',
-    email: 'test@radp.local',
-    role: 'admin',
-    company: 'Test Contractor',
-    service_line: 'slickline'
-  };
-  localStorage.setItem('radp_token', testToken);
-  localStorage.setItem('radp_user', JSON.stringify(testUser));
-}
 </script>
 
 <!-- Supabase Client for Realtime -->
