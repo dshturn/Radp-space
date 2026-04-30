@@ -849,23 +849,27 @@ async function deleteAssessment(id) {
     return;
   }
 
-  // Notify all admins of the deletion request
-  const admins = await apiFetch(`${SUPABASE_URL}/rest/v1/user_profiles?role=eq.admin&select=id`, { headers: getHeaders() });
-  if (admins && admins.length > 0) {
-    const notifPromises = admins.map(admin =>
-      fetch(`${SUPABASE_URL}/rest/v1/notifications`, {
-        method: 'POST',
-        headers: { ...getHeaders(), Prefer: 'return=minimal' },
-        body: JSON.stringify({
-          contractor_id: admin.id,
-          entity_type: 'assessment_deletion_request',
-          entity_id: id,
-          entity_label: `Assessment deletion requested (ID: ${id})`,
-          read: false
-        })
-      })
-    );
-    await Promise.all(notifPromises).catch(() => {});
+  // Notify all admins of the deletion request (best effort, doesn't block deletion)
+  try {
+    const admins = await apiFetch(`${SUPABASE_URL}/rest/v1/user_profiles?role=eq.admin&select=id`, { headers: getHeaders() });
+    if (admins && admins.length > 0) {
+      admins.forEach(admin => {
+        // Fire-and-forget notification - don't wait for result
+        fetch(`${SUPABASE_URL}/rest/v1/notifications`, {
+          method: 'POST',
+          headers: { ...getHeaders(), Prefer: 'return=minimal' },
+          body: JSON.stringify({
+            contractor_id: admin.id,
+            entity_type: 'assessment_deletion_request',
+            entity_id: id,
+            entity_label: `Assessment deletion requested (ID: ${id})`,
+            read: false
+          })
+        }).catch(err => console.warn('Notification failed (non-critical):', err));
+      });
+    }
+  } catch (err) {
+    console.warn('Could not send admin notifications:', err);
   }
 
   logAudit('assessment', id, 'deletion_requested', `Deletion request created by ${u.email}`);
