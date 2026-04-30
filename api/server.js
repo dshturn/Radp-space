@@ -36,7 +36,7 @@ app.get('/test-db', async (req, res) => {
     const response = await axios.get(`${SUPABASE_URL}/rest/v1/assessments?limit=1`, {
       headers: {
         apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        Authorization: req.headers.authorization || `Bearer ${SUPABASE_ANON_KEY}`,
       },
     });
     res.json({
@@ -82,7 +82,7 @@ app.get('/api', async (req, res) => {
     const response = await axios.get(url, {
       headers: {
         apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        Authorization: req.headers.authorization || `Bearer ${SUPABASE_ANON_KEY}`,
       },
     });
     res.json(response.data);
@@ -110,7 +110,7 @@ app.get('/api/*', async (req, res) => {
     const response = await axios.get(url, {
       headers: {
         apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        Authorization: req.headers.authorization || `Bearer ${SUPABASE_ANON_KEY}`,
       },
     });
     res.json(response.data);
@@ -153,7 +153,7 @@ app.post('/api', async (req, res) => {
     const response = await axios.post(url, req.body, {
       headers: {
         apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        Authorization: req.headers.authorization || `Bearer ${SUPABASE_ANON_KEY}`,
         'Content-Type': 'application/json',
       },
     });
@@ -182,7 +182,7 @@ app.post('/api/*', async (req, res) => {
     const response = await axios.post(url, req.body, {
       headers: {
         apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        Authorization: req.headers.authorization || `Bearer ${SUPABASE_ANON_KEY}`,
         'Content-Type': 'application/json',
       },
     });
