@@ -472,7 +472,7 @@ async function logNotificationEvent(eventType, entityType, entityId, metadata = 
   setTimeout(() => _eventCache.delete(cacheKey), 2000);
 
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/notification_events`, {
+    const res = await originalFetch(`${SUPABASE_URL}/rest/v1/notification_events`, {
       method: 'POST',
       headers: { ...getHeaders() },
       body: JSON.stringify({
