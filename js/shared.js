@@ -16,12 +16,9 @@ const getHeaders = () => {
   return { apikey: SUPABASE_KEY, Authorization: token ? `Bearer ${token}` : '', 'Content-Type': 'application/json' };
 };
 
-// Helper to route Supabase API calls through proxy on localhost
+// Helper to route Supabase API calls through proxy
 function getApiUrl(endpoint) {
-  if (window.location.hostname === 'localhost') {
-    return `http://localhost:5000/api?endpoint=${encodeURIComponent(endpoint)}`;
-  }
-  return `${SUPABASE_URL}${endpoint}`;
+  return `/api?endpoint=${encodeURIComponent(endpoint)}`;
 }
 
 // Wrapper fetch that routes Supabase calls through proxy on localhost
