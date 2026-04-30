@@ -11,7 +11,7 @@ function auditInit() {
 }
 
 async function loadUsers() {
-  let endpoint = `/api/user_profiles?select=*&order=status.asc,created_at.desc`;
+  let endpoint = `/rest/v1/user_profiles?select=*&order=status.asc,created_at.desc`;
   const roleFilter = document.getElementById('usersRoleFilter')?.value;
   if (roleFilter) endpoint += `&role=eq.${encodeURIComponent(roleFilter)}`;
 
@@ -111,7 +111,7 @@ async function saveEditUser() {
   const role        = document.getElementById('editRole')?.value || 'contractor';
   if (!full_name || !email) { showToast('Name and email are required', 'warn'); return; }
 
-  const res = await fetch(getApiUrl(`/api/user_profiles?id=eq.${id}`), {
+  const res = await fetch(getApiUrl(`/rest/v1/user_profiles?id=eq.${id}`), {
     method: 'PATCH',
     headers: { ...getHeaders(), Prefer: 'return=minimal' },
     body: JSON.stringify({ full_name, email, company, service_line, role })
@@ -122,7 +122,7 @@ async function saveEditUser() {
 }
 
 async function updateStatus(id, status) {
-  await fetch(getApiUrl(`/api/user_profiles?id=eq.${id}`), {
+  await fetch(getApiUrl(`/rest/v1/user_profiles?id=eq.${id}`), {
     method: 'PATCH',
     headers: { ...getHeaders(), Prefer: 'return=minimal' },
     body: JSON.stringify({ status })
@@ -133,7 +133,7 @@ async function updateStatus(id, status) {
 
 async function deleteUser(id) {
   if (!await showConfirm('Delete this user?')) return;
-  const _delRes = await fetch(getApiUrl(`/api/user_profiles?id=eq.${id}`), {
+  const _delRes = await fetch(getApiUrl(`/rest/v1/user_profiles?id=eq.${id}`), {
     method: 'DELETE',
     headers: { ...getHeaders(), Prefer: 'return=minimal' }
   });
@@ -178,7 +178,7 @@ async function _renderAuditLog() {
   let userMap = {};
   if (actorIds.length > 0) {
     const h = getHeaders();
-    const endpoint = `/api/user_profiles?id=in.(${actorIds.join(',')})&select=id,full_name,service_line`;
+    const endpoint = `/rest/v1/user_profiles?id=in.(${actorIds.join(',')})&select=id,full_name,service_line`;
     const url = getApiUrl(endpoint);
     const users = await apiFetch(url, { headers: h }) || [];
     userMap = Object.fromEntries(users.map(u => [u.id, u]));
