@@ -164,6 +164,140 @@ app.get('/api/*', async (req, res) => {
   }
 });
 
+// ── Proxy: DELETE request to Supabase ──
+app.delete('/api', async (req, res) => {
+  try {
+    if (!req.query.endpoint) {
+      console.error('[API] Missing endpoint parameter');
+      return res.status(400).json({ error: 'Missing endpoint parameter' });
+    }
+
+    let fullEndpoint = req.query.endpoint;
+    console.log('[API] DELETE request:', fullEndpoint);
+
+    // Split endpoint into path and query parts
+    const [path, ...queryParts] = fullEndpoint.split('?');
+    const endpointQuery = queryParts.length > 0 ? '?' + queryParts.join('?') : '';
+
+    // Get other query parameters
+    const { endpoint, ...otherParams } = req.query;
+    const otherQuery = new URLSearchParams(otherParams).toString();
+    const finalQuery = endpointQuery + (otherQuery ? (endpointQuery ? '&' : '?') + otherQuery : '');
+
+    // Determine full URL
+    let url;
+    if (path.startsWith('/auth/') || path.startsWith('/storage/') || path.startsWith('/functions/')) {
+      url = `${SUPABASE_URL}${path}${finalQuery}`;
+    } else if (path.startsWith('/rest/v1/')) {
+      url = `${SUPABASE_URL}${path}${finalQuery}`;
+    } else {
+      url = `${SUPABASE_URL}/rest/v1/${path}${finalQuery}`;
+    }
+
+    console.log('[API] DELETE Final URL:', url);
+    const response = await axios.delete(url, {
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: req.headers.authorization || `Bearer ${SUPABASE_ANON_KEY}`,
+        Prefer: req.headers.prefer || '',
+      },
+    });
+    res.status(response.status).json(response.data || {});
+  } catch (err) {
+    console.error('[API] DELETE error:', {
+      message: err.message,
+      status: err.response?.status,
+      data: err.response?.data,
+      url: err.config?.url
+    });
+    res.status(err.response?.status || 500).json({ error: err.message, details: err.response?.data });
+  }
+});
+
+app.delete('/api/*', async (req, res) => {
+  try {
+    let path = req.params[0];
+    let query = new URLSearchParams(req.query).toString();
+
+    if (req.query.endpoint) {
+      path = req.query.endpoint;
+      const { endpoint, ...otherParams } = req.query;
+      query = new URLSearchParams(otherParams).toString();
+    }
+
+    const url = `${SUPABASE_URL}/rest/v1/${path}${query ? '?' + query : ''}`;
+    console.log('[API] DELETE URL:', url);
+
+    const response = await axios.delete(url, {
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: req.headers.authorization || `Bearer ${SUPABASE_ANON_KEY}`,
+        Prefer: req.headers.prefer || '',
+      },
+    });
+    res.status(response.status).json(response.data || {});
+  } catch (err) {
+    console.error('[API] DELETE error:', {
+      message: err.message,
+      status: err.response?.status,
+      data: err.response?.data,
+      url: err.config?.url
+    });
+    res.status(err.response?.status || 500).json({ error: err.message, details: err.response?.data });
+  }
+});
+
+// ── Proxy: POST request to Supabase (for mutations other than assessment_personnel) ──
+app.post('/api', async (req, res) => {
+  try {
+    if (!req.query.endpoint) {
+      console.error('[API] Missing endpoint parameter');
+      return res.status(400).json({ error: 'Missing endpoint parameter' });
+    }
+
+    let fullEndpoint = req.query.endpoint;
+    console.log('[API] POST request:', fullEndpoint);
+
+    // Split endpoint into path and query parts
+    const [path, ...queryParts] = fullEndpoint.split('?');
+    const endpointQuery = queryParts.length > 0 ? '?' + queryParts.join('?') : '';
+
+    // Get other query parameters
+    const { endpoint, ...otherParams } = req.query;
+    const otherQuery = new URLSearchParams(otherParams).toString();
+    const finalQuery = endpointQuery + (otherQuery ? (endpointQuery ? '&' : '?') + otherQuery : '');
+
+    // Determine full URL
+    let url;
+    if (path.startsWith('/auth/') || path.startsWith('/storage/') || path.startsWith('/functions/')) {
+      url = `${SUPABASE_URL}${path}${finalQuery}`;
+    } else if (path.startsWith('/rest/v1/')) {
+      url = `${SUPABASE_URL}${path}${finalQuery}`;
+    } else {
+      url = `${SUPABASE_URL}/rest/v1/${path}${finalQuery}`;
+    }
+
+    console.log('[API] POST Final URL:', url);
+    const response = await axios.post(url, req.body, {
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: req.headers.authorization || `Bearer ${SUPABASE_ANON_KEY}`,
+        Prefer: req.headers.prefer || '',
+        'Content-Type': 'application/json',
+      },
+    });
+    res.status(response.status).json(response.data || {});
+  } catch (err) {
+    console.error('[API] POST error:', {
+      message: err.message,
+      status: err.response?.status,
+      data: err.response?.data,
+      url: err.config?.url
+    });
+    res.status(err.response?.status || 500).json({ error: err.message, details: err.response?.data });
+  }
+});
+
 // ── LoR PDF Generation (must be before /api catch-all) ──
 app.post('/api/generate-lor-pdf', async (req, res) => {
   let browser;
