@@ -152,7 +152,7 @@ app.get('/api/*', async (req, res) => {
       res.json(response.data);
     }
   } catch (err) {
-    console.error('Proxy error:', err.message);
+    console.error('[API] GET error:', err.message, err.response?.status, err.response?.data);
     res.status(err.response?.status || 500).json({ error: err.message });
   }
 });
