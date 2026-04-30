@@ -234,22 +234,8 @@ async function loadAssessmentDetail(id) {
   const validStatuses = new Set(['draft', 'approved', 'pending', 'rejected']);
   const safeStatus = validStatuses.has(a.status) ? a.status : 'draft';
 
-  // Load Aramco contract info if user is a contractor
   const user = getUser();
   let aramcoHtml = '';
-  if (user.role === 'contractor') {
-    const contract = await loadSharePointContract(user.company);
-    if (contract) {
-      const renewalText = contract.renewal_date ? `Renewal: ${contract.renewal_date}` : 'Renewal: N/A';
-      aramcoHtml = `
-        <div style="margin-top:16px;padding:12px;border-radius:6px;background:var(--bg-2);border-left:4px solid var(--accent);">
-          <h3 style="margin:0 0 8px 0;font-size:14px;font-weight:600;">🏢 Aramco Contract Info</h3>
-          <div class="detail-info">${esc(contract.contract_terms) || 'No contract details available'}</div>
-          <div class="detail-info">${esc(renewalText)}</div>
-          ${contract.sharepoint_id ? `<div class="detail-info"><a href="https://sharek.aramco.com.sa/orgs/30002972/30037952/" target="_blank" rel="noopener noreferrer">📄 View in SharePoint</a></div>` : ''}
-        </div>`;
-    }
-  }
 
   // Show sync status if available
   let syncHtml = '';
