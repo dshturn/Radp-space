@@ -463,9 +463,9 @@ async function logNotificationEvent(eventType, entityType, entityId, metadata = 
   const u = getUser();
   if (!u?.id) return;
   try {
-    await fetch(`${SUPABASE_URL}/rest/v1/notification_events`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/notification_events`, {
       method: 'POST',
-      headers: { ...getHeaders(), Prefer: 'return=minimal' },
+      headers: { ...getHeaders() },
       body: JSON.stringify({
         event_type: eventType,
         entity_type: entityType,
@@ -474,8 +474,12 @@ async function logNotificationEvent(eventType, entityType, entityId, metadata = 
         metadata
       })
     });
+    if (!res.ok) {
+      const err = await res.text().catch(() => '');
+      console.warn('Event logging failed:', res.status, err);
+    }
   } catch (err) {
-    console.warn('Event logging failed:', err);
+    console.warn('Event logging error:', err);
   }
 }
 
