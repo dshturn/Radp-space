@@ -1,9 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
-const puppeteer = require('puppeteer');
-const fs = require('fs').promises;
-const path = require('path');
+const pdf = require('html-pdf');
 require('dotenv').config();
 
 const app = express();
