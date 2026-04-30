@@ -174,7 +174,7 @@ app.post('/api', async (req, res) => {
 
     // Determine full URL based on path format
     let url;
-    if (path.startsWith('/auth/') || path.startsWith('/storage/')) {
+    if (path.startsWith('/auth/') || path.startsWith('/storage/') || path.startsWith('/functions/')) {
       url = `${SUPABASE_URL}${path}${finalQuery}`;
     } else if (path.startsWith('/rest/v1/')) {
       url = `${SUPABASE_URL}${path}${finalQuery}`;
