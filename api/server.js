@@ -485,8 +485,7 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
         const docs = docsByPersonnel[per.id] || [];
         lorDoc.text(`  ${per.full_name} (${per.position})`, { indent: 20 });
         for (const d of docs) {
-          const destPage = actualPageMap[d.id] || docPageMap[d.id] || 1;
-          const y = lorDoc.y;
+          const destPage = docPageMap[d.id] || 1;
           lorDoc.fillColor('#0066cc').text(`    ${d.doc_type_name}`, { indent: 30, link: { page: destPage - 1, y: 0 } });
           lorDoc.fillColor('#000000');
         }
