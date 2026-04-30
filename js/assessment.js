@@ -899,7 +899,18 @@ async function deleteAssessment(id) {
   if (!confirm(confirmMsg)) return;
 
   if (isAdmin) {
-    // Admins delete directly
+    // Admins delete directly (delete child records first due to FK constraints)
+    // Delete assessment_equipment and assessment_personnel first
+    await fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment?assessment_id=eq.${id}`, {
+      method: 'DELETE',
+      headers: { ...getHeaders(), Prefer: 'return=minimal' }
+    });
+    await fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?assessment_id=eq.${id}`, {
+      method: 'DELETE',
+      headers: { ...getHeaders(), Prefer: 'return=minimal' }
+    });
+
+    // Now delete the assessment itself
     const res = await fetch(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${id}`, {
       method: 'DELETE',
       headers: { ...getHeaders(), Prefer: 'return=minimal' }
