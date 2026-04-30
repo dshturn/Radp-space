@@ -84,7 +84,7 @@ function showPage(name, replace = false) {
   nav.style.display = NAV_PAGES.has(name) ? 'flex' : 'none';
   if (NAV_PAGES.has(name)) {
     document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
-    const navMap = { contractor: 'navContractor', assessment: 'navAssessment', operations: 'navOperations', admin: 'navAdmin', audit: 'navAudit' };
+    const navMap = { contractor: 'navContractor', assessment: 'navAssessment', operations: 'navOperations', admin: 'navUsers', audit: 'navAudit' };
     document.getElementById(navMap[name])?.classList.add('active');
     const u = getUser();
     document.getElementById('navUser').textContent = u.email || '';
