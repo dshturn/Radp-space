@@ -84,6 +84,7 @@ app.get('/api', async (req, res) => {
       url = `${SUPABASE_URL}/rest/v1/${path}${finalQuery}`;
     }
 
+    console.log('[API] Final URL:', url);
     const response = await axios.get(url, {
       headers: {
         apikey: SUPABASE_ANON_KEY,
