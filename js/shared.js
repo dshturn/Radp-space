@@ -565,7 +565,9 @@ async function loadNotifications() {
 
 async function markNotifRead(id, el) {
   el?.classList.remove('unread');
-  await fetch(`${SUPABASE_URL}/rest/v1/notifications?id=eq.${id}`, {
+  const u = getUser();
+  // Use contractor_id + id to ensure row visibility under RLS
+  await fetch(`${SUPABASE_URL}/rest/v1/notifications?contractor_id=eq.${u.id}&id=eq.${id}`, {
     method: 'PATCH', headers: { ...getHeaders(), Prefer: 'return=minimal' },
     body: JSON.stringify({ read: true })
   });
