@@ -638,5 +638,5 @@ async function generateLoR() {
 }
 // Page initialization
 async function assessmentInit() {
-  await loadAssessment();
+  await loadAssessments();
 }
