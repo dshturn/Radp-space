@@ -214,15 +214,10 @@ navigator.serviceWorker.getRegistrations().then(regs => {
         <button class="btn-ghost-sm" onclick="showList()">← Back</button>
       </div>
       <div class="app-card" id="assessmentInfo"></div>
-      <div class="row-between mb-sm" style="margin-top:20px;">
-        <div class="tabs" id="detailTabs" style="margin:0;">
-          <button class="tab active" style="display:none;"></button>
-        </div>
-        <div style="display:flex; gap:8px;">
-          <button class="btn-primary" onclick="openPersonnelSelector()">+ Personnel</button>
-          <button class="btn-primary" onclick="openEquipmentSelector()">+ Equipment</button>
-          <button class="lor-btn" onclick="generateLoR()">📄 Generate LoR</button>
-        </div>
+      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:20px; margin-bottom:12px;">
+        <button class="btn-primary" onclick="openPersonnelSelector()">+ Personnel</button>
+        <button class="btn-primary" onclick="openEquipmentSelector()">+ Equipment</button>
+        <button class="lor-btn" onclick="generateLoR()">📄 Generate LoR</button>
       </div>
       <div id="assessmentHierarchy" class="assessment-tree"></div>
     </div>
