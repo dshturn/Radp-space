@@ -124,7 +124,6 @@ async function loadAssessments() {
   const list = document.getElementById('assessmentList');
   if (!assessments.length) { list.innerHTML = '<div class="empty">No assessments yet. Create your first one.</div>'; return; }
   const validStatuses = new Set(['draft', 'approved', 'pending', 'rejected']);
-  const isAdmin = roleOf(getUser()) === 'admin';
   list.innerHTML = assessments.map(a => {
     const safeStatus = validStatuses.has(a.status) ? a.status : 'draft';
     const isEditable = a.status === 'draft';
