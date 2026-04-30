@@ -660,35 +660,42 @@ async function generateLoR() {
   setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
 }
 
-async function generateLoRWithDocs() {
+async function generateLoRWithDocs(type = 'both') {
   if (!currentAssessmentId) { showToast('No assessment selected', 'error'); return; }
 
-  showToast('Generating PDF...', 'info');
+  const typeLabel = type === 'personnel' ? 'Personnel LoR + Docs' : type === 'equipment' ? 'Equipment LoR + Docs' : 'LoR + Docs';
+  showToast(`Fetching data for ${typeLabel}...`, 'info');
+
   try {
     const apiUrl = typeof window !== 'undefined' && window.location.port === '3001'
       ? 'http://localhost:5000/api/generate-lor-pdf'
       : '/api/generate-lor-pdf';
+
+    showToast(`Generating PDF (this may take a moment)...`, 'info');
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': getHeaders().Authorization
       },
-      body: JSON.stringify({ assessmentId: currentAssessmentId })
+      body: JSON.stringify({ assessmentId: currentAssessmentId, docType: type })
     });
 
     if (!response.ok) {
-      const err = await response.json();
+      const err = await response.json().catch(() => ({}));
       showToast('PDF generation failed: ' + (err.error || response.status), 'error');
       return;
     }
 
+    showToast('Processing documents...', 'info');
     const blob = await response.blob();
+
+    showToast('Finalizing PDF...', 'info');
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     const assessment = window._currentAssessment || { field_well: 'Assessment' };
     link.href = url;
-    link.download = `LoR_${assessment.field_well || 'Assessment'}_${new Date().toISOString().split('T')[0]}.pdf`;
+    link.download = `LoR_${type}_${assessment.field_well || 'Assessment'}_${new Date().toISOString().split('T')[0]}.pdf`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
