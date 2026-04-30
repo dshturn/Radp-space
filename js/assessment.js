@@ -558,27 +558,39 @@ async function generateLoR() {
     docsByPersonnel[d.personnel_id].push(d);
   });
 
-  let persRows = '', pNum = 1;
+  // Group personnel by job role
+  const byRole = {};
   personnel.forEach(p => {
-    const per = p.personnel;
-    const docs = docsByPersonnel[per.id] || [];
-    if (!docs.length) {
-      persRows += `<tr><td>${pNum++}</td><td>${esc(per?.full_name||'—')}</td><td>${esc(String(per?.years_experience||'—'))}</td><td>${esc(per?.position||'—')}</td><td>—</td><td>—</td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td></tr>`;
-    } else {
-      docs.forEach((d, idx) => {
-        const expiry = d.expiry_date || '';
-        if (expiry && expiry !== '—' && expiry !== '-') allExpiries.push(new Date(expiry));
-        persRows += `<tr>`
-          + `<td>${idx === 0 ? pNum++ : ''}</td>`
-          + `<td>${idx === 0 ? esc(per?.full_name||'—') : ''}</td>`
-          + `<td>${idx === 0 ? esc(String(per?.years_experience||'—')) : ''}</td>`
-          + `<td>${idx === 0 ? esc(per?.position||'—') : ''}</td>`
-          + `<td>${esc(d.doc_type_name || '—')}</td>`
-          + `<td style="${getExpiryStyle(expiry)}">${esc(expiry || '—')}</td>`
-          + `<td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td>`
-          + `</tr>`;
-      });
-    }
+    const role = p.personnel?.position || 'Unassigned';
+    if (!byRole[role]) byRole[role] = [];
+    byRole[role].push(p);
+  });
+
+  let persRows = '', pNum = 1;
+  const roles = Object.keys(byRole).sort();
+  roles.forEach(role => {
+    persRows += `<tr><td colspan="11" style="background:#1e3a5f;color:white;font-weight:bold;padding:5px 4px;border:1px solid #bbb;">● ${esc(role)}</td></tr>`;
+    byRole[role].forEach(p => {
+      const per = p.personnel;
+      const docs = docsByPersonnel[per.id] || [];
+      if (!docs.length) {
+        persRows += `<tr><td>${pNum++}</td><td>${esc(per?.full_name||'—')}</td><td>${esc(String(per?.years_experience||'—'))}</td><td>${esc(per?.position||'—')}</td><td>—</td><td>—</td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td></tr>`;
+      } else {
+        docs.forEach((d, idx) => {
+          const expiry = d.expiry_date || '';
+          if (expiry && expiry !== '—' && expiry !== '-') allExpiries.push(new Date(expiry));
+          persRows += `<tr>`
+            + `<td>${idx === 0 ? pNum++ : ''}</td>`
+            + `<td>${idx === 0 ? esc(per?.full_name||'—') : ''}</td>`
+            + `<td>${idx === 0 ? esc(String(per?.years_experience||'—')) : ''}</td>`
+            + `<td>${idx === 0 ? esc(per?.position||'—') : ''}</td>`
+            + `<td>${esc(d.doc_type_name || '—')}</td>`
+            + `<td style="${getExpiryStyle(expiry)}">${esc(expiry || '—')}</td>`
+            + `<td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td>`
+            + `</tr>`;
+        });
+      }
+    });
   });
 
   // ── Render equipment recursively: root → sub → sub-sub, each with its docs ──
