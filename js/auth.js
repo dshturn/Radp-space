@@ -63,8 +63,8 @@ function logout() {
 async function loadRegisterOptions() {
   try {
     const [cRes, sRes] = await Promise.all([
-      fetch((window.location.hostname === 'localhost' ? 'http://localhost:5000' : '') + `/api?endpoint=${encodeURIComponent('/rest/v1/companies?select=name&order=name')}`),
-      fetch((window.location.hostname === 'localhost' ? 'http://localhost:5000' : '') + `/api?endpoint=${encodeURIComponent('/rest/v1/service_lines?select=name&order=name')}`)
+      fetch(`/api?endpoint=${encodeURIComponent('/rest/v1/companies?select=name&order=name')}`),
+      fetch(`/api?endpoint=${encodeURIComponent('/rest/v1/service_lines?select=name&order=name')}`)
     ]);
     if (!cRes.ok || !sRes.ok) throw new Error('Failed to load options');
     const c = await cRes.json();
