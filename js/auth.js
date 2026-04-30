@@ -7,7 +7,9 @@ async function login() {
   msg.className  = 'auth-msg';
 
   const endpoint = '/auth/v1/token?grant_type=password';
-  const url = `/api?endpoint=${encodeURIComponent(endpoint)}`;
+  const url = window.location.hostname === 'localhost'
+    ? `http://localhost:5000/api?endpoint=${encodeURIComponent(endpoint)}`
+    : `/api?endpoint=${encodeURIComponent(endpoint)}`;
 
   const res  = await fetch(url, {
     method: 'POST',
