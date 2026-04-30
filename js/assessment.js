@@ -573,11 +573,9 @@ async function generateLoR() {
           + `<td>${idx === 0 ? esc(per?.full_name||'—') : ''}</td>`
           + `<td>${idx === 0 ? esc(String(per?.years_experience||'—')) : ''}</td>`
           + `<td>${idx === 0 ? esc(per?.position||'—') : ''}</td>`
-          + `<td>${idx === 0 ? esc(per?.national_id||'—') : ''}</td>`
-          + `<td style="${getExpiryStyle(expiry)}">${esc(d.doc_type_name || d.document_name || '—')}</td>`
-          + `<td style="${getExpiryStyle(expiry)}">${esc(d.issue_date || '—')}</td>`
+          + `<td>${esc(d.doc_type_name || '—')}</td>`
           + `<td style="${getExpiryStyle(expiry)}">${esc(expiry || '—')}</td>`
-          + `<td class="ac"></td><td class="ac"></td><td class="ac"></td>`
+          + `<td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td>`
           + `</tr>`;
       });
     }
