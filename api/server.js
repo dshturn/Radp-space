@@ -127,6 +127,7 @@ app.get('/api/*', async (req, res) => {
     }
 
     const url = `${SUPABASE_URL}/rest/v1/${path}${query ? '?' + query : ''}`;
+    console.log('[API] URL:', url);
 
     const response = await axios.get(url, {
       headers: {
