@@ -292,20 +292,50 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
       renderItem(item);
     });
 
-    // Build document pages HTML
+    // Build document pages HTML - fetch and convert documents
     let docPagesHtml = '';
     if (allDocs.length) {
       docPagesHtml = '<div style="page-break-before: always; margin-top: 30px;"><h2>Certificate Documents</h2>';
+
       for (const doc of allDocs) {
-        docPagesHtml += `<div style="margin-bottom: 20px; page-break-inside: avoid;">
-          <p style="font-weight: bold; margin: 5px 0;">[${doc.type.toUpperCase()}] ${esc(doc.ownerName)} — ${esc(doc.docName)}</p>`;
+        docPagesHtml += `<div style="margin-bottom: 20px; page-break-before: always;">
+          <p style="font-weight: bold; font-size: 12px; margin: 5px 0;">[${doc.type.toUpperCase()}] ${esc(doc.ownerName)} — ${esc(doc.docName)}</p>`;
 
         if (doc.fileUrl) {
-          // For images, try to embed them; for PDFs, show a link
-          if (doc.fileUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-            docPagesHtml += `<img src="${doc.fileUrl}" style="max-width: 100%; max-height: 600px; border: 1px solid #ccc; page-break-inside: avoid;" />`;
-          } else {
-            docPagesHtml += `<p><a href="${doc.fileUrl}" style="color: #0066cc; text-decoration: underline;">View Document: ${esc(doc.fileUrl.split('/').pop())}</a></p>`;
+          try {
+            // Download the document
+            const docResponse = await axios.get(doc.fileUrl, { responseType: 'arraybuffer', timeout: 10000 });
+            const docBuffer = Buffer.from(docResponse.data);
+
+            if (doc.fileUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+              // For images, convert to base64 and embed
+              const base64 = docBuffer.toString('base64');
+              const mimeType = doc.fileUrl.match(/\.png$/i) ? 'image/png' : 'image/jpeg';
+              docPagesHtml += `<img src="data:${mimeType};base64,${base64}" style="max-width: 100%; max-height: 750px; border: 1px solid #ccc; page-break-inside: avoid;" />`;
+            } else if (doc.fileUrl.match(/\.pdf$/i)) {
+              // For PDFs, try to convert to image (requires ImageMagick/Ghostscript)
+              try {
+                const tmpDir = path.join(os.tmpdir(), `pdf_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+                fs.mkdirSync(tmpDir, { recursive: true });
+                const pdfPath = path.join(tmpDir, 'doc.pdf');
+                fs.writeFileSync(pdfPath, docBuffer);
+
+                const pdfImage = new PDFImage(pdfPath);
+                const imagePath = await pdfImage.convertPage(0); // First page only
+                const imageBuffer = fs.readFileSync(imagePath);
+                const base64 = imageBuffer.toString('base64');
+                docPagesHtml += `<img src="data:image/png;base64,${base64}" style="max-width: 100%; max-height: 750px; border: 1px solid #ccc; page-break-inside: avoid;" />`;
+
+                // Cleanup
+                fs.rmSync(tmpDir, { recursive: true, force: true });
+              } catch (pdfErr) {
+                console.warn(`Failed to convert PDF ${doc.fileUrl}:`, pdfErr.message);
+                docPagesHtml += `<p style="color: #999; font-size: 10px;">PDF document (cannot convert to image)</p>`;
+              }
+            }
+          } catch (fetchErr) {
+            console.warn(`Failed to fetch document ${doc.fileUrl}:`, fetchErr.message);
+            docPagesHtml += `<p style="color: #999; font-size: 10px;">Failed to load document</p>`;
           }
         }
         docPagesHtml += '</div>';
