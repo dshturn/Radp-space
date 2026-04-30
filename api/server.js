@@ -313,12 +313,15 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
     });
 
     const lorPdfBuffer = await lorPdfPromise;
+    console.log(`[PDF] LoR PDF generated (${lorPdfBuffer.length} bytes), loading into pdf-lib...`);
 
     // Load LoR PDF into pdf-lib
     const mergedPdf = await PDFDocument.load(lorPdfBuffer);
+    console.log(`[PDF] Processing ${allDocs.length} documents...`);
 
     // Add document pages (images and PDFs)
     for (const doc of allDocs) {
+      console.log(`[PDF] Processing: ${doc.type} - ${doc.ownerName} - ${doc.docName}`);
       if (!doc.fileUrl) continue;
 
       try {
