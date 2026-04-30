@@ -130,13 +130,23 @@ app.get('/api/*', async (req, res) => {
         Authorization: req.headers.authorization || `Bearer ${SUPABASE_ANON_KEY}`,
         Prefer: req.headers.prefer || '',
       },
+      responseType: path.startsWith('/storage/') ? 'arraybuffer' : 'json',
     });
     // Forward critical response headers (check both cases)
     const contentRange = response.headers['content-range'] || response.headers['Content-Range'];
     if (contentRange) {
       res.set('Content-Range', contentRange);
     }
-    res.json(response.data);
+    // Forward Content-Type for files
+    if (response.headers['content-type']) {
+      res.set('Content-Type', response.headers['content-type']);
+    }
+    // Send binary data as-is for storage, JSON for REST
+    if (path.startsWith('/storage/')) {
+      res.send(response.data);
+    } else {
+      res.json(response.data);
+    }
   } catch (err) {
     console.error('Proxy error:', err.message);
     res.status(err.response?.status || 500).json({ error: err.message });
