@@ -74,17 +74,9 @@ function showDetail(id) {
   document.querySelectorAll('#assessment-page .as-view').forEach(v => v.classList.remove('active'));
   const detailView = document.getElementById('detailView');
   if (detailView) detailView.classList.add('active');
-  document.querySelectorAll('#detailTabs .tab').forEach(t => {
-    t.classList.remove('active');
-    t.style.background = '#fff';
-    t.style.color = '#666';
-  });
+  document.querySelectorAll('#detailTabs .tab').forEach(t => t.classList.remove('active'));
   const firstTab = document.querySelectorAll('#detailTabs .tab')[0];
-  if (firstTab) {
-    firstTab.classList.add('active');
-    firstTab.style.background = '#f5f5f5';
-    firstTab.style.color = '#333';
-  }
+  if (firstTab) firstTab.classList.add('active');
   const persTab = document.getElementById('personnelTab');
   if (persTab) persTab.style.display = 'block';
   const equipTab = document.getElementById('equipmentTab');
