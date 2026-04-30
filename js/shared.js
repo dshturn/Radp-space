@@ -459,9 +459,18 @@ function closeDocViewer() {
 })();
 
 // ─── Notification Events ───
+const _eventCache = new Set();
+
 async function logNotificationEvent(eventType, entityType, entityId, metadata = {}) {
   const u = getUser();
   if (!u?.id) return;
+
+  // Deduplicate: don't send the same event twice within a 2-second window
+  const cacheKey = `${eventType}:${entityType}:${entityId}`;
+  if (_eventCache.has(cacheKey)) return;
+  _eventCache.add(cacheKey);
+  setTimeout(() => _eventCache.delete(cacheKey), 2000);
+
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/notification_events`, {
       method: 'POST',
@@ -474,13 +483,16 @@ async function logNotificationEvent(eventType, entityType, entityId, metadata = 
         metadata
       })
     });
-    // 409 Conflict = notification already exists (duplicate) - that's OK
-    if (!res.ok && res.status !== 409) {
-      const err = await res.text().catch(() => '');
-      console.warn('Event logging failed:', res.status, err);
+    if (res.ok) return;
+
+    const errText = await res.text().catch(() => '');
+    if (res.status === 409) {
+      console.warn(`Event already logged: ${cacheKey}`, errText);
+    } else {
+      console.warn(`Event logging failed (${res.status}):`, cacheKey, errText);
     }
   } catch (err) {
-    console.warn('Event logging error:', err);
+    console.warn('Event logging error:', cacheKey, err);
   }
 }
 
