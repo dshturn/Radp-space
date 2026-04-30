@@ -168,8 +168,6 @@ input[type="file"] { display: none; }
 .welcome p { font-size: 13px; color: var(--text-2); }
 .ct-section { display: none; }
 .ct-section.active { display: block; }
-.admin-section { display: none; }
-.admin-section.active { display: block; }
 .doc-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 4px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 8px; transition: background 0.15s ease; border-radius: 6px; margin-top: 4px; }
 .doc-row:hover { background: rgba(217,119,6,0.05); }
 .doc-row:last-child { border-bottom: none; }
