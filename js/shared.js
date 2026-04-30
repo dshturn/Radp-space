@@ -521,8 +521,11 @@ document.addEventListener('click', e => {
 async function loadNotifUnreadCount() {
   const u = getUser();
   if (!u?.id) return;
-  const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/notifications?contractor_id=eq.${u.id}&read=eq.false&select=id`,
+  const endpoint = `/rest/v1/notifications?contractor_id=eq.${u.id}&read=eq.false&select=id`;
+  const url = window.location.hostname === 'localhost'
+    ? `http://localhost:5000/api?endpoint=${encodeURIComponent(endpoint)}`
+    : `${SUPABASE_URL}${endpoint}`;
+  const res = await fetch(url,
     { headers: { ...getHeaders(), Prefer: 'count=exact' } }
   );
   if (!res.ok) return;
