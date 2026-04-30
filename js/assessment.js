@@ -928,6 +928,13 @@ async function deleteAssessment(id) {
     showToast('Assessment deleted.', 'success');
   } else {
     // Contractors request approval
+    // Fetch assessment to get its contractor_id
+    const assessRes = await fetch(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${id}&select=contractor_id`, {
+      headers: getHeaders()
+    });
+    const assessments = assessRes.ok ? await assessRes.json() : [];
+    const assessment = assessments[0];
+
     const res = await fetch(`${SUPABASE_URL}/rest/v1/assessment_deletion_requests`, {
       method: 'POST',
       headers: { ...getHeaders(), Prefer: 'return=minimal' },
@@ -939,7 +946,7 @@ async function deleteAssessment(id) {
       showToast(`Failed to request deletion (${res.status})`, 'error');
       return;
     }
-    await logNotificationEvent('deletion_requested', 'assessment', id, { contractor_email: u.email });
+    await logNotificationEvent('deletion_requested', 'assessment', id, { contractor_id: assessment?.contractor_id, contractor_email: u.email });
     logAudit('assessment', id, 'deletion_requested', `Deletion request created by ${u.email}`);
     showToast('Deletion request submitted. Awaiting admin approval.', 'success');
   }
