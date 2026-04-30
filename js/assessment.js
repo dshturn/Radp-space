@@ -659,8 +659,40 @@ async function generateLoR() {
 }
 
 async function generateLoRWithDocs() {
-  // TODO: Implement LoR + Docs generation
-  showToast('Feature coming soon', 'info');
+  if (!currentAssessmentId) { showToast('No assessment selected', 'error'); return; }
+
+  showToast('Generating PDF...', 'info');
+  try {
+    const response = await fetch('/api/generate-lor-pdf', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': getHeaders().Authorization
+      },
+      body: JSON.stringify({ assessmentId: currentAssessmentId })
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      showToast('PDF generation failed: ' + (err.error || response.status), 'error');
+      return;
+    }
+
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const assessment = window._currentAssessment || { field_well: 'Assessment' };
+    link.href = url;
+    link.download = `LoR_${assessment.field_well || 'Assessment'}_${new Date().toISOString().split('T')[0]}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast('PDF generated successfully', 'success');
+  } catch (err) {
+    console.error('PDF generation error:', err);
+    showToast('Error generating PDF: ' + err.message, 'error');
+  }
 }
 
 // Page initialization
