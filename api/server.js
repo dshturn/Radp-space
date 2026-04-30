@@ -541,57 +541,8 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
       }
     }
 
-    // Add internal link annotations to LoR pages pointing to documents
-    console.log('[PDF] Adding internal links to LoR table...');
-    const { PDFName, PDFArray, PDFNumber, PDFDict } = require('pdf-lib');
-
-    const lorPagesArray = mergedPdf.getPages().slice(0, lorPageCount);
-
-    // For each document with an actual page, create a GoTo destination and link
-    for (const doc of allDocs) {
-      const destPageIndex = actualPageMap[doc.id] - 1; // Convert to 0-based index
-      if (destPageIndex >= 0 && destPageIndex < mergedPdf.getPageCount()) {
-        const destPage = mergedPdf.getPage(destPageIndex);
-
-        // Create a GoTo destination pointing to the document page
-        const destination = PDFArray.of(
-          destPage.node,
-          PDFName.of('XYZ'),
-          PDFNumber.of(0),
-          PDFNumber.of(destPage.getHeight()),
-          PDFNumber.of(0)
-        );
-
-        // Add invisible link rectangles to all LoR pages with GoTo actions
-        for (let i = 0; i < lorPagesArray.length; i++) {
-          const lorPage = lorPagesArray[i];
-
-          // Create link annotation with GoTo action
-          const linkDict = PDFDict.from({
-            Type: PDFName.of('Annot'),
-            Subtype: PDFName.of('Link'),
-            Rect: PDFArray.of(
-              PDFNumber.of(0),
-              PDFNumber.of(0),
-              PDFNumber.of(lorPage.getWidth()),
-              PDFNumber.of(lorPage.getHeight())
-            ),
-            Border: PDFArray.of(PDFNumber.of(0), PDFNumber.of(0), PDFNumber.of(0)),
-            A: PDFDict.from({
-              S: PDFName.of('GoTo'),
-              D: destination
-            })
-          });
-
-          // Add the annotation to the page
-          if (!lorPage.node.Annots()) {
-            lorPage.node.set(PDFName.of('Annots'), PDFArray.of());
-          }
-          lorPage.node.Annots().asArray().push(linkDict);
-          console.log(`[PDF] Added link on LoR page ${i + 1} to doc page ${destPageIndex + 1}`);
-        }
-      }
-    }
+    // Add page numbers to document references for navigation
+    console.log('[PDF] Document pages: ' + JSON.stringify(actualPageMap));
 
     // Save merged PDF and send
     console.log('[PDF] Saving merged PDF...');
