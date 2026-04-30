@@ -129,32 +129,6 @@ async function loadAssessments() {
   console.log('[ASSESSMENTS] Pending deletion requests:', deletionRequests, 'IDs:', Array.from(pendingDeletionIds));
 
   const totalCount = parseInt(res.headers.get('Content-Range')?.split('/')[1] || '0', 10);
-
-  // Show deletion requests for admins at the top
-  if (isAdmin && deletionRequests && deletionRequests.length > 0) {
-    const delSection = document.getElementById('assessmentDeletionRequests');
-    if (delSection) {
-      delSection.innerHTML = `
-        <div style="margin-bottom:24px;">
-          <h3 style="margin-bottom:12px;">Pending Deletion Requests (${deletionRequests.length})</h3>
-          ${deletionRequests.map(req => `
-            <div class="admin-card" style="flex-wrap:wrap;">
-              <div class="admin-info">
-                <div class="name">Assessment ID: ${parseInt(req.assessment_id)}</div>
-                <div class="detail" style="font-size:12px;">Requested by: ${esc(req.requested_by || 'Unknown')}</div>
-                <div class="detail" style="font-size:11px;color:var(--text-4);">Requested: ${new Date(req.requested_at).toLocaleDateString()}</div>
-              </div>
-              <div class="admin-actions" style="gap:6px;">
-                <button class="btn-success btn-sm" onclick="approveDeletion(${parseInt(req.id)}, ${parseInt(req.assessment_id)})">✓ Approve</button>
-                <button class="btn-danger btn-sm" onclick="rejectDeletion(${parseInt(req.id)}, ${parseInt(req.assessment_id)}, 'Rejected by admin')">✕ Reject</button>
-                <button class="btn-warning btn-sm" onclick="adminCancelDeletion(${parseInt(req.id)}, ${parseInt(req.assessment_id)})">⎌ Cancel</button>
-              </div>
-            </div>
-          `).join('')}
-        </div>`;
-    }
-  }
-
   const list = document.getElementById('assessmentList');
   if (!assessments.length) { list.innerHTML = '<div class="empty">No assessments yet. Create your first one.</div>'; return; }
   const validStatuses = new Set(['draft', 'approved', 'pending', 'rejected', 'awaiting_deletion']);
