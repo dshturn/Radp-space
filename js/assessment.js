@@ -857,7 +857,7 @@ async function deleteAssessment(id) {
         // Fire-and-forget notification - don't wait for result
         fetch(`${SUPABASE_URL}/rest/v1/notifications`, {
           method: 'POST',
-          headers: { ...getHeaders(), Prefer: 'return=minimal' },
+          headers: { ...getHeaders() },
           body: JSON.stringify({
             contractor_id: admin.id,
             entity_type: 'assessment_deletion_request',
@@ -865,7 +865,13 @@ async function deleteAssessment(id) {
             entity_label: `Assessment deletion requested (ID: ${id})`,
             read: false
           })
-        }).catch(err => console.warn('Notification failed (non-critical):', err));
+        })
+          .then(res => {
+            if (!res.ok) {
+              res.text().then(err => console.warn('Notification error (non-critical):', res.status, err));
+            }
+          })
+          .catch(err => console.warn('Notification failed (non-critical):', err));
       });
     }
   } catch (err) {
