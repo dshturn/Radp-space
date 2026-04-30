@@ -403,11 +403,13 @@ async function addSelectedSitePersonnel() {
 }
 
 async function removeSitePersonnel(rowId, fromSelector = false) {
+  const btn = document.querySelector(`button[onclick*="removeSitePersonnel(${rowId}"]`);
+  const label = btn?.closest('.ops-item-row,.item-row')?.querySelector('.item-name')?.textContent?.trim() || `Personnel ${rowId}`;
   const r = await fetch(`${SUPABASE_URL}/rest/v1/operation_site_personnel?id=eq.${rowId}`, {
     method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' }
   });
   if (!r.ok) { showToast('Failed to remove', 'error'); return; }
-  logAudit('site', currentSiteId, 'removed_personnel', `Personnel entry ${rowId}`);
+  logAudit('site', currentSiteId, 'removed_personnel', label);
   if (fromSelector) { loadSiteDetail(currentSiteId); openSitePersonnelSelector(); }
   else loadSiteDetail(currentSiteId);
 }
