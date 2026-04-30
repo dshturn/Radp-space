@@ -268,26 +268,30 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
       });
     });
 
-    // Collect all documents
+    // Collect documents based on docType filter
     const allDocs = [];
-    personnel.forEach(p => {
-      const per = p.personnel;
-      const docs = docsByPersonnel[per.id] || [];
-      docs.forEach(d => {
-        allDocs.push({ type: 'personnel', ownerName: per.full_name, docName: d.doc_type_name, fileUrl: d.file_url, id: d.id });
-      });
-    });
-    rootItems.forEach(item => {
-      const renderItem = (it) => {
-        const docs = it?.documents || [];
-        const name = it?.equipment_templates?.name || it?.name || it?.model || '—';
+    if (docType === 'personnel' || docType === 'both') {
+      personnel.forEach(p => {
+        const per = p.personnel;
+        const docs = docsByPersonnel[per.id] || [];
         docs.forEach(d => {
-          allDocs.push({ type: 'equipment', ownerName: name, docName: d.document_types?.document_name || d.doc_type_name || '—', fileUrl: d.file_url, id: d.id });
+          allDocs.push({ type: 'personnel', ownerName: per.full_name, docName: d.doc_type_name, fileUrl: d.file_url, id: d.id });
         });
-        (kidsByParent[it.id] || []).forEach(child => renderItem(child));
-      };
-      renderItem(item);
-    });
+      });
+    }
+    if (docType === 'equipment' || docType === 'both') {
+      rootItems.forEach(item => {
+        const renderItem = (it) => {
+          const docs = it?.documents || [];
+          const name = it?.equipment_templates?.name || it?.name || it?.model || '—';
+          docs.forEach(d => {
+            allDocs.push({ type: 'equipment', ownerName: name, docName: d.document_types?.document_name || d.doc_type_name || '—', fileUrl: d.file_url, id: d.id });
+          });
+          (kidsByParent[it.id] || []).forEach(child => renderItem(child));
+        };
+        renderItem(item);
+      });
+    }
 
     const lorHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>LoR</title><style>body{font-family:Arial,sans-serif;font-size:11px;margin:16px;color:#000}h1{font-size:15px;text-align:center;margin-bottom:2px}.subtitle{text-align:center;font-size:10px;color:#444;margin-bottom:10px}h2{font-size:13px;margin:12px 0 8px;background:#1e3a5f;color:white;padding:8px 10px}.info-table{width:100%;border-collapse:collapse;margin-bottom:10px}.info-table td{padding:4px 8px;border:1px solid #bbb;font-size:11px}.info-table .lbl{font-weight:bold;background:#e8edf2;width:130px}table{width:100%;border-collapse:collapse;margin-bottom:12px}th{padding:5px 4px;text-align:left;font-size:10px;border:1px solid #bbb}th.sp{background:#1e3a5f;color:white}th.as{background:#2d4a1e;color:white}td{padding:4px 4px;border:1px solid #ddd;font-size:10px}tr:nth-child(even) td{background:#f7f9f7}.ac{background:#f0f7ee}img{max-width:95%;height:auto;}@media print{body{margin:0}@page{size:A4 landscape;margin:8mm}}</style></head><body><h1>List of Readiness (LoR)</h1><div class="subtitle">Attachment to SMS Process 07.01</div><table class="info-table"><tr><td class="lbl">Service Provider</td><td><strong>${esc(assessment.company_name||'—')}</strong></td><td class="lbl">Date</td><td>${todayStr}</td></tr><tr><td class="lbl">Field/Well</td><td colspan="3">${esc(assessment.field_well||'—')}</td></tr><tr><td class="lbl">Type of Job</td><td colspan="3">${esc(assessment.type_of_job||'—')}</td></tr></table><table><thead><tr><th class="sp" colspan="6">Manpower</th><th class="as" colspan="5">Assessor</th></tr><tr><th class="sp">#</th><th class="sp">Name</th><th class="sp">Yrs Exp</th><th class="sp">Role</th><th class="sp">Doc</th><th class="sp">Expiry</th><th class="as">Unit</th><th class="as">Auditor</th><th class="as">Date</th><th class="as">Ready</th><th class="as">Comment</th></tr></thead><tbody>${persRows}<tr><th class="sp" colspan="6">Equipment</th><th class="as" colspan="5">Assessor</th></tr><tr><th class="sp">#</th><th class="sp">S/N</th><th class="sp">Description</th><th class="sp">Type</th><th class="sp">Issue</th><th class="sp">Expiry</th><th class="as">Unit</th><th class="as">Auditor</th><th class="as">Date</th><th class="as">Ready</th><th class="as">Comment</th></tr>${equipRows}</tbody></table></body></html>`;
 
