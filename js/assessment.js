@@ -593,11 +593,10 @@ async function generateLoR() {
     });
   });
 
-  // ── Render equipment recursively: root → sub → sub-sub, each with its docs ──
-  // Depth tint is applied per-<td> because the LoR stylesheet sets td backgrounds
-  // via nth-child(even) zebra striping, which would otherwise override a <tr> bg.
+  // ── Group equipment by type and render recursively ──
   let equipRows = '', eNum = 1;
   const itemName = it => esc(it?.equipment_templates?.name || it?.name || it?.model || '—');
+  const itemType = it => esc(it?.equipment_templates?.name || 'Uncategorized');
   const indentFor = depth => depth === 0 ? '' : '&nbsp;'.repeat(depth * 4) + '└─ ';
   const tdBg = depth => depth === 0 ? '' : depth === 1 ? 'background:#eef3f8!important;' : 'background:#dde5ee!important;';
 
@@ -616,7 +615,6 @@ async function generateLoR() {
       docs.forEach((d, idx) => {
         const expiry = d.expiry_date || '';
         if (expiry && expiry !== '—' && expiry !== '-') allExpiries.push(new Date(expiry));
-        // Only the first doc row repeats #, S/N, and name — subsequent docs blank those cells so the item reads as one grouped entry.
         equipRows += `<tr>`
           + td(idx === 0 ? numCell : '')
           + td(idx === 0 ? sn      : '')
@@ -631,7 +629,19 @@ async function generateLoR() {
 
     (kidsByParent[item.id] || []).forEach(child => renderItem(child, depth + 1));
   }
-  rootItems.forEach(item => renderItem(item, 0));
+
+  const byType = {};
+  rootItems.forEach(item => {
+    const type = itemType(item);
+    if (!byType[type]) byType[type] = [];
+    byType[type].push(item);
+  });
+
+  const types = Object.keys(byType).sort();
+  types.forEach(type => {
+    equipRows += `<tr><td colspan="11" style="background:#2d4a1e;color:white;font-weight:bold;padding:5px 4px;border:1px solid #bbb;">● ${type}</td></tr>`;
+    byType[type].forEach(item => renderItem(item, 0));
+  });
   let validTillStr = '—', validTillBg = '#cccccc', validTillColor = '#333';
   if (allExpiries.length) {
     const validTill = new Date(Math.min(...allExpiries.map(d => d.getTime())));
