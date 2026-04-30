@@ -499,8 +499,7 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
     lorDoc.fontSize(11).font('Helvetica-Bold').text('EQUIPMENT', { underline: true });
     lorDoc.fontSize(9).font('Helvetica');
 
-    const types = Object.keys(byType).sort();
-    for (const type of types) {
+    for (const type of Object.keys(byType).sort()) {
       lorDoc.text(`• ${type}`, { indent: 10 });
       for (const item of byType[type]) {
         const docs = item?.documents || [];
