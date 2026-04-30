@@ -551,11 +551,36 @@ async function generateLoR() {
   const todayStr = today.toLocaleDateString('en-GB');
   const allExpiries = [];
 
+  // Build map of documents by personnel_id
+  const docsByPersonnel = {};
+  allPersonnelDocs.forEach(d => {
+    if (!docsByPersonnel[d.personnel_id]) docsByPersonnel[d.personnel_id] = [];
+    docsByPersonnel[d.personnel_id].push(d);
+  });
+
   let persRows = '', pNum = 1;
   personnel.forEach(p => {
-    const per = p.personnel, expiry = per?.expiry_date || '';
-    if (expiry && expiry !== '—' && expiry !== '-') allExpiries.push(new Date(expiry));
-    persRows += `<tr><td>${pNum++}</td><td>${esc(per?.full_name||'—')}</td><td>${esc(String(per?.years_experience||'—'))}</td><td>${esc(per?.position||'—')}</td><td>${esc(per?.national_id||'—')}</td><td style="${getExpiryStyle(expiry)}">${esc(expiry||'—')}</td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td></tr>`;
+    const per = p.personnel;
+    const docs = docsByPersonnel[per.id] || [];
+    if (!docs.length) {
+      persRows += `<tr><td>${pNum++}</td><td>${esc(per?.full_name||'—')}</td><td>${esc(String(per?.years_experience||'—'))}</td><td>${esc(per?.position||'—')}</td><td>${esc(per?.national_id||'—')}</td><td>—</td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td></tr>`;
+    } else {
+      docs.forEach((d, idx) => {
+        const expiry = d.expiry_date || '';
+        if (expiry && expiry !== '—' && expiry !== '-') allExpiries.push(new Date(expiry));
+        persRows += `<tr>`
+          + `<td>${idx === 0 ? pNum++ : ''}</td>`
+          + `<td>${idx === 0 ? esc(per?.full_name||'—') : ''}</td>`
+          + `<td>${idx === 0 ? esc(String(per?.years_experience||'—')) : ''}</td>`
+          + `<td>${idx === 0 ? esc(per?.position||'—') : ''}</td>`
+          + `<td>${idx === 0 ? esc(per?.national_id||'—') : ''}</td>`
+          + `<td style="${getExpiryStyle(expiry)}">${esc(d.doc_type_name || d.document_name || '—')}</td>`
+          + `<td style="${getExpiryStyle(expiry)}">${esc(d.issue_date || '—')}</td>`
+          + `<td style="${getExpiryStyle(expiry)}">${esc(expiry || '—')}</td>`
+          + `<td class="ac"></td><td class="ac"></td><td class="ac"></td>`
+          + `</tr>`;
+      });
+    }
   });
 
   // ── Render equipment recursively: root → sub → sub-sub, each with its docs ──
