@@ -160,12 +160,14 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
   let browser;
   try {
     const { assessmentId, docType = 'both' } = req.body;
+    console.log(`[PDF] Starting generation for assessment ${assessmentId}, type: ${docType}`);
     const headers = {
       apikey: SUPABASE_ANON_KEY,
       Authorization: req.headers.authorization || `Bearer ${SUPABASE_ANON_KEY}`,
     };
 
     // Fetch all data
+    console.log('[PDF] Fetching assessment data...');
     const [aRes, eRes, pRes, pDocsRes] = await Promise.all([
       axios.get(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${assessmentId}`, { headers }),
       axios.get(`${SUPABASE_URL}/rest/v1/assessment_equipment?assessment_id=eq.${assessmentId}&select=*,equipment_items(id,serial_number,model,name,parent_id,equipment_templates(name),documents(*,document_types(document_name)))`, { headers }),
