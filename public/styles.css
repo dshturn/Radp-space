@@ -282,7 +282,7 @@ input[type="file"] { display: none; }
 .admin-header button { background: var(--border); color: var(--text); border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: background 0.2s; }
 .admin-header button:hover { background: var(--text-4); }
 .section-title { font-size: 16px; color: var(--text-2); margin-bottom: 16px; margin-top: 24px; }
-.admin-card { background: var(--surface); border-radius: 10px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; animation: fadeSlideUp 0.35s cubic-bezier(0.22,1,0.36,1) both; }
+.admin-card { background: var(--surface); border-radius: 10px; padding: var(--space-lg); margin-bottom: var(--space-md); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-md); animation: fadeSlideUp 0.35s cubic-bezier(0.22,1,0.36,1) both; }
 .admin-info { flex: 1; }
 .admin-info .name { font-size: 15px; font-weight: bold; }
 .admin-info .detail { font-size: 12px; color: var(--text-2); margin-top: 4px; }
