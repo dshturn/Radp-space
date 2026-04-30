@@ -156,7 +156,7 @@ async function _renderAuditLog() {
   const dateFrom     = document.getElementById('auditDateFrom')?.value || '';
   const dateTo       = document.getElementById('auditDateTo')?.value || '';
 
-  let endpoint = `/rest/v1/audit_log?select=*,personnel_documents!inner(file_url),equipment_documents!inner(file_url)&order=created_at.desc&offset=${_auditPage * _AUDIT_PAGE_SIZE}&limit=${_AUDIT_PAGE_SIZE}`;
+  let endpoint = `/rest/v1/audit_log?order=created_at.desc&offset=${_auditPage * _AUDIT_PAGE_SIZE}&limit=${_AUDIT_PAGE_SIZE}`;
   if (entityFilter) endpoint += `&entity_type=eq.${encodeURIComponent(entityFilter)}`;
   if (dateFrom)     endpoint += `&created_at=gte.${encodeURIComponent(dateFrom)}T00:00:00Z`;
   if (dateTo)       endpoint += `&created_at=lte.${encodeURIComponent(dateTo)}T23:59:59Z`;
@@ -171,13 +171,7 @@ async function _renderAuditLog() {
     document.getElementById('auditLogList').innerHTML = '<div class="empty">Audit log not available</div>';
     return;
   }
-  let rows = await res.json();
-
-  // Extract file_url from joined documents
-  rows = rows.map(r => {
-    const docFile = r.personnel_documents?.[0]?.file_url || r.equipment_documents?.[0]?.file_url;
-    return { ...r, document_file_url: docFile };
-  });
+  const rows = await res.json();
 
   // Fetch user profiles for all actors
   const actorIds = [...new Set(rows.map(r => r.actor_id))].filter(id => id);
