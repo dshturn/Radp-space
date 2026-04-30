@@ -18,6 +18,9 @@ const getHeaders = () => {
 
 // Helper to route Supabase API calls through proxy
 function getApiUrl(endpoint) {
+  if (window.location.hostname === 'localhost') {
+    return `http://localhost:5000/api?endpoint=${encodeURIComponent(endpoint)}`;
+  }
   return `/api?endpoint=${encodeURIComponent(endpoint)}`;
 }
 
