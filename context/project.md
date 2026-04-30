@@ -241,26 +241,35 @@ Audit Log (immutable, forever)
 - Old deleted items retain generic labels (data is gone, can't be recovered retroactively)
 - Future deletions will have descriptive labels with item names
 
-## Recent Fixes & Improvements (Current Session)
+## Recent Fixes & Improvements (Current Session - May 2026)
 
-### SharePoint Integration Cleanup
-- ✅ **Removed Edge Function call**: Deleted `loadSharePointContract()` function from assessment.js (was causing 503 errors)
-- ✅ **Removed sync status display**: Removed "SharePoint Sync: pending" text from assessment detail view
-- ✅ **API proxy routing fix**: Added `/functions/` path support to api/server.js for proper Edge Function routing
+### LoR PDF Generation with Clickable Links
+- ✅ **New endpoint `/api/generate-html-pdf`**: Backend endpoint accepts HTML and converts to PDF with proper link handling
+- ✅ **"Download as PDF" button**: Added to LoR display for direct PDF download with clickable document links
+- ✅ **Payload size limit increased**: Raised from 100KB to 5MB to handle large HTML LoR payloads
+- ✅ **Link conversion**: Document titles in LoR now render as clickable links in generated PDF (uses html-pdf library)
+- ✅ **Inline PDF conversion**: JavaScript function embedded in HTML window for seamless PDF download without page reload
 
-### LoR Generation Enhancements
-- ✅ **Personnel documents in LoR**: Personnel now display with all their certifications (docs) as multi-row entries, similar to equipment
-- ✅ **Job role grouping**: Personnel grouped by job role in LoR with role headers (● Operator, ● Righand, etc.)
-- ✅ **Equipment type grouping**: Equipment grouped by equipment type in LoR with type headers (● Slickline Unit, ● CT Unit, etc.)
-- ✅ **Improved document handling**: Each person/item shows documents as rows (first row = person/item info, subsequent rows = other documents)
+### Document Deduplication Fixes
+- ✅ **Personnel-level deduplication**: Removed duplicate personnel entries (multiple `assessment_personnel` records for same person)
+- ✅ **Document-level deduplication**: Removed duplicate document rows (same personnel + doc_type_name combination)
+- ✅ **Query filtering fix**: Changed personnel_documents query from system-wide fetch to assessment-specific (only fetch docs for personnel in current assessment)
+- ✅ **Applied to both frontend and backend**: Changes made to `generateLor()` and `/api/generate-lor-pdf` endpoint
 
-### UI/UX Improvements
-- ✅ **Button layout reorganization**: Moved "Generate LoR" button to same line as "+ Personnel" and "+ Equipment" buttons
-- ✅ **New button added**: "📋 Generate LoR + Docs" (stub, awaiting implementation details)
+### CSP Policy Updates
+- ✅ **Source map support**: Added `https://cdn.jsdelivr.net` to `connect-src` directive to allow .map file requests for debugging
+- ✅ **Proper CSP headers**: All external resources now explicitly whitelisted in Content-Security-Policy meta tag
+
+### API & Backend Improvements
+- ✅ **Express middleware configuration**: JSON body parser now accepts 5MB payloads (previously 100KB limit caused 413 errors)
+- ✅ **Better error logging**: Added detailed error messages to PDF generation endpoint for troubleshooting
+- ✅ **Two-stage LoR + Docs workflow**: Supports both display (for printing) and PDF generation (with embedded links)
 
 ### Known Pending Tasks
-- [ ] `generateLoRWithDocs()` function implementation (to be defined next session)
+- [ ] Add actual document pages to PDF (currently just LoR table with links)
+- [ ] Implement internal PDF navigation links (TOC bookmarks → certificate pages)
+- [ ] Equipment LoR + Docs generation (currently personnel-focused)
 
 ---
 
-Owner: Tech Lead | Last updated: 2026-04-30+ (LoR Enhancements, SharePoint Cleanup, UI Improvements)
+Owner: Tech Lead | Last updated: 2026-04-30 (LoR PDF Links, Deduplication, Payload Size Fix)
