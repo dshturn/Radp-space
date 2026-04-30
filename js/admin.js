@@ -292,13 +292,6 @@ async function rejectDeletion(requestId, assessmentId, reason) {
     return;
   }
 
-  // Mark notification as read (best effort, doesn't block rejection)
-  fetch(`${SUPABASE_URL}/rest/v1/notifications?entity_type=eq.assessment_deletion_request&entity_id=eq.${assessmentId}`, {
-    method: 'PATCH',
-    headers: { ...getHeaders(), Prefer: 'return=minimal' },
-    body: JSON.stringify({ read: true })
-  }).catch(() => {});
-
   logAudit('assessment_deletion_request', requestId, 'rejected', reason || 'Deletion request rejected');
   showToast('Deletion request rejected', 'success');
   renderDeletionRequests();
