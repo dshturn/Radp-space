@@ -563,7 +563,7 @@ async function generateLoR() {
     const per = p.personnel;
     const docs = docsByPersonnel[per.id] || [];
     if (!docs.length) {
-      persRows += `<tr><td>${pNum++}</td><td>${esc(per?.full_name||'—')}</td><td>${esc(String(per?.years_experience||'—'))}</td><td>${esc(per?.position||'—')}</td><td>${esc(per?.national_id||'—')}</td><td>—</td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td></tr>`;
+      persRows += `<tr><td>${pNum++}</td><td>${esc(per?.full_name||'—')}</td><td>${esc(String(per?.years_experience||'—'))}</td><td>${esc(per?.position||'—')}</td><td>—</td><td>—</td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td></tr>`;
     } else {
       docs.forEach((d, idx) => {
         const expiry = d.expiry_date || '';
