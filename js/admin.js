@@ -354,6 +354,8 @@ async function adminInit() {
 
 // Audit page initialization
 async function auditInit() {
+  console.log('[ADMIN] auditInit called');
   await renderDeletionRequests();
+  console.log('[ADMIN] After renderDeletionRequests');
   await loadAuditLog();
 }
