@@ -124,9 +124,11 @@ async function loadAssessments() {
   const list = document.getElementById('assessmentList');
   if (!assessments.length) { list.innerHTML = '<div class="empty">No assessments yet. Create your first one.</div>'; return; }
   const validStatuses = new Set(['draft', 'approved', 'pending', 'rejected']);
+  const isAdmin = roleOf(getUser()) === 'admin';
   list.innerHTML = assessments.map(a => {
     const safeStatus = validStatuses.has(a.status) ? a.status : 'draft';
     const isEditable = a.status === 'draft';
+    const canDelete = isEditable || isAdmin;
     return `
     <div class="assessment-card" onclick="showDetail(${parseInt(a.id)})">
       <div>
@@ -135,7 +137,7 @@ async function loadAssessments() {
       </div>
       <div style="display:flex;align-items:center;gap:8px;">
         ${isEditable ? `<button class="btn-edit btn-sm" onclick="openEditAssessment(${parseInt(a.id)});event.stopPropagation();" aria-label="Edit assessment">✏</button>` : ''}
-        ${isEditable ? `<button class="btn-danger btn-sm" onclick="deleteAssessment(${parseInt(a.id)});event.stopPropagation();" aria-label="Delete assessment">✕</button>` : ''}
+        ${canDelete ? `<button class="btn-danger btn-sm" onclick="deleteAssessment(${parseInt(a.id)});event.stopPropagation();" aria-label="Delete assessment">✕</button>` : ''}
         <span class="badge ${safeStatus}">${safeStatus}</span>
       </div>
     </div>`;
