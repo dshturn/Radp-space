@@ -311,6 +311,7 @@ input[type="file"] { display: none; }
 .btn-delete:hover  { background: #6b0a1a; transform: translateY(-1px); }
 .btn-edit    { background: var(--info-bg); color: var(--info); border: none; padding: 8px 10px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: background 0.2s, transform 0.15s; }
 .btn-edit:hover    { background: #1e4a7f; transform: translateY(-1px); }
+.btn-sm { padding: 6px 10px; font-size: 12px; }
 
 /* Mini dashboard — status bar layout */
 .mini-dash { display: flex; margin-bottom: 20px; background: var(--surface); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); animation: fadeSlideUp 0.35s cubic-bezier(0.22,1,0.36,1) both; }
