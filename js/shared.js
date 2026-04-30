@@ -539,8 +539,11 @@ async function loadNotifUnreadCount() {
 async function loadNotifications() {
   const u = getUser();
   if (!u?.id) return;
-  const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/notifications?contractor_id=eq.${u.id}&order=created_at.desc&limit=30`,
+  const endpoint = `/rest/v1/notifications?contractor_id=eq.${u.id}&order=created_at.desc&limit=30`;
+  const url = window.location.hostname === 'localhost'
+    ? `http://localhost:5000/api?endpoint=${encodeURIComponent(endpoint)}`
+    : `${SUPABASE_URL}${endpoint}`;
+  const res = await fetch(url,
     { headers: getHeaders() }
   );
   if (!res.ok) return;
