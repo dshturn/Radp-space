@@ -456,6 +456,8 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
       byType[type].forEach(item => renderItem(item, 0));
     });
 
+    console.log(`[PDF] Data: byRole=${Object.keys(byRole).join(',')}, byType=${Object.keys(byType).join(',')}, persRows=${persRows.length}, equipRows=${equipRows.length}`);
+
     // Generate LoR HTML with table
     const lorHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>LoR</title><style>body{font-family:Arial;font-size:10px;margin:10px}table{border-collapse:collapse;width:100%;margin:10px 0}td{border:1px solid #bbb;padding:3px 2px;vertical-align:top;font-size:9px}th{background:#333;color:white;font-weight:bold;padding:3px 2px;font-size:9px;text-align:left}h2{margin:5px 0;font-size:14px}h3{margin:8px 0 3px 0;font-size:11px}p{margin:2px 0;font-size:9px}</style></head><body><h2>List of Readiness</h2><p>Assessment: <strong>${assessment.id}</strong> | <strong>${esc(assessment.company_name||'—')}</strong> | Field: ${esc(assessment.field_well||'—')} | ${todayStr}</p><h3>Personnel</h3><table><tr style="background:#1e3a5f;color:white;font-weight:bold;"><td>No.</td><td>Name</td><td>Exp.</td><td>Pos.</td><td>Document</td><td>Expiry</td><td>✓</td><td>✗</td><td>A</td><td>B</td><td>C</td></tr>${persRows}</table><h3>Equipment</h3><table><tr style="background:#2d4a1e;color:white;font-weight:bold;"><td>No.</td><td>Serial</td><td>Equipment</td><td>Document</td><td>Issue</td><td>Expiry</td><td>✓</td><td>✗</td><td>A</td><td>B</td><td>C</td></tr>${equipRows}</table></body></html>`;
 
