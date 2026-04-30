@@ -288,7 +288,7 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
       renderItem(item);
     });
 
-    // Build document pages HTML - fetch and convert documents
+    // Build document pages HTML - fetch and embed image documents
     let docPagesHtml = '';
     if (allDocs.length) {
       docPagesHtml = '<div style="page-break-before: always; margin-top: 30px;"><h2>Certificate Documents</h2>';
@@ -306,28 +306,10 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
             if (doc.fileUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
               // For images, convert to base64 and embed
               const base64 = docBuffer.toString('base64');
-              const mimeType = doc.fileUrl.match(/\.png$/i) ? 'image/png' : 'image/jpeg';
+              const mimeType = doc.fileUrl.match(/\.png$/i) ? 'image/png' : doc.fileUrl.match(/\.gif$/i) ? 'image/gif' : doc.fileUrl.match(/\.webp$/i) ? 'image/webp' : 'image/jpeg';
               docPagesHtml += `<img src="data:${mimeType};base64,${base64}" style="max-width: 100%; max-height: 750px; border: 1px solid #ccc; page-break-inside: avoid;" />`;
             } else if (doc.fileUrl.match(/\.pdf$/i)) {
-              // For PDFs, try to convert to image (requires ImageMagick/Ghostscript)
-              try {
-                const tmpDir = path.join(os.tmpdir(), `pdf_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
-                fs.mkdirSync(tmpDir, { recursive: true });
-                const pdfPath = path.join(tmpDir, 'doc.pdf');
-                fs.writeFileSync(pdfPath, docBuffer);
-
-                const pdfImage = new PDFImage(pdfPath);
-                const imagePath = await pdfImage.convertPage(0); // First page only
-                const imageBuffer = fs.readFileSync(imagePath);
-                const base64 = imageBuffer.toString('base64');
-                docPagesHtml += `<img src="data:image/png;base64,${base64}" style="max-width: 100%; max-height: 750px; border: 1px solid #ccc; page-break-inside: avoid;" />`;
-
-                // Cleanup
-                fs.rmSync(tmpDir, { recursive: true, force: true });
-              } catch (pdfErr) {
-                console.warn(`Failed to convert PDF ${doc.fileUrl}:`, pdfErr.message);
-                docPagesHtml += `<p style="color: #999; font-size: 10px;">PDF document (cannot convert to image)</p>`;
-              }
+              docPagesHtml += `<p style="color: #666; font-size: 11px; font-style: italic;">[PDF Document - ${esc(doc.fileUrl.split('/').pop())}]</p>`;
             }
           } catch (fetchErr) {
             console.warn(`Failed to fetch document ${doc.fileUrl}:`, fetchErr.message);
