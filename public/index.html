@@ -347,6 +347,13 @@ navigator.serviceWorker.getRegistrations().then(regs => {
 <section id="audit-page" class="page">
   <div class="container">
     <h1 class="sr-only">Audit Log</h1>
+
+    <!-- Assessment Deletion Requests -->
+    <div id="deletionRequestsSection" style="display:none;margin-bottom:32px;">
+      <div class="section-title" style="color:var(--bad);">🗑 Assessment Deletion Requests</div>
+      <div id="deletionRequestsList"></div>
+    </div>
+
     <div style="margin-bottom:20px;">
       <h2 style="margin-bottom:16px;">Audit Log</h2>
       <div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
