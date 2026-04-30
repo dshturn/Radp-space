@@ -596,12 +596,14 @@ async function generateLoR() {
         docs.forEach((d, idx) => {
           const expiry = d.expiry_date || '';
           if (expiry && expiry !== '—' && expiry !== '-') allExpiries.push(new Date(expiry));
+          const docName = d.doc_type_name || '—';
+          const docLink = d.file_url ? `<a href="${d.file_url}" target="_blank" style="color:#0066cc;text-decoration:underline;cursor:pointer;">${esc(docName)}</a>` : esc(docName);
           persRows += `<tr>`
             + `<td>${idx === 0 ? pNum++ : ''}</td>`
             + `<td>${idx === 0 ? esc(per?.full_name||'—') : ''}</td>`
             + `<td>${idx === 0 ? esc(String(per?.years_experience||'—')) : ''}</td>`
             + `<td>${idx === 0 ? esc(per?.position||'—') : ''}</td>`
-            + `<td>${esc(d.doc_type_name || '—')}</td>`
+            + `<td>${docLink}</td>`
             + `<td style="${getExpiryStyle(expiry)}">${esc(expiry || '—')}</td>`
             + `<td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td>`
             + `</tr>`;
