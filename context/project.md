@@ -241,6 +241,26 @@ Audit Log (immutable, forever)
 - Old deleted items retain generic labels (data is gone, can't be recovered retroactively)
 - Future deletions will have descriptive labels with item names
 
+## Recent Fixes & Improvements (Current Session)
+
+### SharePoint Integration Cleanup
+- ✅ **Removed Edge Function call**: Deleted `loadSharePointContract()` function from assessment.js (was causing 503 errors)
+- ✅ **Removed sync status display**: Removed "SharePoint Sync: pending" text from assessment detail view
+- ✅ **API proxy routing fix**: Added `/functions/` path support to api/server.js for proper Edge Function routing
+
+### LoR Generation Enhancements
+- ✅ **Personnel documents in LoR**: Personnel now display with all their certifications (docs) as multi-row entries, similar to equipment
+- ✅ **Job role grouping**: Personnel grouped by job role in LoR with role headers (● Operator, ● Righand, etc.)
+- ✅ **Equipment type grouping**: Equipment grouped by equipment type in LoR with type headers (● Slickline Unit, ● CT Unit, etc.)
+- ✅ **Improved document handling**: Each person/item shows documents as rows (first row = person/item info, subsequent rows = other documents)
+
+### UI/UX Improvements
+- ✅ **Button layout reorganization**: Moved "Generate LoR" button to same line as "+ Personnel" and "+ Equipment" buttons
+- ✅ **New button added**: "📋 Generate LoR + Docs" (stub, awaiting implementation details)
+
+### Known Pending Tasks
+- [ ] `generateLoRWithDocs()` function implementation (to be defined next session)
+
 ---
 
-Owner: Tech Lead | Last updated: 2026-04-30 (Audit Log & Proxy Fixes, Document Links, RLS Contractor Access)
+Owner: Tech Lead | Last updated: 2026-04-30+ (LoR Enhancements, SharePoint Cleanup, UI Improvements)
