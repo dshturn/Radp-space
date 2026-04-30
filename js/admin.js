@@ -297,9 +297,38 @@ async function rejectDeletion(requestId, reason) {
   loadUsers();
 }
 
+// ── Display deletion requests on admin page ──
+async function renderDeletionRequests() {
+  const requests = await loadDeletionRequests();
+  const section = document.getElementById('deletionRequestsSection');
+  const list = document.getElementById('deletionRequestsList');
+
+  if (!requests || requests.length === 0) {
+    if (section) section.style.display = 'none';
+    return;
+  }
+
+  if (section) section.style.display = '';
+
+  list.innerHTML = requests.map(req => `
+    <div class="admin-card" style="flex-wrap:wrap;">
+      <div class="admin-info">
+        <div class="name">Assessment ID: ${parseInt(req.assessment_id)}</div>
+        <div class="detail" style="font-size:12px;">Requested by: ${esc(req.requested_by || 'Unknown')}</div>
+        <div class="detail" style="font-size:11px;color:var(--text-4);">Requested: ${new Date(req.requested_at).toLocaleDateString()}</div>
+      </div>
+      <div class="admin-actions" style="gap:6px;">
+        <button class="btn-success btn-sm" onclick="approveDeletion(${parseInt(req.id)}, ${parseInt(req.assessment_id)})">✓ Approve</button>
+        <button class="btn-danger btn-sm" onclick="rejectDeletion(${parseInt(req.id)}, 'Rejected by admin')">✕ Reject</button>
+      </div>
+    </div>
+  `).join('');
+}
+
 // Page initialization - called when admin page is shown
 async function adminInit() {
   await loadUsers();
+  await renderDeletionRequests();
   await loadAuditLog();
 }
 
