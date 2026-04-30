@@ -460,12 +460,19 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
 
     // Load LoR PDF into pdf-lib
     const mergedPdf = await PDFDocument.load(lorPdfBuffer);
+    const lorPageCount = mergedPdf.getPageCount();
+    let currentPageNum = lorPageCount + 1;
+    console.log(`[PDF] LoR occupies ${lorPageCount} pages. Documents start at page ${currentPageNum}`);
     console.log(`[PDF] Processing ${allDocs.length} documents...`);
+
+    // Track which document goes to which page
+    const docPageMap = {};
 
     // Add document pages (images and PDFs)
     for (const doc of allDocs) {
-      console.log(`[PDF] Processing: ${doc.type} - ${doc.ownerName} - ${doc.docName}`);
+      console.log(`[PDF] Processing: ${doc.type} - ${doc.ownerName} - ${doc.docName} (page ${currentPageNum})`);
       if (!doc.fileUrl) continue;
+      docPageMap[doc.id] = currentPageNum;
 
       try {
         const docResponse = await axios.get(doc.fileUrl, { responseType: 'arraybuffer', timeout: 10000 });
@@ -491,19 +498,22 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
             height: imgHeight
           });
 
-          // Add label
+          // Add label with page number
           page.drawText(`[${doc.type.toUpperCase()}] ${doc.ownerName} — ${doc.docName}`, {
             x: 20,
             y: 800,
             size: 10,
             color: { r: 0, g: 0, b: 0 }
           });
+          currentPageNum++;
         } else if (doc.fileUrl.match(/\.pdf$/i)) {
           // Merge PDF pages
           try {
             const srcPdf = await PDFDocument.load(docBuffer);
-            const srcPages = await mergedPdf.copyPages(srcPdf, srcPdf.getPageIndices());
+            const pageIndices = srcPdf.getPageIndices();
+            const srcPages = await mergedPdf.copyPages(srcPdf, pageIndices);
             srcPages.forEach(page => mergedPdf.addPage(page));
+            currentPageNum += pageIndices.length;
           } catch (pdfErr) {
             console.warn(`Failed to merge PDF ${doc.fileUrl}:`, pdfErr.message);
           }
