@@ -215,8 +215,8 @@ async function _renderAuditLog() {
       <tbody>
         ${rows.map(r => {
           let labelHtml = esc(r.label || '—');
-          if (r.entity_type === 'document' && r.metadata && r.metadata.file_url) {
-            labelHtml = `<a href="javascript:void(0)" onclick="openDoc('${r.metadata.file_url}')" style="color:var(--accent);cursor:pointer;text-decoration:underline;">${esc(r.label || '—')}</a>`;
+          if (r.entity_type === 'document' && r.document_file_url) {
+            labelHtml = `<a href="javascript:void(0)" onclick="openDoc('${r.document_file_url}')" style="color:var(--accent);cursor:pointer;text-decoration:underline;">${esc(r.label || '—')}</a>`;
           }
           const whoName = r._user?.full_name || '—';
           const whoServiceLine = r._user?.service_line || '';
