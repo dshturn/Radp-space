@@ -23,6 +23,8 @@ export default async (req, res) => {
     return res.status(400).json({ error: 'Missing endpoint or path parameter' });
   }
 
+  console.log('[PROXY] Incoming request:', { method, path, bodyType: typeof req.body, body: req.body });
+
   try {
     const headers = {
       'Content-Type': 'application/json',
