@@ -480,8 +480,7 @@ async function logNotificationEvent(eventType, entityType, entityId, metadata = 
         entity_type: entityType,
         entity_id: entityId,
         triggered_by: u.id,
-        contractor_id: metadata.contractor_id || u.id,
-        metadata
+        metadata: { ...metadata, contractor_id: metadata.contractor_id || u.id }
       })
     });
     if (res.ok) return;
