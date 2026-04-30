@@ -212,17 +212,37 @@ Simplicity: No AI per-request; pre-computed checklists only
 ## LoR (Letter of Readiness) Generation
 
 Assessment tab includes two LoR generation options:
-- **Generate LoR**: Full readiness document with grouped personnel (by job role) and equipment (by type)
-  - Personnel section: Shows each person's name, experience, position, and all certificates with expiry dates
-  - Equipment section: Shows items hierarchically (root → sub-components) with integrity check dates and certs
-  - Both sections grouped with role/type headers for clarity
-- **Generate LoR + Docs**: Enhanced version with embedded documents (awaiting implementation)
 
-Structure:
+### Generate LoR (Browser Display)
+- Opens HTML document in new browser window with Print/Download buttons
+- Full readiness document with grouped personnel (by job role) and equipment (by type)
+- Personnel section: Shows each person's name, experience, position, and all certificates with expiry dates
+- Equipment section: Shows items hierarchically (root → sub-components) with integrity check dates and certs
+- Both sections grouped with role/type headers for clarity
+- Clickable document links (open in new tab)
+
+### Generate LoR + Docs (PDF with Clickable Links)
+- Backend endpoint: `/api/generate-html-pdf` (POST)
+- Accepts HTML payload and converts to PDF using html-pdf library
+- Document titles are rendered as clickable links in the PDF (opens in PDF reader)
+- Current implementation: Personnel + Equipment LoR table with document links
+- Future enhancement: Embed actual document pages and internal navigation
+
+**Data Deduplication** (applied to both generation methods):
+- Personnel: Remove duplicate `assessment_personnel` records for same person
+- Documents: Remove duplicate document rows (keyed by `personnel_id:doc_type_name`)
+- Query filtering: Only fetch `personnel_documents` for personnel in current assessment (not system-wide)
+
+**Structure**:
 - Manpower section: Personnel grouped by job role (● Operator, ● Righand, etc.), each showing their documents
 - Equipment section: Equipment grouped by type (● Slickline Unit, ● CT Unit), with hierarchy and documents
 - Assessor section: Empty checkboxes for audit/readiness sign-off
 - Valid Till calculation: Minimum expiry date across all personnel/equipment certs, color-coded (red=expired, amber=<14 days, green=valid)
+
+**Frontend Components**:
+- `generateLor()`: Fetches data, builds HTML, opens in browser window
+- `downloadLoRPDF()`: Sends HTML to backend, downloads PDF with clickable links
+- `generateLoRWithDocs()`: Calls backend `/api/generate-lor-pdf` endpoint for assessment-specific PDF
 
 ## SharePoint Integration (Phase 3)
 
