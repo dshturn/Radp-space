@@ -474,7 +474,8 @@ async function logNotificationEvent(eventType, entityType, entityId, metadata = 
         metadata
       })
     });
-    if (!res.ok) {
+    // 409 Conflict = notification already exists (duplicate) - that's OK
+    if (!res.ok && res.status !== 409) {
       const err = await res.text().catch(() => '');
       console.warn('Event logging failed:', res.status, err);
     }
