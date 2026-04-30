@@ -634,11 +634,13 @@ async function generateLoR() {
       docs.forEach((d, idx) => {
         const expiry = d.expiry_date || '';
         if (expiry && expiry !== '—' && expiry !== '-') allExpiries.push(new Date(expiry));
+        const docName = d.document_types?.document_name || d.doc_type_name || '—';
+        const docLink = d.file_url ? `<a href="${d.file_url}" target="_blank" style="color:#0066cc;text-decoration:underline;cursor:pointer;">${esc(docName)}</a>` : esc(docName);
         equipRows += `<tr>`
           + td(idx === 0 ? numCell : '')
           + td(idx === 0 ? sn      : '')
           + td(idx === 0 ? label   : '')
-          + td(esc(d.document_types?.document_name || d.doc_type_name || '—'))
+          + td(docLink)
           + td(esc(d.issue_date || '—'))
           + td(esc(expiry || '—'), getExpiryStyle(expiry))
           + tdAc() + tdAc() + tdAc() + tdAc() + tdAc()
