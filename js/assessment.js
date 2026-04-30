@@ -387,8 +387,8 @@ async function addPersonnelItem(persId) {
   });
   if (!r.ok) { showToast('Add failed: ' + r.status, 'error'); return; }
   try {
-    const person = await apiFetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${persId}&select=full_name,position,email`, { headers: getHeaders() });
-    const persLabel = person?.[0]?.full_name || person?.[0]?.email || `Personnel ${persId}`;
+    const person = await apiFetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${persId}&select=full_name,position`, { headers: getHeaders() });
+    const persLabel = person?.[0]?.full_name || `Personnel ${persId}`;
     logAudit('assessment', currentAssessmentId, 'added_personnel', persLabel);
   } catch (err) {
     console.error('Failed to log personnel addition:', err);
