@@ -456,27 +456,77 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
       byType[type].forEach(item => renderItem(item, 0));
     });
 
-    const lorHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>LoR</title><style>body{font-family:Arial,sans-serif;font-size:11px;margin:16px;color:#000}h1{font-size:15px;text-align:center;margin-bottom:2px}.subtitle{text-align:center;font-size:10px;color:#444;margin-bottom:10px}h2{font-size:13px;margin:12px 0 8px;background:#1e3a5f;color:white;padding:8px 10px}.info-table{width:100%;border-collapse:collapse;margin-bottom:10px}.info-table td{padding:4px 8px;border:1px solid #bbb;font-size:11px}.info-table .lbl{font-weight:bold;background:#e8edf2;width:130px}table{width:100%;border-collapse:collapse;margin-bottom:12px}th{padding:5px 4px;text-align:left;font-size:10px;border:1px solid #bbb}th.sp{background:#1e3a5f;color:white}th.as{background:#2d4a1e;color:white}td{padding:4px 4px;border:1px solid #ddd;font-size:10px}tr:nth-child(even) td{background:#f7f9f7}.ac{background:#f0f7ee}img{max-width:95%;height:auto;}@media print{body{margin:0}@page{size:A4 landscape;margin:8mm}}</style></head><body><h1>List of Readiness (LoR)</h1><div class="subtitle">Attachment to SMS Process 07.01</div><table class="info-table"><tr><td class="lbl">Service Provider</td><td><strong>${esc(assessment.company_name||'—')}</strong></td><td class="lbl">Date</td><td>${todayStr}</td></tr><tr><td class="lbl">Field/Well</td><td colspan="3">${esc(assessment.field_well||'—')}</td></tr><tr><td class="lbl">Type of Job</td><td colspan="3">${esc(assessment.type_of_job||'—')}</td></tr></table><table><thead><tr><th class="sp" colspan="6">Manpower</th><th class="as" colspan="5">Assessor</th></tr><tr><th class="sp">#</th><th class="sp">Name</th><th class="sp">Yrs Exp</th><th class="sp">Role</th><th class="sp">Doc</th><th class="sp">Expiry</th><th class="as">Unit</th><th class="as">Auditor</th><th class="as">Date</th><th class="as">Ready</th><th class="as">Comment</th></tr></thead><tbody>${persRows}<tr><th class="sp" colspan="6">Equipment</th><th class="as" colspan="5">Assessor</th></tr><tr><th class="sp">#</th><th class="sp">S/N</th><th class="sp">Description</th><th class="sp">Type</th><th class="sp">Issue</th><th class="sp">Expiry</th><th class="as">Unit</th><th class="as">Auditor</th><th class="as">Date</th><th class="as">Ready</th><th class="as">Comment</th></tr>${equipRows}</tbody></table></body></html>`;
+    // Generate LoR PDF using pdfkit with proper internal links
+    console.log('[PDF] Generating LoR with pdfkit...');
+    const lorDoc = new PDFDocument({ size: 'A4', margin: 20, bufferPages: true });
+    const lorChunks = [];
 
-    // Generate LoR PDF from HTML
-    console.log('[PDF] Generating HTML to PDF...');
-    const lorPdfPromise = new Promise((resolve, reject) => {
-      const pdfOptions = {
-        format: 'A4',
-        orientation: 'landscape',
-        margin: { top: '0.5in', bottom: '0.5in', left: '0.5in', right: '0.5in' }
-      };
-      pdf.create(lorHtml, pdfOptions).toBuffer((err, buffer) => {
-        if (err) return reject(err);
-        resolve(buffer);
+    lorDoc.on('data', chunk => lorChunks.push(chunk));
+
+    // Title and info
+    lorDoc.fontSize(16).text('List of Readiness (LoR)', { align: 'center' });
+    lorDoc.fontSize(10).text('Attachment to SMS Process 07.01', { align: 'center' });
+    lorDoc.moveDown(0.5);
+
+    lorDoc.fontSize(10).text(`Service Provider: ${assessment.company_name||'—'}`);
+    lorDoc.text(`Field/Well: ${assessment.field_well||'—'}`);
+    lorDoc.text(`Type of Job: ${assessment.type_of_job||'—'}`);
+    lorDoc.text(`Date: ${todayStr}`);
+    lorDoc.moveDown(0.5);
+
+    // Personnel section
+    lorDoc.fontSize(11).font('Helvetica-Bold').text('PERSONNEL', { underline: true });
+    lorDoc.fontSize(9).font('Helvetica');
+
+    const roles = Object.keys(byRole).sort();
+    for (const role of roles) {
+      lorDoc.text(`• ${role}`, { indent: 10 });
+      for (const p of byRole[role]) {
+        const per = p.personnel;
+        const docs = docsByPersonnel[per.id] || [];
+        lorDoc.text(`  ${per.full_name} (${per.position})`, { indent: 20 });
+        for (const d of docs) {
+          const destPage = actualPageMap[d.id] || docPageMap[d.id] || 1;
+          const y = lorDoc.y;
+          lorDoc.fillColor('#0066cc').text(`    ${d.doc_type_name}`, { indent: 30, link: { page: destPage - 1, y: 0 } });
+          lorDoc.fillColor('#000000');
+        }
+      }
+    }
+
+    lorDoc.moveDown(0.5);
+
+    // Equipment section
+    lorDoc.fontSize(11).font('Helvetica-Bold').text('EQUIPMENT', { underline: true });
+    lorDoc.fontSize(9).font('Helvetica');
+
+    const types = Object.keys(byType).sort();
+    for (const type of types) {
+      lorDoc.text(`• ${type}`, { indent: 10 });
+      for (const item of byType[type]) {
+        const docs = item?.documents || [];
+        lorDoc.text(`  ${item?.equipment_templates?.name || item?.name || '—'}`, { indent: 20 });
+        for (const d of docs) {
+          const destPage = actualPageMap[d.id] || docPageMap[d.id] || 1;
+          lorDoc.fillColor('#0066cc').text(`    ${d.document_types?.document_name || d.doc_type_name}`, { indent: 30, link: { page: destPage - 1, y: 0 } });
+          lorDoc.fillColor('#000000');
+        }
+      }
+    }
+
+    lorDoc.end();
+
+    const lorPdfBuffer = await new Promise((resolve, reject) => {
+      lorDoc.on('end', () => {
+        resolve(Buffer.concat(lorChunks));
       });
+      lorDoc.on('error', reject);
     });
 
-    const lorPdfBuffer = await lorPdfPromise;
     console.log(`[PDF] LoR PDF generated (${lorPdfBuffer.length} bytes), loading into pdf-lib...`);
 
-    // Load LoR PDF into pdf-lib
-    const mergedPdf = await PDFDocument.load(lorPdfBuffer);
+    // Load LoR PDF into pdf-lib for merging with documents
+    const mergedPdf = await PDFLibDocument.load(lorPdfBuffer);
     const lorPageCount = mergedPdf.getPageCount();
     console.log(`[PDF] LoR occupies ${lorPageCount} pages. Documents start at page ${lorPageCount + 1}`);
     console.log(`[PDF] Processing ${allDocs.length} documents...`);
