@@ -840,7 +840,12 @@ async function deleteAssessment(id) {
     method: 'DELETE',
     headers: { ...getHeaders(), Prefer: 'return=minimal' }
   });
-  if (!res.ok) { showToast('Failed to delete assessment', 'error'); return; }
+  if (!res.ok) {
+    const err = await res.text().catch(() => '');
+    console.error('Delete failed:', res.status, err);
+    showToast(`Failed to delete assessment (${res.status})`, 'error');
+    return;
+  }
 
   logAudit('assessment', id, 'deleted', `Assessment deleted`);
   showToast('Assessment deleted', 'success');
