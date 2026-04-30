@@ -120,13 +120,21 @@ async function loadAssessments() {
   );
   if (!res.ok) { showToast('Failed to load assessments', 'error'); return; }
   const assessments = await res.json();
+
+  // Load pending deletion requests to show status
+  const delReqRes = await fetch(`${SUPABASE_URL}/rest/v1/assessment_deletion_requests?status=eq.pending&select=assessment_id`,
+    { headers: getHeaders() });
+  const deletionRequests = delReqRes.ok ? await delReqRes.json() : [];
+  const pendingDeletionIds = new Set(deletionRequests.map(d => d.assessment_id));
+
   const totalCount = parseInt(res.headers.get('Content-Range')?.split('/')[1] || '0', 10);
   const list = document.getElementById('assessmentList');
   if (!assessments.length) { list.innerHTML = '<div class="empty">No assessments yet. Create your first one.</div>'; return; }
-  const validStatuses = new Set(['draft', 'approved', 'pending', 'rejected']);
+  const validStatuses = new Set(['draft', 'approved', 'pending', 'rejected', 'awaiting_deletion']);
   list.innerHTML = assessments.map(a => {
-    const safeStatus = validStatuses.has(a.status) ? a.status : 'draft';
-    const isEditable = a.status === 'draft';
+    let safeStatus = validStatuses.has(a.status) ? a.status : 'draft';
+    if (pendingDeletionIds.has(a.id)) safeStatus = 'awaiting_deletion';
+    const isEditable = a.status === 'draft' && !pendingDeletionIds.has(a.id);
     const canDelete = isEditable || isAdmin;
     return `
     <div class="assessment-card" onclick="showDetail(${parseInt(a.id)})">
