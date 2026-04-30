@@ -501,11 +501,13 @@ async function addSelectedSiteEquipment() {
 
 async function removeSiteEquipment(rowId, fromSelector = false) {
   const btn = document.querySelector(`button[onclick*="removeSiteEquipment(${rowId}"]`);
+  if (btn?.disabled) return; // Prevent double-click
+  btn.disabled = true;
   const label = btn?.closest('.ops-item-row,.item-row')?.querySelector('.item-name')?.textContent?.trim() || `Equipment ${rowId}`;
   const r = await fetch(`${SUPABASE_URL}/rest/v1/operation_site_equipment?id=eq.${rowId}`, {
     method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' }
   });
-  if (!r.ok) { showToast('Failed to remove', 'error'); return; }
+  if (!r.ok) { showToast('Failed to remove', 'error'); btn.disabled = false; return; }
   logAudit('site', currentSiteId, 'removed_equipment', label);
   if (fromSelector) { loadSiteDetail(currentSiteId); openSiteEquipmentSelector(); }
   else loadSiteDetail(currentSiteId);
