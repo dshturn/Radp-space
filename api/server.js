@@ -536,7 +536,6 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
     // Create named destinations and add links for documents
     console.log('[PDF] Creating document links...');
     const lorPages = mergedPdf.getPages();
-    const lorPageCount = lorPageCount || 1;
 
     // Add named destinations for each document so links can find them
     for (const doc of allDocs) {
