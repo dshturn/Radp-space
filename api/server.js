@@ -26,7 +26,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'apikey', 'Prefer'],
   exposedHeaders: ['Content-Range']
 }));
-app.use(express.json());
+app.use(express.json({ limit: '5mb' }));
 
 // ── Health Check ──
 app.get('/health', (req, res) => {

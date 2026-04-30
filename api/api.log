@@ -1,0 +1,58 @@
+RADP API running on port 5000
+Database host: undefined
+[API] POST request: /auth/v1/token?grant_type=password
+[API] POST Final URL: https://fslleuedqlxpjnerruzt.supabase.co/auth/v1/token?grant_type=password
+[API] GET request: /rest/v1/user_profiles?id=eq.367bd894-9c70-4995-82a7-ff08d19523c0&select=status,full_name,company,service_line,role
+[API] Final URL: https://fslleuedqlxpjnerruzt.supabase.co/rest/v1/user_profiles?id=eq.367bd894-9c70-4995-82a7-ff08d19523c0&select=status,full_name,company,service_line,role
+[API] POST request: /rest/v1/audit_log
+[API] POST Final URL: https://fslleuedqlxpjnerruzt.supabase.co/rest/v1/audit_log
+[API] GET request: /rest/v1/equipment_items?dismissed=is.false&parent_id=is.null&select=*,equipment_templates(name)&order=created_at&offset=0&limit=25
+[API] Final URL: https://fslleuedqlxpjnerruzt.supabase.co/rest/v1/equipment_items?dismissed=is.false&parent_id=is.null&select=*,equipment_templates(name)&order=created_at&offset=0&limit=25
+[API] GET request: /rest/v1/personnel?select=*&order=created_at&offset=0&limit=25
+[API] Final URL: https://fslleuedqlxpjnerruzt.supabase.co/rest/v1/personnel?select=*&order=created_at&offset=0&limit=25
+[API] GET request: /rest/v1/assessments
+[API] Final URL: https://fslleuedqlxpjnerruzt.supabase.co/rest/v1/assessments?contractor_id=eq.367bd894-9c70-4995-82a7-ff08d19523c0&select=id%2Cstatus
+[API] GET request: /rest/v1/personnel_documents
+[API] Final URL: https://fslleuedqlxpjnerruzt.supabase.co/rest/v1/personnel_documents?personnel_id=in.%281%2C2%2C3%2C6%2C8%2C21%2C22%2C23%2C24%2C27%2C28%2C30%2C31%2C32%2C33%2C34%2C35%2C36%2C37%2C38%2C39%2C40%2C41%2C42%2C43%29&select=*&order=uploaded_at.desc
+[API] GET request: /rest/v1/equipment_items?dismissed=is.false&parent_id=in.(2,3,4,5,6,11,18,19,20,21,24,47,49,52,54,56,57,58,60,61,62,63,64,65,66)&select=*&order=created_at
+[API] Final URL: https://fslleuedqlxpjnerruzt.supabase.co/rest/v1/equipment_items?dismissed=is.false&parent_id=in.(2,3,4,5,6,11,18,19,20,21,24,47,49,52,54,56,57,58,60,61,62,63,64,65,66)&select=*&order=created_at
+[API] GET request: /rest/v1/equipment_items?dismissed=is.false&parent_id=in.(26,48)&select=*&order=created_at
+[API] Final URL: https://fslleuedqlxpjnerruzt.supabase.co/rest/v1/equipment_items?dismissed=is.false&parent_id=in.(26,48)&select=*&order=created_at
+[API] GET request: /rest/v1/documents
+[API] Final URL: https://fslleuedqlxpjnerruzt.supabase.co/rest/v1/documents?equipment_item_id=in.%282%2C3%2C4%2C5%2C6%2C11%2C18%2C19%2C20%2C21%2C24%2C47%2C49%2C52%2C54%2C56%2C57%2C58%2C60%2C61%2C62%2C63%2C64%2C65%2C66%29&select=*&order=uploaded_at.desc
+[API] GET request: /rest/v1/assessments?contractor_id=eq.367bd894-9c70-4995-82a7-ff08d19523c0&order=created_at.desc&offset=0&limit=25
+[API] Final URL: https://fslleuedqlxpjnerruzt.supabase.co/rest/v1/assessments?contractor_id=eq.367bd894-9c70-4995-82a7-ff08d19523c0&order=created_at.desc&offset=0&limit=25
+[API] GET request: /rest/v1/assessments?contractor_id=eq.367bd894-9c70-4995-82a7-ff08d19523c0&order=created_at.desc&offset=0&limit=25
+[API] Final URL: https://fslleuedqlxpjnerruzt.supabase.co/rest/v1/assessments?contractor_id=eq.367bd894-9c70-4995-82a7-ff08d19523c0&order=created_at.desc&offset=0&limit=25
+[API] GET request: /rest/v1/assessments
+[API] Final URL: https://fslleuedqlxpjnerruzt.supabase.co/rest/v1/assessments?id=eq.16
+[API] GET request: /rest/v1/assessment_equipment
+[API] Final URL: https://fslleuedqlxpjnerruzt.supabase.co/rest/v1/assessment_equipment?assessment_id=eq.16&select=*%2Cequipment_items%28serial_number%2Cmodel%2Cequipment_template_id%2Cequipment_templates%28name%29%29
+[API] GET request: /rest/v1/assessment_personnel
+[API] Final URL: https://fslleuedqlxpjnerruzt.supabase.co/rest/v1/assessment_personnel?assessment_id=eq.16&select=*%2Cpersonnel%28full_name%2Cposition%2Cnational_id%29
+[API] GET request: /rest/v1/assessments?id=eq.16
+[API] Final URL: https://fslleuedqlxpjnerruzt.supabase.co/rest/v1/assessments?id=eq.16
+[API] GET request: /rest/v1/assessment_equipment?assessment_id=eq.16&select=*,equipment_items(id,serial_number,model,name,parent_id,equipment_templates(name),documents(*,document_types(document_name)))
+[API] Final URL: https://fslleuedqlxpjnerruzt.supabase.co/rest/v1/assessment_equipment?assessment_id=eq.16&select=*,equipment_items(id,serial_number,model,name,parent_id,equipment_templates(name),documents(*,document_types(document_name)))
+[API] GET request: /rest/v1/assessment_personnel?assessment_id=eq.16&select=*,personnel(*)
+[API] Final URL: https://fslleuedqlxpjnerruzt.supabase.co/rest/v1/assessment_personnel?assessment_id=eq.16&select=*,personnel(*)
+[API] GET request: /rest/v1/personnel_documents?select=*
+[API] Final URL: https://fslleuedqlxpjnerruzt.supabase.co/rest/v1/personnel_documents?select=*
+[API] GET request: /rest/v1/equipment_items?dismissed=is.false&parent_id=in.(56,54,49,127,52,72,68,69,66,65,71,70,67,93,76,79,108,87,90,83,81,92,106,91,96,95,107,109,94,77,120,121,115,117,123,89,124,125,143,122,111,110,114,119,118,112,126,116,113,144,62,103,61,63,105,60,142,134,135,136,57,58,64,138,131,129,133,128,132,130,152,147,150,149,148,151,97,98,153,154)&select=id,parent_id,serial_number,model,name,equipment_templates(name),documents(*,document_types(document_name))
+[API] Final URL: https://fslleuedqlxpjnerruzt.supabase.co/rest/v1/equipment_items?dismissed=is.false&parent_id=in.(56,54,49,127,52,72,68,69,66,65,71,70,67,93,76,79,108,87,90,83,81,92,106,91,96,95,107,109,94,77,120,121,115,117,123,89,124,125,143,122,111,110,114,119,118,112,126,116,113,144,62,103,61,63,105,60,142,134,135,136,57,58,64,138,131,129,133,128,132,130,152,147,150,149,148,151,97,98,153,154)&select=id,parent_id,serial_number,model,name,equipment_templates(name),documents(*,document_types(document_name))
+Error: PayloadTooLargeError: request entity too large
+    at readStream (C:\Users\dshtu\Radp-space\api\node_modules\raw-body\index.js:163:17)
+    at getRawBody (C:\Users\dshtu\Radp-space\api\node_modules\raw-body\index.js:116:12)
+    at read (C:\Users\dshtu\Radp-space\api\node_modules\body-parser\lib\read.js:79:3)
+    at jsonParser (C:\Users\dshtu\Radp-space\api\node_modules\body-parser\lib\types\json.js:138:5)
+    at Layer.handle [as handle_request] (C:\Users\dshtu\Radp-space\api\node_modules\express\lib\router\layer.js:95:5)
+    at trim_prefix (C:\Users\dshtu\Radp-space\api\node_modules\express\lib\router\index.js:328:13)
+    at C:\Users\dshtu\Radp-space\api\node_modules\express\lib\router\index.js:286:9
+    at router.process_params (C:\Users\dshtu\Radp-space\api\node_modules\express\lib\router\index.js:346:12)
+    at next (C:\Users\dshtu\Radp-space\api\node_modules\express\lib\router\index.js:280:10)
+    at cors (C:\Users\dshtu\Radp-space\api\node_modules\cors\lib\index.js:188:7) {
+  expected: 251323,
+  length: 251323,
+  limit: 102400,
+  type: 'entity.too.large'
+}
