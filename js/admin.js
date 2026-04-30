@@ -356,7 +356,11 @@ async function adminInit() {
 }
 
 async function loadAdminNotifications() {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/notifications?order=created_at.desc&limit=100`, {
+  const endpoint = `/rest/v1/notifications?order=created_at.desc&limit=100`;
+  const url = window.location.hostname === 'localhost'
+    ? `http://localhost:5000/api?endpoint=${encodeURIComponent(endpoint)}`
+    : `${SUPABASE_URL}${endpoint}`;
+  const res = await fetch(url, {
     headers: getHeaders()
   });
   if (!res.ok) {
