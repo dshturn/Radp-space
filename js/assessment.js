@@ -792,6 +792,56 @@ async function generateLoRWithDocs(type = 'both') {
   }
 }
 
+// ── Edit and Delete Assessment ──
+async function openEditAssessment(id) {
+  const data = await apiFetch(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${id}`, { headers: getHeaders() });
+  if (!data || !data[0]) return;
+  const a = data[0];
+  document.getElementById('editAssessmentId').value = id;
+  document.getElementById('editFieldWell').value = a.field_well || '';
+  document.getElementById('editTypeOfJob').value = a.type_of_job || '';
+  document.getElementById('editObjective').value = a.objective || '';
+  document.getElementById('editDateOfIssue').value = a.date_of_issue || '';
+  openModal('editAssessmentModal');
+}
+
+async function saveEditAssessment() {
+  const id = document.getElementById('editAssessmentId').value;
+  const fieldWell = document.getElementById('editFieldWell').value.trim();
+  const typeOfJob = document.getElementById('editTypeOfJob').value.trim();
+  const objective = document.getElementById('editObjective').value.trim();
+  const dateOfIssue = document.getElementById('editDateOfIssue').value;
+
+  if (!fieldWell) { showToast('Field / Well is required', 'warn'); return; }
+  if (!typeOfJob) { showToast('Type of Job is required', 'warn'); return; }
+
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: { ...getHeaders(), Prefer: 'return=minimal' },
+    body: JSON.stringify({ field_well: fieldWell, type_of_job: typeOfJob, objective, date_of_issue: dateOfIssue })
+  });
+  if (!res.ok) { showToast('Failed to update assessment', 'error'); return; }
+
+  logAudit('assessment', id, 'updated', `Assessment updated: ${fieldWell}`);
+  showToast('Assessment updated', 'success');
+  closeModal('editAssessmentModal');
+  loadAssessments();
+}
+
+async function deleteAssessment(id) {
+  if (!confirm('Are you sure you want to delete this assessment? This action cannot be undone.')) return;
+
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${id}`, {
+    method: 'DELETE',
+    headers: { ...getHeaders(), Prefer: 'return=minimal' }
+  });
+  if (!res.ok) { showToast('Failed to delete assessment', 'error'); return; }
+
+  logAudit('assessment', id, 'deleted', `Assessment deleted`);
+  showToast('Assessment deleted', 'success');
+  loadAssessments();
+}
+
 // Page initialization
 async function assessmentInit() {
   await loadAssessments();
