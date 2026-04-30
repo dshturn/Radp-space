@@ -268,6 +268,7 @@ async function loadSelectedEquipment(id) {
   const items = await apiFetch(`${SUPABASE_URL}/rest/v1/assessment_equipment?assessment_id=eq.${id}&select=*,equipment_items(serial_number,model,equipment_template_id,equipment_templates(name))`, { headers: getHeaders() });
   if (!items) return;
   const el = document.getElementById('selectedEquipment');
+  if (!el) return;
   if (!items.length) { el.innerHTML = '<div class="empty">No equipment selected</div>'; return; }
   el.innerHTML = items.map(i => `
     <div class="item-row">
@@ -280,6 +281,7 @@ async function loadSelectedPersonnel(id) {
   const items = await apiFetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?assessment_id=eq.${id}&select=*,personnel(full_name,position,national_id)`, { headers: getHeaders() });
   if (!items) return;
   const el = document.getElementById('selectedPersonnel');
+  if (!el) return;
   if (!items.length) { el.innerHTML = '<div class="empty">No personnel selected</div>'; return; }
   el.innerHTML = items.map(i => `
     <div class="item-row">
