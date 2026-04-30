@@ -288,27 +288,27 @@ async function approveDeletion(requestId, assessmentId) {
 
 async function rejectDeletion(requestId, assessmentId, reason) {
   const u = getUser();
-  const [updateRes, notifRes] = await Promise.all([
-    fetch(`${SUPABASE_URL}/rest/v1/assessment_deletion_requests?id=eq.${requestId}`, {
-      method: 'PATCH',
-      headers: { ...getHeaders(), Prefer: 'return=minimal' },
-      body: JSON.stringify({ status: 'rejected', approved_by: u.id, approved_at: new Date().toISOString(), rejection_reason: reason || 'Rejected by admin' })
-    }),
-    fetch(`${SUPABASE_URL}/rest/v1/notifications?entity_type=eq.assessment_deletion_request&entity_id=eq.${assessmentId}`, {
-      method: 'PATCH',
-      headers: { ...getHeaders(), Prefer: 'return=minimal' },
-      body: JSON.stringify({ read: true })
-    }).catch(() => {})
-  ]);
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/assessment_deletion_requests?id=eq.${requestId}`, {
+    method: 'PATCH',
+    headers: { ...getHeaders(), Prefer: 'return=minimal' },
+    body: JSON.stringify({ status: 'rejected', approved_by: u.id, approved_at: new Date().toISOString(), rejection_reason: reason || 'Rejected by admin' })
+  });
 
-  if (!updateRes.ok) {
+  if (!res.ok) {
     showToast('Failed to reject deletion request', 'error');
     return;
   }
 
+  // Mark notification as read (best effort, doesn't block rejection)
+  fetch(`${SUPABASE_URL}/rest/v1/notifications?entity_type=eq.assessment_deletion_request&entity_id=eq.${assessmentId}`, {
+    method: 'PATCH',
+    headers: { ...getHeaders(), Prefer: 'return=minimal' },
+    body: JSON.stringify({ read: true })
+  }).catch(() => {});
+
   logAudit('assessment_deletion_request', requestId, 'rejected', reason || 'Deletion request rejected');
   showToast('Deletion request rejected', 'success');
-  loadUsers();
+  renderDeletionRequests();
 }
 
 // ── Display deletion requests on admin page ──
