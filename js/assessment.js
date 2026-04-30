@@ -900,21 +900,24 @@ async function deleteAssessment(id) {
 
   if (isAdmin) {
     // Admins delete directly (delete child records first due to FK constraints)
-    // Delete assessment_equipment and assessment_personnel first
-    await fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment?assessment_id=eq.${id}`, {
+    const delEquip = await fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment?assessment_id=eq.${id}`, {
       method: 'DELETE',
       headers: { ...getHeaders(), Prefer: 'return=minimal' }
     });
-    await fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?assessment_id=eq.${id}`, {
+    console.log('[DELETE] assessment_equipment response:', delEquip.status);
+
+    const delPersonnel = await fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?assessment_id=eq.${id}`, {
       method: 'DELETE',
       headers: { ...getHeaders(), Prefer: 'return=minimal' }
     });
+    console.log('[DELETE] assessment_personnel response:', delPersonnel.status);
 
     // Now delete the assessment itself
     const res = await fetch(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${id}`, {
       method: 'DELETE',
       headers: { ...getHeaders(), Prefer: 'return=minimal' }
     });
+    console.log('[DELETE] assessment response:', res.status);
     if (!res.ok) {
       const err = await res.text().catch(() => '');
       console.error('Delete failed:', res.status, err);
