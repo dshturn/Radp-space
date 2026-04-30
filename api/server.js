@@ -350,6 +350,8 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
     const kidsByParent = {};
     [...childItems, ...grandItems].forEach(c => { (kidsByParent[c.parent_id] = kidsByParent[c.parent_id] || []).push(c); });
 
+    const today = new Date().toLocaleDateString('en-GB');
+
     // Create PDF with pdfkit
     const doc = new PDFDocument({ size: 'A4', margin: 20 });
     res.setHeader('Content-Type', 'application/pdf');
@@ -365,8 +367,6 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
     });
 
     doc.pipe(res);
-
-    const today = new Date().toLocaleDateString('en-GB');
 
     // LoR Header
     doc.fontSize(16).font('Helvetica-Bold').text('List of Readiness', { align: 'center' });
