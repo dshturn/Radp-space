@@ -365,6 +365,15 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
       docsByPersonnel[d.personnel_id].push(d);
     });
 
+    // Deduplicate personnel by ID
+    const seenPersonnelIds = new Set();
+    const uniquePersonnel = personnel.filter(p => {
+      const id = p.personnel?.id;
+      if (seenPersonnelIds.has(id)) return false;
+      seenPersonnelIds.add(id);
+      return true;
+    });
+
     const rootItems = equipment.map(e => e.equipment_items).filter(Boolean);
     const rootIds = rootItems.map(i => i.id);
     let childItems = [];
