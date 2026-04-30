@@ -180,6 +180,7 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
     const personnel = pRes.data;
     const allPersonnelDocs = pDocsRes.data || [];
 
+    console.log(`[PDF] Data loaded: assessment=${assessment?.id}, personnel=${personnel.length}, equipment=${equipment.length}`);
     if (!assessment) return res.status(404).json({ error: 'Assessment not found' });
 
     // Fetch equipment sub-components
