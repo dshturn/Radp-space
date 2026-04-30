@@ -126,6 +126,7 @@ async function loadAssessments() {
     { headers: getHeaders() });
   const deletionRequests = delReqRes.ok ? await delReqRes.json() : [];
   const pendingDeletionIds = new Set(deletionRequests.map(d => d.assessment_id));
+  console.log('[ASSESSMENTS] Pending deletion requests:', deletionRequests, 'IDs:', Array.from(pendingDeletionIds));
 
   const totalCount = parseInt(res.headers.get('Content-Range')?.split('/')[1] || '0', 10);
   const list = document.getElementById('assessmentList');
