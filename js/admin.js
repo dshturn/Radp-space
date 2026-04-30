@@ -384,7 +384,8 @@ async function loadAdminNotifications() {
             <th style="padding:12px;text-align:left;color:var(--text-3);font-weight:600;">Type</th>
             <th style="padding:12px;text-align:left;color:var(--text-3);font-weight:600;">Label</th>
             <th style="padding:12px;text-align:left;color:var(--text-3);font-weight:600;">Status</th>
-            <th style="padding:12px;text-align:left;color:var(--text-3);font-weight:600;">Date</th>
+            <th style="padding:12px;text-align:left;color:var(--text-3);font-weight:600;">Created</th>
+            <th style="padding:12px;text-align:left;color:var(--text-3);font-weight:600;">Modified</th>
             <th style="padding:12px;text-align:center;color:var(--text-3);font-weight:600;">Action</th>
           </tr>
         </thead>
@@ -398,6 +399,7 @@ async function loadAdminNotifications() {
                 <span style="font-size:11px;padding:4px 8px;border-radius:4px;${n.read ? 'background:var(--surface-3);color:var(--text-3);' : 'background:var(--warn-bg);color:var(--warn);font-weight:600;'}">${n.read ? 'Read' : 'Unread'}</span>
               </td>
               <td style="padding:12px;color:var(--text-3);font-size:12px;">${new Date(n.created_at).toLocaleDateString()}</td>
+              <td style="padding:12px;color:var(--text-3);font-size:12px;">${new Date(n.modified_at || n.created_at).toLocaleDateString()}</td>
               <td style="padding:12px;text-align:center;">
                 ${n.read
                   ? `<button class="btn-warning btn-sm" onclick="toggleNotifReadStatus('${n.id}', false)">Mark Unread</button>`
