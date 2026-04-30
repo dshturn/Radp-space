@@ -322,8 +322,13 @@ navigator.serviceWorker.getRegistrations().then(regs => {
       </div>
     </div>
 
+    <div id="deletionRequestsSection" style="display:none;margin-bottom:24px;">
+      <div class="section-title" style="color:var(--bad);">🗑 Pending Deletion Requests</div>
+      <div id="deletionRequestsList"></div>
+    </div>
+
     <div id="pendingSection">
-      <div class="section-title" style="color:var(--warn);">⚠ Pending Approval</div>
+      <div class="section-title" style="color:var(--warn);">⚠ Pending User Approval</div>
       <div id="pendingList"></div>
     </div>
 
