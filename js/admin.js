@@ -413,7 +413,7 @@ async function loadAdminNotifications() {
 }
 
 async function toggleNotifReadStatus(notifId, shouldBeRead) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/notifications?id=eq.${notifId}`, {
+  const res = await originalFetch(`${SUPABASE_URL}/rest/v1/notifications?id=eq.${notifId}`, {
     method: 'PATCH',
     headers: { ...getHeaders(), Prefer: 'return=minimal' },
     body: JSON.stringify({ read: shouldBeRead })
