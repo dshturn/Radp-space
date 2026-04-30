@@ -863,6 +863,7 @@ async function deleteAssessment(id) {
             entity_type: 'assessment_deletion_request',
             entity_id: id,
             entity_label: `Assessment deletion requested (ID: ${id})`,
+            type: 'deletion_request',
             read: false
           })
         })
