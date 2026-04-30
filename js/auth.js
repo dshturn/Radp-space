@@ -161,7 +161,7 @@ async function register() {
     msg.textContent = company === '__new__' ? 'Please finish adding your company first.' : 'Please fill all fields.';
     return;
   }
-  const res  = await fetch(`/api?endpoint=${encodeURIComponent('/auth/v1/signup')}`, {
+  const res  = await fetch((window.location.hostname === 'localhost' ? 'http://localhost:5000' : '') + `/api?endpoint=${encodeURIComponent('/auth/v1/signup')}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password, options: { data: { full_name: fullName, company, service_line: serviceLine } } })
