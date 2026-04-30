@@ -111,6 +111,40 @@ async function approveAssessment(assessmentId) {
   });
 }
 
+## Data Deduplication
+
+When fetching related records (personnel with documents, equipment with certs):
+- **Query filtering**: Only fetch documents for entities in current context (not system-wide)
+  - Wrong: `fetch(/personnel_documents)` → returns ALL personnel docs
+  - Right: `fetch(/personnel_documents?personnel_id=in.(1,2,3))` → only docs for these 3 people
+- **Client-side deduplication**: Remove exact duplicates before rendering
+  - Use Set to track already-seen combinations: `${entity_id}:${type_name}`
+  - Filter array to keep only first occurrence of each combination
+- **Apply to both frontend and backend**: Keep logic consistent across display and PDF generation
+
+Example:
+```javascript
+const seenDocs = new Set();
+const uniqueDocs = allDocs.filter(d => {
+  const key = `${d.personnel_id}:${d.doc_type_name}`;
+  if (seenDocs.has(key)) return false;
+  seenDocs.add(key);
+  return true;
+});
+```
+
+## PDF Generation
+
+Document-to-PDF conversion uses `html-pdf` library (wkhtmltopdf backend):
+- **Link handling**: `<a href="...">text</a>` tags convert to clickable PDF annotations
+- **HTML structure**: All styling must be inline (no external CSS)
+- **Payload size**: Increased Express limit to 5MB for large HTML payloads
+- **Error handling**: Always check response status; return user-friendly error message
+
+Endpoints:
+- `/api/generate-html-pdf`: Generic HTML→PDF conversion (for dynamic LoR display)
+- `/api/generate-lor-pdf`: Assessment-specific LoR with data fetching and deduplication
+
 ## Performance
 
 Targets:
@@ -119,12 +153,14 @@ Targets:
 - Field lookup (3G): < 2 min
 - JS module: < 50KB each
 - CSS: < 100KB
+- PDF generation: < 3s for complex LoR tables
 
 Optimization:
 - Pagination: 25 items/page
 - Lazy-load modals (don't render until opened)
 - Cache stable data (templates, service lines, crew rosters)
 - Index database on: contractor_id, service_line, status, created_at
+- PDF queries: Fetch only assessment-specific data (not all records)
 
 ## Database Migrations
 
