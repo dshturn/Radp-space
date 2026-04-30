@@ -1,8 +1,8 @@
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
-const pdf = require('html-pdf');
-const { PDFDocument } = require('pdf-lib');
+const PDFDocument = require('pdfkit');
+const { PDFDocument: PDFLibDocument } = require('pdf-lib');
 require('dotenv').config();
 
 const app = express();
