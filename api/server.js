@@ -336,11 +336,10 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
 
     // Fetch data
     console.log('[PDF] Fetching assessment data...');
-    const [aRes, eRes, pRes, pDocsRes] = await Promise.all([
+    const [aRes, eRes, pRes] = await Promise.all([
       axios.get(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${assessmentId}`, { headers }),
       axios.get(`${SUPABASE_URL}/rest/v1/assessment_equipment?assessment_id=eq.${assessmentId}&select=*,equipment_items(id,serial_number,model,name,parent_id,equipment_templates(name),documents(*,document_types(document_name)))`, { headers }),
-      axios.get(`${SUPABASE_URL}/rest/v1/assessment_personnel?assessment_id=eq.${assessmentId}&select=*,personnel(*)`, { headers }),
-      axios.get(`${SUPABASE_URL}/rest/v1/personnel_documents?select=*`, { headers })
+      axios.get(`${SUPABASE_URL}/rest/v1/assessment_personnel?assessment_id=eq.${assessmentId}&select=*,personnel(*)`, { headers })
     ]);
 
     const assessment = aRes.data[0];
@@ -348,7 +347,14 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
 
     const equipment = eRes.data;
     const personnel = pRes.data;
-    const allPersonnelDocs = pDocsRes.data || [];
+
+    // Fetch documents only for personnel in this assessment
+    let allPersonnelDocs = [];
+    if (personnel.length) {
+      const personnelIds = personnel.map(p => p.personnel.id).filter(Boolean);
+      const pDocsRes = await axios.get(`${SUPABASE_URL}/rest/v1/personnel_documents?personnel_id=in.(${personnelIds.join(',')})&select=*`, { headers });
+      allPersonnelDocs = pDocsRes.data || [];
+    }
 
     console.log(`[PDF] Data: assessment=${assessment?.id}, personnel=${personnel.length}, equipment=${equipment.length}, docs=${allPersonnelDocs.length}`);
 
