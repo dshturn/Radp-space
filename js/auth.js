@@ -52,6 +52,7 @@ async function login() {
 
   localStorage.setItem('radp_token', data.access_token);
   localStorage.setItem('radp_user', JSON.stringify({ id: data.user.id, email: data.user.email, ...profile }));
+  logAudit('user', data.user.id, 'logged_in', email);
   showPage('contractor');
 }
 
