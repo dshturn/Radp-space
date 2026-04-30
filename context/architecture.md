@@ -149,6 +149,39 @@ Fallback on network fail:
 - Show cached crew + equipment data (read-only)
 - Cannot submit assessments offline (requires auth + server validation)
 
+## API Proxy (localhost:5000, Express)
+
+Proxies browser requests from localhost:3001 (Vercel dev) to Supabase REST API:
+- **GET /api?endpoint=/rest/v1/audit_log...** → forwards to Supabase, returns JSON
+- **GET /api?endpoint=/storage/v1/object/public/...** → forwards to Supabase, returns binary (PDF/image)
+- **POST /api?endpoint=/rest/v1/assessments** → forwards with user's JWT auth header
+
+Key features:
+- **Header forwarding**: Authorization (JWT), Prefer (count=exact), apikey (anon key)
+- **Response headers**: Content-Range (pagination), Content-Type (file type)
+- **Binary handling**: Storage requests use `responseType: 'arraybuffer'` to avoid JSON parsing
+- **CORS exposure**: Content-Range header exposed to browser for pagination support
+
+## Audit Log & Document Links
+
+Audit log tracks all actions: created, updated, deleted, uploaded, added_X, removed_X, approved, rejected
+
+Labels improved (2026-04-30):
+- Deletions: "Equipment name - Serial#" instead of "Equipment item"
+- Removals: "Person name" instead of "Personnel entry {id}"
+- Documents: "Person/Equipment name - Document type" instead of generic labels
+
+Document links:
+- Stored in audit_log.metadata.file_url (Supabase storage path)
+- Clickable in audit log UI → triggers openDoc() function
+- Binary PDF/image fetched through API proxy with proper Content-Type headers
+- Displayed inline using PDF.js viewer
+
+RLS Access:
+- Contractors: see only entries where actor_id = auth.uid() (fixed 2026-04-30)
+- Admins: see all audit log entries
+- Pagination: 50 entries/page, Content-Range header enables "next page" button
+
 ## Performance Targets
 
 See context/rules.md § Performance for targets and optimization techniques.
