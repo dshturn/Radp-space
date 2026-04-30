@@ -331,7 +331,7 @@ async function renderDeletionRequests() {
       </div>
       <div class="admin-actions" style="gap:6px;">
         <button class="btn-success btn-sm" onclick="approveDeletion(${parseInt(req.id)}, ${parseInt(req.assessment_id)})">✓ Approve</button>
-        <button class="btn-danger btn-sm" onclick="rejectDeletion(${parseInt(req.id)}, 'Rejected by admin')">✕ Reject</button>
+        <button class="btn-danger btn-sm" onclick="rejectDeletion(${parseInt(req.id)}, ${parseInt(req.assessment_id)}, 'Rejected by admin')">✕ Reject</button>
       </div>
     </div>
   `).join('');
