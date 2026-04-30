@@ -218,6 +218,29 @@ Audit Log (immutable, forever)
 - [ ] Equipment maintenance log (service intervals, inspections)
 - [ ] Integration with SAP (contractor + crew sync)
 
+## Recent Fixes & Improvements (2026-04-30)
+
+### Audit Log Enhancements
+- ✅ **Better deletion labels**: Deleted items now show full context (e.g., "Equipment name - Serial#" instead of "Equipment item")
+- ✅ **Removal clarity**: Removed personnel/equipment shows actual names instead of IDs
+- ✅ **Document links**: Clickable URLs in audit log now display PDFs/images inline
+- ✅ **RLS policy fix**: Contractors can now see all 747+ of their own audit entries (fixed policy to read actor_id = auth.uid())
+- ✅ **Pagination**: Content-Range header now properly forwarded through API proxy, pagination works correctly
+
+### API Proxy Improvements
+- ✅ **Binary file handling**: Storage requests (PDFs, images) now returned as binary, not JSON-encoded
+- ✅ **Header forwarding**: Prefer header now forwarded to Supabase (enables count=exact for pagination)
+- ✅ **Content-Type preservation**: Response content-type forwarded to client for proper file handling
+- ✅ **CORS exposed headers**: Content-Range header now exposed to browser for pagination
+
+### UI/UX Bug Fixes
+- ✅ **Double-click protection**: Remove buttons now disabled after first click to prevent duplicate audit entries (was logging same removal 80+ times)
+- ✅ **Select statements**: Audit log queries now include `select=*` to fetch all columns including metadata
+
+### Known Limitations
+- Old deleted items retain generic labels (data is gone, can't be recovered retroactively)
+- Future deletions will have descriptive labels with item names
+
 ---
 
-Owner: Tech Lead | Last updated: 2026-04-27 (Azure PostgreSQL + Heroku Migration Started)
+Owner: Tech Lead | Last updated: 2026-04-30 (Audit Log & Proxy Fixes, Document Links, RLS Contractor Access)
