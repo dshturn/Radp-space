@@ -274,13 +274,6 @@ async function approveDeletion(requestId, assessmentId) {
     return;
   }
 
-  // Mark notification as read (best effort, doesn't block approval)
-  fetch(`${SUPABASE_URL}/rest/v1/notifications?entity_type=eq.assessment_deletion_request&entity_id=eq.${assessmentId}`, {
-    method: 'PATCH',
-    headers: { ...getHeaders(), Prefer: 'return=minimal' },
-    body: JSON.stringify({ read: true })
-  }).catch(() => {});
-
   logAudit('assessment', assessmentId, 'deletion_approved', `Assessment deleted by admin approval of request ${requestId}`);
   showToast('Assessment deleted', 'success');
   renderDeletionRequests();
