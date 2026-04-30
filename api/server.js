@@ -300,7 +300,6 @@ app.post('/api', async (req, res) => {
 
 // ── LoR PDF Generation (must be before /api catch-all) ──
 app.post('/api/generate-lor-pdf', async (req, res) => {
-  let browser;
   try {
     const { assessmentId, docType = 'both' } = req.body;
     console.log(`[PDF] Starting generation for assessment ${assessmentId}, type: ${docType}`);
@@ -309,7 +308,7 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
       Authorization: req.headers.authorization || `Bearer ${SUPABASE_ANON_KEY}`,
     };
 
-    // Fetch all data
+    // Fetch data
     console.log('[PDF] Fetching assessment data...');
     const [aRes, eRes, pRes, pDocsRes] = await Promise.all([
       axios.get(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${assessmentId}`, { headers }),
@@ -319,14 +318,21 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
     ]);
 
     const assessment = aRes.data[0];
+    if (!assessment) return res.status(404).json({ error: 'Assessment not found' });
+
     const equipment = eRes.data;
     const personnel = pRes.data;
     const allPersonnelDocs = pDocsRes.data || [];
 
-    console.log(`[PDF] Data loaded: assessment=${assessment?.id}, personnel=${personnel.length}, equipment=${equipment.length}`);
-    if (!assessment) return res.status(404).json({ error: 'Assessment not found' });
+    console.log(`[PDF] Data: assessment=${assessment?.id}, personnel=${personnel.length}, equipment=${equipment.length}, docs=${allPersonnelDocs.length}`);
 
-    // Fetch equipment sub-components
+    // Build document lookup
+    const docsByPersonnel = {};
+    allPersonnelDocs.forEach(d => {
+      if (!docsByPersonnel[d.personnel_id]) docsByPersonnel[d.personnel_id] = [];
+      docsByPersonnel[d.personnel_id].push(d);
+    });
+
     const rootItems = equipment.map(e => e.equipment_items).filter(Boolean);
     const rootIds = rootItems.map(i => i.id);
     let childItems = [];
@@ -341,35 +347,79 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
       grandItems = gcRes.data;
     }
 
-    const docsByPersonnel = {};
-    allPersonnelDocs.forEach(d => {
-      if (!docsByPersonnel[d.personnel_id]) docsByPersonnel[d.personnel_id] = [];
-      docsByPersonnel[d.personnel_id].push(d);
-    });
-
     const kidsByParent = {};
     [...childItems, ...grandItems].forEach(c => { (kidsByParent[c.parent_id] = kidsByParent[c.parent_id] || []).push(c); });
 
-    const today = new Date();
-    const todayStr = today.toLocaleDateString('en-GB');
-    const esc = s => (s || '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    // Create PDF with pdfkit
+    const doc = new PDFDocument({ size: 'A4', margin: 20 });
+    const buffers = [];
+    doc.on('data', buffers.push.bind(buffers));
 
-    // Group personnel by role and equipment by type
-    const byRole = {};
+    const today = new Date().toLocaleDateString('en-GB');
+
+    // LoR Header
+    doc.fontSize(16).font('Helvetica-Bold').text('List of Readiness', { align: 'center' });
+    doc.fontSize(10).font('Helvetica').text(`Assessment: ${assessment.id} | ${assessment.company_name || '—'} | Field: ${assessment.field_well || '—'} | ${today}`, { align: 'left' });
+    doc.moveDown(0.3);
+
+    // Personnel section
+    doc.fontSize(12).font('Helvetica-Bold').text('Personnel');
+    doc.moveDown(0.2);
+
+    const roles = {};
     personnel.forEach(p => {
       const role = p.personnel?.position || 'Unassigned';
-      if (!byRole[role]) byRole[role] = [];
-      byRole[role].push(p);
+      if (!roles[role]) roles[role] = [];
+      roles[role].push(p);
     });
 
-    const byType = {};
+    let pNum = 1;
+    Object.keys(roles).sort().forEach(role => {
+      doc.fontSize(10).font('Helvetica-Bold').fillColor('#1e3a5f').text(`● ${role}`, { underline: false });
+      doc.fillColor('black').fontSize(9).font('Helvetica');
+
+      roles[role].forEach(p => {
+        const per = p.personnel;
+        const docs = docsByPersonnel[per.id] || [];
+        const docText = docs.length ? docs.map(d => d.doc_type_name).join(', ') : '—';
+        doc.text(`${pNum++}. ${per.full_name} (${per.position}) — ${docText}`);
+      });
+      doc.moveDown(0.2);
+    });
+
+    doc.moveDown(0.3);
+
+    // Equipment section
+    doc.fontSize(12).font('Helvetica-Bold').text('Equipment');
+    doc.moveDown(0.2);
+
+    const types = {};
     rootItems.forEach(item => {
       const type = item.equipment_templates?.name || 'Equipment';
-      if (!byType[type]) byType[type] = [];
-      byType[type].push(item);
+      if (!types[type]) types[type] = [];
+      types[type].push(item);
     });
 
-    // Collect documents based on docType filter (needed for page calculation)
+    let eNum = 1;
+    Object.keys(types).sort().forEach(type => {
+      doc.fontSize(10).font('Helvetica-Bold').fillColor('#2d4a1e').text(`● ${type}`, { underline: false });
+      doc.fillColor('black').fontSize(9).font('Helvetica');
+
+      const renderItem = (it, depth) => {
+        const docs = it?.documents || [];
+        const name = it?.equipment_templates?.name || it?.name || it?.model || '—';
+        const indent = '  '.repeat(depth);
+        const docText = docs.length ? docs.map(d => d.document_types?.document_name || d.doc_type_name).join(', ') : '—';
+        doc.text(`${indent}${depth === 0 ? eNum++ + '. ' : ''}${name} (${it?.serial_number || '—'}) — ${docText}`);
+        (kidsByParent[it.id] || []).forEach(child => renderItem(child, depth + 1));
+      };
+      types[type].forEach(item => renderItem(item, 0));
+      doc.moveDown(0.2);
+    });
+
+    // Add document pages
+    console.log('[PDF] Adding document pages...');
+
     const allDocs = [];
     if (docType === 'personnel' || docType === 'both') {
       personnel.forEach(p => {
@@ -381,178 +431,55 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
       });
     }
     if (docType === 'equipment' || docType === 'both') {
-      rootItems.forEach(item => {
-        const renderItem = (it) => {
-          const docs = it?.documents || [];
-          const name = it?.equipment_templates?.name || it?.name || it?.model || '—';
-          docs.forEach(d => {
-            allDocs.push({ type: 'equipment', ownerName: name, docName: d.document_types?.document_name || d.doc_type_name || '—', fileUrl: d.file_url, id: d.id });
-          });
-          (kidsByParent[it.id] || []).forEach(child => renderItem(child));
-        };
-        renderItem(item);
-      });
-    }
-
-    // First, calculate page numbers for all documents (dry run)
-    let pageCounter = 1; // LoR will be on page 1 (might span multiple)
-    const docPageMap = {};
-    for (const doc of allDocs) {
-      docPageMap[doc.id] = pageCounter;
-      if (doc.fileUrl?.match(/\.pdf$/i)) {
-        try {
-          const docResponse = await axios.get(doc.fileUrl, { responseType: 'arraybuffer', timeout: 10000 });
-          const srcPdf = await PDFDocument.load(docResponse.data);
-          pageCounter += srcPdf.getPageCount();
-        } catch (e) {
-          pageCounter++; // Assume 1 page on error
-        }
-      } else {
-        pageCounter++; // Images are 1 page
-      }
-    }
-    console.log(`[PDF] Document page map: ${JSON.stringify(docPageMap)}`);
-
-    // Build LoR with page numbers in links
-    let persRows = '';
-    let pNum = 1;
-    const roles = Object.keys(byRole).sort();
-    roles.forEach(role => {
-      persRows += `<tr><td colspan="11" style="background:#1e3a5f;color:white;font-weight:bold;padding:5px 4px;border:1px solid #bbb;">● ${esc(role)}</td></tr>`;
-      byRole[role].forEach(p => {
-        const per = p.personnel;
-        const docs = docsByPersonnel[per.id] || [];
-        if (!docs.length) {
-          persRows += `<tr><td>${pNum++}</td><td>${esc(per?.full_name||'—')}</td><td>${esc(String(per?.years_experience||'—'))}</td><td>${esc(per?.position||'—')}</td><td>—</td><td>—</td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td></tr>`;
-        } else {
-          docs.forEach((d, idx) => {
-            const docLink = `<a href="#doc-${d.id}" style="color:#0066cc;text-decoration:underline;cursor:pointer;">${esc(d.doc_type_name || '—')}</a>`;
-            persRows += `<tr><td>${idx === 0 ? pNum++ : ''}</td><td>${idx === 0 ? esc(per?.full_name||'—') : ''}</td><td>${idx === 0 ? esc(String(per?.years_experience||'—')) : ''}</td><td>${idx === 0 ? esc(per?.position||'—') : ''}</td><td>${docLink}</td><td>${esc(d.expiry_date || '—')}</td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td></tr>`;
-          });
-        }
-      });
-    });
-
-    let equipRows = '', eNum = 1;
-    const types = Object.keys(byType).sort();
-    types.forEach(type => {
-      equipRows += `<tr><td colspan="11" style="background:#2d4a1e;color:white;font-weight:bold;padding:5px 4px;border:1px solid #bbb;">● ${type}</td></tr>`;
-      const renderItem = (it, depth) => {
-        const docs = it?.documents || [];
-        const indent = depth === 0 ? '' : '&nbsp;'.repeat(depth * 4) + '└─ ';
-        const label = indent + (it?.equipment_templates?.name || it?.name || it?.model || '—');
-        const numCell = depth === 0 ? String(eNum++) : '';
-        const sn = esc(it?.serial_number || '—');
-        if (!docs.length) {
-          equipRows += `<tr><td>${numCell}</td><td>${sn}</td><td>${label}</td><td>—</td><td>—</td><td>—</td><td></td><td></td><td></td><td></td><td></td></tr>`;
-        } else {
-          docs.forEach((d, idx) => {
-            const docLink = `<a href="#doc-${d.id}" style="color:#0066cc;text-decoration:underline;cursor:pointer;">${esc(d.document_types?.document_name || d.doc_type_name || '—')}</a>`;
-            equipRows += `<tr><td>${idx === 0 ? numCell : ''}</td><td>${idx === 0 ? sn : ''}</td><td>${idx === 0 ? label : ''}</td><td>${docLink}</td><td>${esc(d.issue_date || '—')}</td><td>${esc(d.expiry_date || '—')}</td><td></td><td></td><td></td><td></td><td></td></tr>`;
-          });
-        }
-        (kidsByParent[it.id] || []).forEach(child => renderItem(child, depth + 1));
+      const renderEquip = (item) => {
+        const docs = item?.documents || [];
+        const name = item?.equipment_templates?.name || item?.name || item?.model || '—';
+        docs.forEach(d => {
+          allDocs.push({ type: 'equipment', ownerName: name, docName: d.document_types?.document_name || d.doc_type_name || '—', fileUrl: d.file_url, id: d.id });
+        });
+        (kidsByParent[item.id] || []).forEach(child => renderEquip(child));
       };
-      byType[type].forEach(item => renderItem(item, 0));
-    });
+      rootItems.forEach(item => renderEquip(item));
+    }
 
-    console.log(`[PDF] Data: byRole=${Object.keys(byRole).join(',')}, byType=${Object.keys(byType).join(',')}, persRows=${persRows.length}, equipRows=${equipRows.length}`);
-
-    // Generate LoR HTML with table
-    const lorHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>LoR</title><style>body{font-family:Arial;font-size:10px;margin:10px}table{border-collapse:collapse;width:100%;margin:10px 0}td{border:1px solid #bbb;padding:3px 2px;vertical-align:top;font-size:9px}th{background:#333;color:white;font-weight:bold;padding:3px 2px;font-size:9px;text-align:left}h2{margin:5px 0;font-size:14px}h3{margin:8px 0 3px 0;font-size:11px}p{margin:2px 0;font-size:9px}</style></head><body><h2>List of Readiness</h2><p>Assessment: <strong>${assessment.id}</strong> | <strong>${esc(assessment.company_name||'—')}</strong> | Field: ${esc(assessment.field_well||'—')} | ${todayStr}</p><h3>Personnel</h3><table><tr style="background:#1e3a5f;color:white;font-weight:bold;"><td>No.</td><td>Name</td><td>Exp.</td><td>Pos.</td><td>Document</td><td>Expiry</td><td>✓</td><td>✗</td><td>A</td><td>B</td><td>C</td></tr>${persRows}</table><h3>Equipment</h3><table><tr style="background:#2d4a1e;color:white;font-weight:bold;"><td>No.</td><td>Serial</td><td>Equipment</td><td>Document</td><td>Issue</td><td>Expiry</td><td>✓</td><td>✗</td><td>A</td><td>B</td><td>C</td></tr>${equipRows}</table></body></html>`;
-
-    // Generate LoR PDF from HTML
-    console.log('[PDF] Generating LoR PDF...');
-    const lorPdfBuffer = await new Promise((resolve, reject) => {
-      pdf.create(lorHtml, { format: 'A4' }).toBuffer((err, buffer) => {
-        if (err) return reject(err);
-        resolve(buffer);
-      });
-    });
-
-    console.log(`[PDF] LoR PDF generated (${lorPdfBuffer.length} bytes)`);
-
-    // Load LoR PDF into pdf-lib for merging with documents
-    const mergedPdf = await PDFDocument.load(lorPdfBuffer);
-    const lorPageCount = mergedPdf.getPageCount();
-    console.log(`[PDF] LoR occupies ${lorPageCount} pages. Documents start at page ${lorPageCount + 1}`);
-    console.log(`[PDF] Processing ${allDocs.length} documents...`);
-
-    // Track actual pages added (some PDFs have multiple pages)
-    const actualPageMap = {};
-    let currentActualPage = lorPageCount + 1;
-
-    // Add document pages (images and PDFs)
-    for (const doc of allDocs) {
-      console.log(`[PDF] Processing: ${doc.type} - ${doc.ownerName} - ${doc.docName} (page ${docPageMap[doc.id]})`);
-      if (!doc.fileUrl) continue;
-
-      actualPageMap[doc.id] = currentActualPage;
-
+    for (const d of allDocs) {
+      if (!d.fileUrl) continue;
       try {
-        const docResponse = await axios.get(doc.fileUrl, { responseType: 'arraybuffer', timeout: 10000 });
-        const docBuffer = Buffer.from(docResponse.data);
-
-        if (doc.fileUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-          // Embed image
-          let embeddedImage;
-          if (doc.fileUrl.match(/\.png$/i)) {
-            embeddedImage = await mergedPdf.embedPng(docBuffer);
-          } else {
-            embeddedImage = await mergedPdf.embedJpg(docBuffer);
-          }
-
-          const page = mergedPdf.addPage([595, 842]); // A4 portrait
-          const { width, height } = embeddedImage.scale(1);
-          const imgWidth = Math.min(width, 550);
-          const imgHeight = (height * imgWidth) / width;
-          page.drawImage(embeddedImage, {
-            x: 20,
-            y: Math.max(20, 842 - imgHeight - 20),
-            width: imgWidth,
-            height: imgHeight
-          });
-
-          // Add label
-          page.drawText(`[${doc.type.toUpperCase()}] ${doc.ownerName} — ${doc.docName}`, {
-            x: 20,
-            y: 800,
-            size: 10,
-            color: { r: 0, g: 0, b: 0 }
-          });
-          currentActualPage++;
-        } else if (doc.fileUrl.match(/\.pdf$/i)) {
-          // Merge PDF pages
+        const resp = await axios.get(d.fileUrl, { responseType: 'arraybuffer', timeout: 10000 });
+        if (d.fileUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+          doc.addPage();
+          doc.fontSize(9).text(`[${d.type.toUpperCase()}] ${d.ownerName} — ${d.docName}`, { y: 20 });
+          doc.image(resp.data, { x: 20, y: 50, width: 555 });
+        } else if (d.fileUrl.match(/\.pdf$/i)) {
           try {
-            const srcPdf = await PDFDocument.load(docBuffer);
-            const pageIndices = srcPdf.getPageIndices();
-            const srcPages = await mergedPdf.copyPages(srcPdf, pageIndices);
-            srcPages.forEach(page => mergedPdf.addPage(page));
-            currentActualPage += pageIndices.length;
-          } catch (pdfErr) {
-            console.warn(`Failed to merge PDF ${doc.fileUrl}:`, pdfErr.message);
+            const srcPdf = await PdfLibDocument.load(resp.data);
+            const pageCount = srcPdf.getPageCount();
+            for (let i = 0; i < pageCount; i++) {
+              doc.addPage();
+              doc.fontSize(9).text(`[${d.type.toUpperCase()}] ${d.ownerName} — ${d.docName} (page ${i + 1}/${pageCount})`, { y: 20 });
+            }
+          } catch (e) {
+            console.warn(`Failed to process PDF ${d.fileUrl}:`, e.message);
           }
         }
-      } catch (fetchErr) {
-        console.warn(`Failed to fetch document ${doc.fileUrl}:`, fetchErr.message);
+      } catch (e) {
+        console.warn(`Failed to fetch ${d.fileUrl}:`, e.message);
       }
     }
 
-    // Add page numbers to document references for navigation
-    console.log('[PDF] Document pages: ' + JSON.stringify(actualPageMap));
+    doc.end();
 
-    // Save merged PDF and send
-    console.log('[PDF] Saving merged PDF...');
-    const finalPdfBytes = await mergedPdf.save();
-    console.log(`[PDF] Final PDF size: ${finalPdfBytes.length} bytes`);
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="LoR_${assessment.field_well || 'Assessment'}_${todayStr}.pdf"`);
-    res.send(Buffer.from(finalPdfBytes));
-    console.log('[PDF] PDF sent successfully');
+    doc.on('finish', () => {
+      const finalBuffer = Buffer.concat(buffers);
+      console.log(`[PDF] Generated ${finalBuffer.length} bytes`);
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="LoR_${assessment.field_well || 'Assessment'}_${today}.pdf"`);
+      res.send(finalBuffer);
+    });
 
   } catch (err) {
-    console.error('PDF generation error:', err.message);
-    res.status(500).json({ error: 'Failed to generate PDF: ' + err.message });
+    console.error('[PDF] Error:', err.message, err.stack);
+    res.status(500).json({ error: err.message });
   }
 });
 
