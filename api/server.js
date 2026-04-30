@@ -421,7 +421,10 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
     // For now, just return the LoR table
     console.log('[PDF] LoR table complete, finalizing...');
 
-    doc.end();
+    doc.on('error', (err) => {
+      console.error('[PDF] Document error:', err);
+      res.status(500).json({ error: 'PDF generation error: ' + err.message });
+    });
 
     doc.on('finish', () => {
       const finalBuffer = Buffer.concat(buffers);
@@ -429,7 +432,10 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="LoR_${assessment.field_well || 'Assessment'}_${today}.pdf"`);
       res.send(finalBuffer);
+      console.log('[PDF] PDF sent');
     });
+
+    doc.end();
 
   } catch (err) {
     console.error('[PDF] Error:', err.message, err.stack);
