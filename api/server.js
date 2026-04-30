@@ -434,13 +434,6 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
     });
 
     let equipRows = '', eNum = 1;
-    const byType = {};
-    rootItems.forEach(item => {
-      const type = item.equipment_templates?.name || 'Equipment';
-      if (!byType[type]) byType[type] = [];
-      byType[type].push(item);
-    });
-
     const types = Object.keys(byType).sort();
     types.forEach(type => {
       equipRows += `<tr><td colspan="11" style="background:#2d4a1e;color:white;font-weight:bold;padding:5px 4px;border:1px solid #bbb;">● ${type}</td></tr>`;
