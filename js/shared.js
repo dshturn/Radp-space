@@ -168,11 +168,16 @@ function filterCheckboxList(listId, query) {
 
 // ─── Toggle helpers ───
 function toggleCard(btn) {
-  btn.closest('.app-card').classList.toggle('expanded');
+  const card = btn.closest('.app-card');
+  card.classList.toggle('expanded');
+  const isExpanded = card.classList.contains('expanded');
+  btn.setAttribute('aria-expanded', isExpanded);
 }
 
 function toggleSubCard(card) {
   card.classList.toggle('expanded');
+  const btn = card.querySelector('.btn-toggle');
+  if (btn) btn.setAttribute('aria-expanded', card.classList.contains('expanded'));
 }
 
 function toggleGroup(header) {
