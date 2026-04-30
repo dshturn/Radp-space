@@ -66,14 +66,14 @@ function esc(str) {
 // ─── API fetch with 401 guard and error surfacing ───
 async function apiFetch(url, options = {}) {
   try {
-    // Route Supabase calls through local proxy
+    // Route Supabase calls through local proxy for localhost development
     let fetchUrl = url;
-    if (url.includes('supabase.co')) {
+    if (url.includes('supabase.co') && window.location.hostname === 'localhost') {
       const endpoint = url.replace(SUPABASE_URL, '').split('?')[0];
       const queryPart = url.includes('?') ? url.split('?')[1] : '';
       // Convert /api/ paths to /rest/v1/ for standard Supabase routing
       const normalizedEndpoint = endpoint.replace(/^\/api\//, '/rest/v1/');
-      fetchUrl = `/api?endpoint=${encodeURIComponent(normalizedEndpoint)}${queryPart ? '&' + queryPart : ''}`;
+      fetchUrl = `http://localhost:5000/api?endpoint=${encodeURIComponent(normalizedEndpoint)}${queryPart ? '&' + queryPart : ''}`;
     }
 
     const res = await fetch(fetchUrl, options);
