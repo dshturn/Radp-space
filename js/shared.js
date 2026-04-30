@@ -572,8 +572,11 @@ async function loadNotifications() {
 async function markNotifRead(id, el) {
   el?.classList.remove('unread');
   const u = getUser();
-  // Use contractor_id + id to ensure row visibility under RLS
-  await fetch(`${SUPABASE_URL}/rest/v1/notifications?contractor_id=eq.${u.id}&id=eq.${id}`, {
+  const endpoint = `/rest/v1/notifications?contractor_id=eq.${u.id}&id=eq.${id}`;
+  const url = window.location.hostname === 'localhost'
+    ? `http://localhost:5000/api?endpoint=${encodeURIComponent(endpoint)}`
+    : `${SUPABASE_URL}${endpoint}`;
+  await fetch(url, {
     method: 'PATCH', headers: { ...getHeaders(), Prefer: 'return=minimal' },
     body: JSON.stringify({ read: true })
   });
