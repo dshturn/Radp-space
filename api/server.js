@@ -354,6 +354,21 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
     const todayStr = today.toLocaleDateString('en-GB');
     const esc = s => (s || '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
+    // Group personnel by role and equipment by type
+    const byRole = {};
+    personnel.forEach(p => {
+      const role = p.personnel?.position || 'Unassigned';
+      if (!byRole[role]) byRole[role] = [];
+      byRole[role].push(p);
+    });
+
+    const byType = {};
+    rootItems.forEach(item => {
+      const type = item.equipment_templates?.name || 'Equipment';
+      if (!byType[type]) byType[type] = [];
+      byType[type].push(item);
+    });
+
     // Collect documents based on docType filter (needed for page calculation)
     const allDocs = [];
     if (docType === 'personnel' || docType === 'both') {
