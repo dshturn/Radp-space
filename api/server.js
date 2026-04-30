@@ -530,12 +530,8 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
     // Load LoR PDF into pdf-lib
     const mergedPdf = await PDFDocument.load(lorPdfBuffer);
     const lorPageCount = mergedPdf.getPageCount();
-    let currentPageNum = lorPageCount + 1;
-    console.log(`[PDF] LoR occupies ${lorPageCount} pages. Documents start at page ${currentPageNum}`);
+    console.log(`[PDF] LoR occupies ${lorPageCount} pages. Documents start at page ${lorPageCount + 1}`);
     console.log(`[PDF] Processing ${allDocs.length} documents...`);
-
-    // Track which document goes to which page
-    const docPageMap = {};
 
     // Add document pages (images and PDFs)
     for (const doc of allDocs) {
