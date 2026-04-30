@@ -105,8 +105,13 @@ function showDetailTab(tab, el) {
 async function loadAssessments() {
   const u = getUser();
   const from = _assessPage * _ASSESS_PAGE_SIZE;
+  // Admins/assessors see all assessments; contractors see only their own
+  const isAdmin = u.role === 'admin' || u.role === 'assessor';
+  const endpoint = isAdmin
+    ? `/rest/v1/assessments?order=created_at.desc&offset=${from}&limit=${_ASSESS_PAGE_SIZE}`
+    : `/rest/v1/assessments?contractor_id=eq.${u.id}&order=created_at.desc&offset=${from}&limit=${_ASSESS_PAGE_SIZE}`;
   const res  = await fetch(
-    `${SUPABASE_URL}/rest/v1/assessments?contractor_id=eq.${u.id}&order=created_at.desc&offset=${from}&limit=${_ASSESS_PAGE_SIZE}`,
+    `${SUPABASE_URL}${endpoint}`,
     { headers: { ...getHeaders(), Prefer: 'count=exact' } }
   );
   if (!res.ok) { showToast('Failed to load assessments', 'error'); return; }
