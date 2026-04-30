@@ -148,7 +148,7 @@ async function loadAssessments() {
       <div style="display:flex;align-items:center;gap:8px;">
         ${isEditable ? `<button class="btn-edit btn-sm" onclick="openEditAssessment(${parseInt(a.id)});event.stopPropagation();" aria-label="Edit assessment">✏</button>` : ''}
         ${canDelete ? `<button class="btn-danger btn-sm" onclick="deleteAssessment(${parseInt(a.id)});event.stopPropagation();" aria-label="Delete assessment">✕</button>` : ''}
-        ${isCancelableByUser ? `<button class="btn-warning btn-sm" onclick="cancelDeletionRequest(${parseInt(a.id)});event.stopPropagation();" aria-label="Cancel deletion request">⎌</button>` : ''}
+        ${hasPendingDeletion && (u.role === 'contractor' || isAdmin) ? `<button class="btn-warning btn-sm" onclick="cancelDeletionRequest(${parseInt(a.id)});event.stopPropagation();" aria-label="Cancel deletion request">⎌</button>` : ''}
         <span class="badge ${safeStatus}">${safeStatus}</span>
       </div>
     </div>`;
