@@ -58,10 +58,12 @@ app.get('/api', async (req, res) => {
   try {
     // Query parameter format: ?endpoint=/path?query=value
     if (!req.query.endpoint) {
+      console.error('[API] Missing endpoint parameter');
       return res.status(400).json({ error: 'Missing endpoint parameter' });
     }
 
     let fullEndpoint = req.query.endpoint;
+    console.log('[API] GET request:', fullEndpoint);
 
     // Split endpoint into path and query parts
     const [path, ...queryParts] = fullEndpoint.split('?');
