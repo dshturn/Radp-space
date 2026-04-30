@@ -413,7 +413,11 @@ async function loadAdminNotifications() {
 }
 
 async function toggleNotifReadStatus(notifId, shouldBeRead) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/notifications?id=eq.${notifId}`, {
+  const endpoint = `/rest/v1/notifications?id=eq.${notifId}`;
+  const url = window.location.hostname === 'localhost'
+    ? `http://localhost:5000/api?endpoint=${encodeURIComponent(endpoint)}`
+    : `${SUPABASE_URL}${endpoint}`;
+  const res = await fetch(url, {
     method: 'PATCH',
     headers: { ...getHeaders(), Prefer: 'return=minimal' },
     body: JSON.stringify({ read: shouldBeRead })
