@@ -120,6 +120,7 @@ async function loadAssessments() {
   );
   if (!res.ok) { showToast('Failed to load assessments', 'error'); return; }
   const assessments = await res.json();
+  console.log('[ASSESSMENTS] Loaded', assessments.length, 'assessments:', assessments.map(a => a.id));
 
   // Load pending deletion requests to show status
   const delReqRes = await fetch(`${SUPABASE_URL}/rest/v1/assessment_deletion_requests?status=eq.pending&select=assessment_id`,
