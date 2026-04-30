@@ -522,9 +522,11 @@ async function addSelectedPersonnel() {
 }
 
 async function removePersonnel(id, fromSelector) {
+  const btn = document.querySelector(`button[onclick*="removePersonnel(${id}"]`);
+  const label = btn?.closest('.item-row')?.querySelector('.item-name')?.textContent || `Personnel ${id}`;
   const r = await fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?id=eq.${id}`, { method: 'DELETE', headers: { ...getHeaders(), Prefer: 'return=minimal' } });
   if (!r.ok) { showToast('Remove failed: ' + r.status, 'error'); return; }
-  logAudit('assessment', currentAssessmentId, 'removed_personnel', `Personnel entry ${id}`);
+  logAudit('assessment', currentAssessmentId, 'removed_personnel', label);
   loadSelectedPersonnel(currentAssessmentId);
   if (fromSelector) openPersonnelSelector();
 }
