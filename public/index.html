@@ -689,6 +689,27 @@ navigator.serviceWorker.getRegistrations().then(regs => {
     </div>
   </div>
 </div>
+
+<!-- Assessment: Edit Modal -->
+<div class="modal" id="editAssessmentModal" role="dialog" aria-modal="true" aria-labelledby="editAssessmentTitle">
+  <div class="modal-box">
+    <h3 id="editAssessmentTitle">Edit Assessment</h3>
+    <label for="editFieldWell">Field / Well</label>
+    <input type="text" id="editFieldWell" placeholder="e.g. MANIFA/MNIF-123" autocomplete="off">
+    <label for="editTypeOfJob">Type of Job</label>
+    <input type="text" id="editTypeOfJob" placeholder="e.g. Slickline" autocomplete="off">
+    <label for="editObjective">Objective</label>
+    <input type="text" id="editObjective" placeholder="Assessment objective" autocomplete="off">
+    <label for="editDateOfIssue">Date of Issue</label>
+    <input type="date" id="editDateOfIssue">
+    <input type="hidden" id="editAssessmentId">
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('editAssessmentModal')">Cancel</button>
+      <button class="btn-save" onclick="saveEditAssessment()">Save</button>
+    </div>
+  </div>
+</div>
+
 <div id="toastContainer" aria-live="polite" aria-atomic="false"></div>
 
 <script>
