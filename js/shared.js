@@ -30,11 +30,11 @@ window.fetch = function(url, options) {
   let finalUrl = url;
 
   // Route Supabase API calls through local proxy
-  if (typeof url === 'string' && url.includes('supabase.co')) {
+  if (typeof url === 'string' && url.includes('supabase.co') && window.location.hostname === 'localhost') {
     let endpoint = url.replace(SUPABASE_URL, '');
     // Normalize /api/ paths to /rest/v1/
     endpoint = endpoint.replace(/^\/api\//, '/rest/v1/');
-    finalUrl = `/api?endpoint=${encodeURIComponent(endpoint)}`;
+    finalUrl = `http://localhost:5000/api?endpoint=${encodeURIComponent(endpoint)}`;
   }
 
   return originalFetch.call(this, finalUrl, options);
