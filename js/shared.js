@@ -586,7 +586,11 @@ async function markNotifRead(id, el) {
 async function markAllNotifsRead() {
   const u = getUser();
   if (!u?.id) return;
-  await fetch(`${SUPABASE_URL}/rest/v1/notifications?contractor_id=eq.${u.id}&read=eq.false`, {
+  const endpoint = `/rest/v1/notifications?contractor_id=eq.${u.id}&read=eq.false`;
+  const url = window.location.hostname === 'localhost'
+    ? `http://localhost:5000/api?endpoint=${encodeURIComponent(endpoint)}`
+    : `${SUPABASE_URL}${endpoint}`;
+  await fetch(url, {
     method: 'PATCH', headers: { ...getHeaders(), Prefer: 'return=minimal' },
     body: JSON.stringify({ read: true })
   });
