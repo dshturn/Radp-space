@@ -513,14 +513,16 @@ function getExpiryStyle(dateStr) {
 
 async function generateLoR() {
   const h = getHeaders(), u = getUser();
-  const [aRes, eRes, pRes] = await Promise.all([
+  const [aRes, eRes, pRes, pDocsRes] = await Promise.all([
     fetch(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${currentAssessmentId}`, { headers: h }),
     fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment?assessment_id=eq.${currentAssessmentId}&select=*,equipment_items(id,serial_number,model,name,parent_id,equipment_templates(name),documents(*,document_types(document_name)))`, { headers: h }),
-    fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?assessment_id=eq.${currentAssessmentId}&select=*,personnel(*)`, { headers: h })
+    fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?assessment_id=eq.${currentAssessmentId}&select=*,personnel(*)`, { headers: h }),
+    fetch(`${SUPABASE_URL}/rest/v1/personnel_documents?select=*`, { headers: h })
   ]);
   const assessment = (await aRes.json())[0];
   const equipment  = await eRes.json();
   const personnel  = await pRes.json();
+  const allPersonnelDocs = pDocsRes.ok ? await pDocsRes.json() : [];
 
   // ── Fetch sub-components and sub-sub-components for selected root equipment ──
   const rootItems = equipment.map(e => e.equipment_items).filter(Boolean);
