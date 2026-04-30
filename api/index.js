@@ -49,7 +49,17 @@ export default async (req, res) => {
       restUrl = `${supabaseUrl}/rest/v1${path}`;
     }
 
-    const body = method !== 'GET' && method !== 'HEAD' ? JSON.stringify(req.body) : undefined;
+    // Build request body
+    let body;
+    if (method !== 'GET' && method !== 'HEAD') {
+      if (typeof req.body === 'string') {
+        body = req.body;
+      } else if (req.body) {
+        body = JSON.stringify(req.body);
+      } else {
+        body = undefined;
+      }
+    }
 
     const response = await fetch(restUrl, {
       method,
