@@ -834,21 +834,23 @@ async function saveEditAssessment() {
 }
 
 async function deleteAssessment(id) {
-  if (!confirm('Are you sure you want to delete this assessment? This action cannot be undone.')) return;
+  if (!confirm('Request deletion of this assessment? An admin must approve before it is permanently deleted.')) return;
 
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${id}`, {
-    method: 'DELETE',
-    headers: { ...getHeaders(), Prefer: 'return=minimal' }
+  const u = getUser();
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/assessment_deletion_requests`, {
+    method: 'POST',
+    headers: { ...getHeaders(), Prefer: 'return=minimal' },
+    body: JSON.stringify({ assessment_id: id, requested_by: u.id, status: 'pending' })
   });
   if (!res.ok) {
     const err = await res.text().catch(() => '');
-    console.error('Delete failed:', res.status, err);
-    showToast(`Failed to delete assessment (${res.status})`, 'error');
+    console.error('Request failed:', res.status, err);
+    showToast(`Failed to request deletion (${res.status})`, 'error');
     return;
   }
 
-  logAudit('assessment', id, 'deleted', `Assessment deleted`);
-  showToast('Assessment deleted', 'success');
+  logAudit('assessment', id, 'deletion_requested', `Deletion request created by ${u.email}`);
+  showToast('Deletion request submitted. Awaiting admin approval.', 'success');
   loadAssessments();
 }
 
