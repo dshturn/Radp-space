@@ -271,6 +271,8 @@ input[type="file"] { display: none; }
 .btn-success-sm { padding: 5px 12px; font-size: 12px; }
 .btn-danger { background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; transition: background 0.2s ease, transform 0.12s ease; }
 .btn-danger:hover { background: var(--danger-h); transform: translateY(-1px); }
+.btn-warning { background: var(--warn); color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: background 0.2s ease, transform 0.12s ease; }
+.btn-warning:hover { background: var(--warn-h); transform: translateY(-1px); }
 .btn-ghost { background: var(--border); color: var(--text); border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; transition: background 0.2s; }
 .btn-ghost:hover { background: var(--text-4); }
 .btn-ghost-sm { background: var(--border); color: var(--text); border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: background 0.2s; }
