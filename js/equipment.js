@@ -600,6 +600,9 @@ async function addSubComponent() {
 async function deleteEquipItem(id) {
   if (!await showConfirm('Delete this equipment and all its documents?')) return;
   const el = document.querySelector(`[data-id="${id}"]`);
+  const name = el?.querySelector('.card-title')?.textContent || 'Equipment item';
+  const serial = el?.querySelector('.doc-name')?.textContent || '';
+  const label = serial ? `${name} - ${serial}` : name;
   // Start API calls immediately so they run in parallel with the animation
   const h = { ...getHeaders(), Prefer: 'return=minimal' };
   const deletePromise = fetch(`${SUPABASE_URL}/rest/v1/documents?equipment_item_id=eq.${id}`, { method: 'DELETE', headers: h })
@@ -607,7 +610,7 @@ async function deleteEquipItem(id) {
   animateRemoveEl(el, async () => {
     const r = await deletePromise;
     if (!r.ok) { showToast('Delete failed: ' + r.status, 'error'); }
-    else { logAudit('equipment', id, 'deleted', 'Equipment item'); }
+    else { logAudit('equipment', id, 'deleted', label); }
     loadEquipment(true);
   });
 }
