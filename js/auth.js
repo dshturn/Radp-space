@@ -175,6 +175,7 @@ async function register() {
       body: JSON.stringify({ id: data.user.id, email, full_name: fullName, company, service_line: serviceLine })
     });
     msg.className = 'auth-msg success'; msg.textContent = 'Account created! Waiting for admin approval.';
+    logAudit('user', data.user.id, 'registered', `${fullName} (${email})`, { company, service_line: serviceLine });
   } else {
     msg.className = 'auth-msg error'; msg.textContent = 'Registration failed. Try again.';
   }
