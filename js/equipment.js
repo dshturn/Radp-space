@@ -349,7 +349,7 @@ function equipItemCard(item, name, docs, subs = [], docsByItem = {}, subsByParen
         </div>
         <div class="row-gap-xs">
           <button class="btn-reassign" onclick="openReassignModal(${parseInt(sub.id)}, this.dataset.name, ${parseInt(item.id)})" data-name="${subName}" aria-label="Change parent of ${subName}">⇄</button>
-          <button class="btn-toggle" onclick="toggleSubCard(this.closest('.sub-card'))" aria-label="Expand ${subName}">▾</button>
+          <button class="btn-toggle" onclick="toggleSubCard(this.closest('.sub-card'))" aria-label="Expand ${subName}" aria-expanded="false">▾</button>
           <button class="btn-danger" onclick="deleteEquipItem(${parseInt(sub.id)})" aria-label="Delete ${subName}">✕</button>
         </div>
       </div>
