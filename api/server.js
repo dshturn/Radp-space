@@ -298,6 +298,29 @@ app.post('/api', async (req, res) => {
   }
 });
 
+// ── HTML to PDF conversion (for Generate LoR) ──
+app.post('/api/generate-html-pdf', async (req, res) => {
+  try {
+    const { html } = req.body;
+    if (!html) return res.status(400).json({ error: 'Missing HTML content' });
+
+    console.log('[PDF] Converting HTML to PDF...');
+    pdf.create(html, { format: 'A4', orientation: 'landscape' }).toBuffer((err, buffer) => {
+      if (err) {
+        console.error('[PDF] Error:', err.message);
+        return res.status(500).json({ error: err.message });
+      }
+      console.log('[PDF] Generated', buffer.length, 'bytes');
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="LoR_${new Date().toISOString().split('T')[0]}.pdf"`);
+      res.send(buffer);
+    });
+  } catch (err) {
+    console.error('[PDF] Error:', err.message, err.stack);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── LoR PDF Generation (must be before /api catch-all) ──
 app.post('/api/generate-lor-pdf', async (req, res) => {
   try {
