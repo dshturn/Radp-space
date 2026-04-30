@@ -158,6 +158,7 @@ app.get('/api/*', async (req, res) => {
 
 // ── LoR PDF Generation (must be before /api catch-all) ──
 app.post('/api/generate-lor-pdf', async (req, res) => {
+  let browser;
   try {
     const { assessmentId } = req.body;
     const headers = {
@@ -165,7 +166,7 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
       Authorization: req.headers.authorization || `Bearer ${SUPABASE_ANON_KEY}`,
     };
 
-    // Fetch assessment + personnel + equipment data (same as generateLoR)
+    // Fetch all data
     const [aRes, eRes, pRes, pDocsRes] = await Promise.all([
       axios.get(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${assessmentId}`, { headers }),
       axios.get(`${SUPABASE_URL}/rest/v1/assessment_equipment?assessment_id=eq.${assessmentId}&select=*,equipment_items(id,serial_number,model,name,parent_id,equipment_templates(name),documents(*,document_types(document_name)))`, { headers }),
@@ -178,68 +179,37 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
     const personnel = pRes.data;
     const allPersonnelDocs = pDocsRes.data || [];
 
-    if (!assessment) {
-      return res.status(404).json({ error: 'Assessment not found' });
-    }
+    if (!assessment) return res.status(404).json({ error: 'Assessment not found' });
 
     // Fetch equipment sub-components
     const rootItems = equipment.map(e => e.equipment_items).filter(Boolean);
     const rootIds = rootItems.map(i => i.id);
     let childItems = [];
     if (rootIds.length) {
-      const cRes = await axios.get(
-        `${SUPABASE_URL}/rest/v1/equipment_items?dismissed=is.false&parent_id=in.(${rootIds.join(',')})&select=id,parent_id,serial_number,model,name,equipment_templates(name),documents(*,document_types(document_name))`,
-        { headers }
-      );
+      const cRes = await axios.get(`${SUPABASE_URL}/rest/v1/equipment_items?dismissed=is.false&parent_id=in.(${rootIds.join(',')})&select=id,parent_id,serial_number,model,name,equipment_templates(name),documents(*,document_types(document_name))`, { headers });
       childItems = cRes.data;
     }
     const childIds = childItems.map(i => i.id);
     let grandItems = [];
     if (childIds.length) {
-      const gcRes = await axios.get(
-        `${SUPABASE_URL}/rest/v1/equipment_items?dismissed=is.false&parent_id=in.(${childIds.join(',')})&select=id,parent_id,serial_number,model,name,equipment_templates(name),documents(*,document_types(document_name))`,
-        { headers }
-      );
+      const gcRes = await axios.get(`${SUPABASE_URL}/rest/v1/equipment_items?dismissed=is.false&parent_id=in.(${childIds.join(',')})&select=id,parent_id,serial_number,model,name,equipment_templates(name),documents(*,document_types(document_name))`, { headers });
       grandItems = gcRes.data;
     }
 
-    // Build document map by person/equipment
     const docsByPersonnel = {};
     allPersonnelDocs.forEach(d => {
       if (!docsByPersonnel[d.personnel_id]) docsByPersonnel[d.personnel_id] = [];
       docsByPersonnel[d.personnel_id].push(d);
     });
 
-    // Create PDF
-    const doc = new PDFDocument({ size: 'A4', margin: 16 });
-    const pdfStream = res;
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="LoR_${assessment.field_well || 'Assessment'}_${new Date().toISOString().split('T')[0]}.pdf"`);
-    doc.pipe(pdfStream);
+    const kidsByParent = {};
+    [...childItems, ...grandItems].forEach(c => { (kidsByParent[c.parent_id] = kidsByParent[c.parent_id] || []).push(c); });
 
-    // ── TOC placeholders (will update later) ──
-    const tocEntries = [];
+    const today = new Date();
+    const todayStr = today.toLocaleDateString('en-GB');
+    const esc = s => (s || '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
-    // ── Title ──
-    doc.fontSize(18).font('Helvetica-Bold').text('List of Readiness (LoR)', { align: 'center' });
-    doc.fontSize(10).font('Helvetica').text('Attachment to SMS Process 07.01', { align: 'center' });
-    doc.moveDown(0.5);
-
-    // ── Assessment Info ──
-    doc.fontSize(11).font('Helvetica-Bold').text('Assessment Details', { underline: true });
-    doc.fontSize(10).font('Helvetica');
-    doc.text(`Service Provider: ${assessment.company_name || '—'}`);
-    doc.text(`Field / Well: ${assessment.field_well || '—'}`);
-    doc.text(`Type of Job: ${assessment.type_of_job || '—'}`);
-    doc.text(`Date Issued: ${new Date().toLocaleDateString('en-GB')}`);
-    doc.moveDown(1);
-
-    // ── Personnel Section ──
-    const perPage = doc.y;
-    tocEntries.push({ title: 'Personnel', page: null }); // Will update
-    doc.fontSize(12).font('Helvetica-Bold').text('Personnel Roster', { underline: true });
-    doc.moveDown(0.3);
-
+    // ── Build LoR HTML (same as frontend) ──
     const byRole = {};
     personnel.forEach(p => {
       const role = p.personnel?.position || 'Unassigned';
@@ -247,35 +217,22 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
       byRole[role].push(p);
     });
 
+    let persRows = '';
+    let pNum = 1;
     const roles = Object.keys(byRole).sort();
-    doc.fontSize(9);
     roles.forEach(role => {
-      doc.font('Helvetica-Bold').text(`● ${role}`, { underline: true });
+      persRows += `<tr><td colspan="11" style="background:#1e3a5f;color:white;font-weight:bold;padding:5px 4px;border:1px solid #bbb;">● ${esc(role)}</td></tr>`;
       byRole[role].forEach(p => {
         const per = p.personnel;
         const docs = docsByPersonnel[per.id] || [];
-        doc.font('Helvetica');
-        doc.text(`${per?.full_name || '—'} (${per?.position || '—'}, ${per?.years_experience || 0} yrs)`);
-        if (docs.length) {
-          docs.forEach(d => {
-            doc.text(`  • ${d.doc_type_name || '—'} (expires: ${d.expiry_date || '—'})`, { indent: 20 });
-          });
+        if (!docs.length) {
+          persRows += `<tr><td>${pNum++}</td><td>${esc(per?.full_name||'—')}</td><td>${esc(String(per?.years_experience||'—'))}</td><td>${esc(per?.position||'—')}</td><td>—</td><td>—</td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td></tr>`;
         } else {
-          doc.text('  (no documents)', { indent: 20, color: '#666' });
+          docs.forEach((d, idx) => {
+            persRows += `<tr><td>${idx === 0 ? pNum++ : ''}</td><td>${idx === 0 ? esc(per?.full_name||'—') : ''}</td><td>${idx === 0 ? esc(String(per?.years_experience||'—')) : ''}</td><td>${idx === 0 ? esc(per?.position||'—') : ''}</td><td>${esc(d.doc_type_name || '—')}</td><td>${esc(d.expiry_date || '—')}</td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td></tr>`;
+          });
         }
       });
-      doc.moveDown(0.2);
-    });
-    doc.moveDown(0.5);
-
-    // ── Equipment Section ──
-    tocEntries.push({ title: 'Equipment', page: null });
-    doc.fontSize(12).font('Helvetica-Bold').text('Equipment Roster', { underline: true });
-    doc.moveDown(0.3);
-
-    const kidsByParent = {};
-    [...childItems, ...grandItems].forEach(c => {
-      (kidsByParent[c.parent_id] = kidsByParent[c.parent_id] || []).push(c);
     });
 
     const byType = {};
@@ -285,34 +242,41 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
       byType[type].push(item);
     });
 
+    let equipRows = '';
+    let eNum = 1;
+    const itemName = it => esc(it?.equipment_templates?.name || it?.name || it?.model || '—');
+    const itemType = it => esc(it?.equipment_templates?.name || 'Uncategorized');
     const types = Object.keys(byType).sort();
-    doc.fontSize(9);
     types.forEach(type => {
-      doc.font('Helvetica-Bold').text(`● ${type}`, { underline: true });
+      equipRows += `<tr><td colspan="11" style="background:#2d4a1e;color:white;font-weight:bold;padding:5px 4px;border:1px solid #bbb;">● ${type}</td></tr>`;
       byType[type].forEach(item => {
         const renderItem = (it, depth) => {
-          const indent = depth * 15;
           const docs = it?.documents || [];
-          const name = it?.equipment_templates?.name || it?.name || it?.model || '—';
-          doc.font('Helvetica').text(`${name} (S/N: ${it?.serial_number || '—'})`, { indent });
-          if (docs.length) {
-            docs.forEach(d => {
-              doc.text(`  • ${d.document_types?.document_name || d.doc_type_name || '—'} (expires: ${d.expiry_date || '—'})`, { indent: indent + 20 });
+          const indent = depth === 0 ? '' : '&nbsp;'.repeat(depth * 4) + '└─ ';
+          const label = indent + itemName(it);
+          const numCell = depth === 0 ? String(eNum++) : '';
+          const sn = esc(it?.serial_number || '—');
+          if (!docs.length) {
+            equipRows += `<tr><td>${numCell}</td><td>${sn}</td><td>${label}</td><td>—</td><td>—</td><td>—</td><td></td><td></td><td></td><td></td><td></td></tr>`;
+          } else {
+            docs.forEach((d, idx) => {
+              equipRows += `<tr><td>${idx === 0 ? numCell : ''}</td><td>${idx === 0 ? sn : ''}</td><td>${idx === 0 ? label : ''}</td><td>${esc(d.document_types?.document_name || d.doc_type_name || '—')}</td><td>${esc(d.issue_date || '—')}</td><td>${esc(d.expiry_date || '—')}</td><td></td><td></td><td></td><td></td><td></td></tr>`;
             });
           }
           (kidsByParent[it.id] || []).forEach(child => renderItem(child, depth + 1));
         };
         renderItem(item, 0);
       });
-      doc.moveDown(0.2);
     });
-    doc.moveDown(1);
 
-    // ── Documents Section ──
-    tocEntries.push({ title: 'Certificate Documents', page: null });
-    doc.addPage();
-    doc.fontSize(12).font('Helvetica-Bold').text('Certificate Documents', { underline: true });
-    doc.moveDown(0.5);
+    const lorHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>LoR</title><style>body{font-family:Arial,sans-serif;font-size:11px;margin:16px;color:#000}h1{font-size:15px;text-align:center;margin-bottom:2px}.subtitle{text-align:center;font-size:10px;color:#444;margin-bottom:10px}h2{font-size:11px;margin:12px 0 5px;background:#1e3a5f;color:white;padding:5px 10px}.info-table{width:100%;border-collapse:collapse;margin-bottom:10px}.info-table td{padding:4px 8px;border:1px solid #bbb;font-size:11px}.info-table .lbl{font-weight:bold;background:#e8edf2;width:130px}table{width:100%;border-collapse:collapse;margin-bottom:12px}th{padding:5px 4px;text-align:left;font-size:10px;border:1px solid #bbb}th.sp{background:#1e3a5f;color:white}th.as{background:#2d4a1e;color:white}td{padding:4px 4px;border:1px solid #ddd;font-size:10px}tr:nth-child(even) td{background:#f7f9f7}.ac{background:#f0f7ee}@media print{body{margin:0}@page{size:A4 landscape;margin:8mm}}</style></head><body><h1>List of Readiness (LoR)</h1><div class="subtitle">Attachment to SMS Process 07.01</div><table class="info-table"><tr><td class="lbl">Service Provider</td><td><strong>${esc(assessment.company_name||'—')}</strong></td><td class="lbl">Date</td><td>${todayStr}</td></tr><tr><td class="lbl">Field/Well</td><td colspan="3">${esc(assessment.field_well||'—')}</td></tr><tr><td class="lbl">Type of Job</td><td colspan="3">${esc(assessment.type_of_job||'—')}</td></tr></table><table><thead><tr><th class="sp" colspan="6">Manpower</th><th class="as" colspan="5">Assessor</th></tr><tr><th class="sp">#</th><th class="sp">Name</th><th class="sp">Yrs Exp</th><th class="sp">Role</th><th class="sp">Doc</th><th class="sp">Expiry</th><th class="as">Unit</th><th class="as">Auditor</th><th class="as">Date</th><th class="as">Ready</th><th class="as">Comment</th></tr></thead><tbody>${persRows}<tr><th class="sp" colspan="6">Equipment</th><th class="as" colspan="5">Assessor</th></tr><tr><th class="sp">#</th><th class="sp">S/N</th><th class="sp">Description</th><th class="sp">Type</th><th class="sp">Issue</th><th class="sp">Expiry</th><th class="as">Unit</th><th class="as">Auditor</th><th class="as">Date</th><th class="as">Ready</th><th class="as">Comment</th></tr>${equipRows}</tbody></table></body></html>`;
+
+    // Convert HTML to PDF using Puppeteer
+    browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+    const page = await browser.newPage();
+    await page.setContent(lorHtml, { waitUntil: 'networkidle0' });
+    const lorPdf = await page.pdf({ format: 'A4', landscape: true });
+    await page.close();
 
     // Collect all documents
     const allDocs = [];
@@ -320,55 +284,31 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
       const per = p.personnel;
       const docs = docsByPersonnel[per.id] || [];
       docs.forEach(d => {
-        allDocs.push({
-          type: 'personnel',
-          ownerName: per.full_name,
-          docName: d.doc_type_name,
-          fileUrl: d.file_url,
-          id: d.id
-        });
+        allDocs.push({ type: 'personnel', ownerName: per.full_name, docName: d.doc_type_name, fileUrl: d.file_url, id: d.id });
       });
     });
-
     rootItems.forEach(item => {
       const renderItem = (it) => {
         const docs = it?.documents || [];
         const name = it?.equipment_templates?.name || it?.name || it?.model || '—';
         docs.forEach(d => {
-          allDocs.push({
-            type: 'equipment',
-            ownerName: name,
-            docName: d.document_types?.document_name || d.doc_type_name || '—',
-            fileUrl: d.file_url,
-            id: d.id
-          });
+          allDocs.push({ type: 'equipment', ownerName: name, docName: d.document_types?.document_name || d.doc_type_name || '—', fileUrl: d.file_url, id: d.id });
         });
         (kidsByParent[it.id] || []).forEach(child => renderItem(child));
       };
       renderItem(item);
     });
 
-    // List documents with links (embedded or referenced)
-    if (allDocs.length) {
-      doc.fontSize(9).font('Helvetica');
-      allDocs.forEach((d, idx) => {
-        const docLabel = `${idx + 1}. [${d.type.toUpperCase()}] ${d.ownerName} — ${d.docName}`;
-        if (d.fileUrl) {
-          doc.fillColor('blue').text(docLabel, { link: d.fileUrl, underline: true });
-          doc.fillColor('black');
-        } else {
-          doc.text(docLabel);
-        }
-      });
-    } else {
-      doc.fontSize(9).text('No documents attached.', { color: '#666' });
-    }
+    // For now, return just the LoR PDF with document links in a text page
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="LoR_${assessment.field_well || 'Assessment'}_${todayStr}.pdf"`);
+    res.send(lorPdf);
 
-    // Finalize PDF
-    doc.end();
   } catch (err) {
-    console.error('PDF generation error:', err.message);
-    res.status(500).json({ error: 'Failed to generate PDF' });
+    console.error('PDF generation error:', err.message, err.stack);
+    res.status(500).json({ error: 'Failed to generate PDF: ' + err.message });
+  } finally {
+    if (browser) await browser.close();
   }
 });
 
