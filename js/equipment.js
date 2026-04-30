@@ -313,7 +313,7 @@ function equipItemCard(item, name, docs, subs = [], docsByItem = {}, subsByParen
           <div class="row-gap-xs">
             ${scHasDeeper ? `<span title="Has nested sub-components not shown" class="depth-badge">↳ ${parseInt((subsByParent[sc.id]).length)}</span>` : ''}
             <button class="btn-reassign" onclick="openReassignModal(${parseInt(sc.id)}, this.dataset.name, ${parseInt(sub.id)})" data-name="${scName}" aria-label="Change parent of ${scName}">⇄</button>
-            <button class="btn-toggle" onclick="toggleSubCard(this.closest('.sub-child-card'))" aria-label="Expand ${scName}">▾</button>
+            <button class="btn-toggle" onclick="toggleSubCard(this.closest('.sub-child-card'))" aria-label="Expand ${scName}" aria-expanded="false">▾</button>
             <button class="btn-danger" onclick="deleteEquipItem(${parseInt(sc.id)})" aria-label="Delete ${scName}">✕</button>
           </div>
         </div>
