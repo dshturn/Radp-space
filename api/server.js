@@ -533,6 +533,33 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
       }
     }
 
+    // Create named destinations and add links for documents
+    console.log('[PDF] Creating document links...');
+    const lorPages = mergedPdf.getPages();
+    const lorPageCount = lorPageCount || 1;
+
+    // Add named destinations for each document so links can find them
+    for (const doc of allDocs) {
+      if (docPageMap[doc.id]) {
+        const destPageIndex = docPageMap[doc.id] - 1; // Convert to 0-based
+        if (destPageIndex >= 0 && destPageIndex < lorPages.length) {
+          const destPage = lorPages[destPageIndex];
+          try {
+            // Add a named destination for this document
+            const destination = mergedPdf.registerDestination({
+              type: 'GoTo',
+              page: destPage,
+              top: destPage.getHeight(),
+              zoom: 1
+            });
+            console.log(`[PDF] Created destination for doc ${doc.id} at page ${docPageMap[doc.id]}`);
+          } catch (e) {
+            console.warn(`[PDF] Could not create destination for doc ${doc.id}:`, e.message);
+          }
+        }
+      }
+    }
+
     // Save merged PDF and send
     console.log('[PDF] Saving merged PDF...');
     const finalPdfBytes = await mergedPdf.save();
