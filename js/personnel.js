@@ -538,6 +538,7 @@ async function markPersAssessed(personId) {
 async function deletePersRecord(id) {
   if (!await showConfirm('Delete this personnel record and all their documents?')) return;
   const el = document.querySelector(`[data-id="p${id}"]`);
+  const name = el?.querySelector('.card-title')?.textContent || 'Personnel';
   // Delete dependents in parallel, then the personnel record — all concurrent with animation
   const h = { ...getHeaders(), Prefer: 'return=minimal' };
   const deletePromise = Promise.all([
@@ -547,7 +548,7 @@ async function deletePersRecord(id) {
   animateRemoveEl(el, async () => {
     const r = await deletePromise;
     if (!r.ok) { const t = await r.text(); showToast('Delete failed: ' + r.status, 'error'); }
-    else { logAudit('personnel', id, 'deleted', 'Personnel record'); }
+    else { logAudit('personnel', id, 'deleted', name); }
     loadPersonnel(true);
   });
 }
