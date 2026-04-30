@@ -25,6 +25,10 @@
   --danger-h:  #b91c1c;
   --shadow-modal: 0 24px 60px rgba(0,0,0,0.6);
   --skeleton-stop: #2a3a50;
+  --space-sm:  8px;
+  --space-md:  12px;
+  --space-lg:  16px;
+  --space-xl:  24px;
 }
 
 /* === Reset === */
