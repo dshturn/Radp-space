@@ -334,6 +334,7 @@ async function renderDeletionRequests() {
 
   if (section) section.style.display = '';
 
+  console.log('[ADMIN] Rendering', requests.length, 'deletion requests');
   list.innerHTML = requests.map(req => `
     <div class="admin-card" style="flex-wrap:wrap;">
       <div class="admin-info">
