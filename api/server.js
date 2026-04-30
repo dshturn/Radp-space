@@ -369,11 +369,13 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
     doc.pipe(res);
 
     // LoR Header
+    console.log('[PDF] Drawing header...');
     doc.fontSize(16).font('Helvetica-Bold').text('List of Readiness', { align: 'center' });
     doc.fontSize(10).font('Helvetica').text(`Assessment: ${assessment.id} | ${assessment.company_name || '—'} | Field: ${assessment.field_well || '—'} | ${today}`, { align: 'left' });
     doc.moveDown(0.3);
 
     // Personnel section
+    console.log('[PDF] Drawing personnel section. Count:', personnel.length);
     doc.fontSize(12).font('Helvetica-Bold').text('Personnel');
     doc.moveDown(0.2);
 
@@ -384,8 +386,10 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
       roles[role].push(p);
     });
 
+    console.log('[PDF] Roles:', Object.keys(roles));
     let pNum = 1;
     Object.keys(roles).sort().forEach(role => {
+      console.log('[PDF] Drawing role:', role, 'with', roles[role].length, 'people');
       doc.fontSize(10).font('Helvetica-Bold').fillColor('#1e3a5f').text(`● ${role}`, { underline: false });
       doc.fillColor('black').fontSize(9).font('Helvetica');
 
@@ -393,6 +397,7 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
         const per = p.personnel;
         const docs = docsByPersonnel[per.id] || [];
         const docText = docs.length ? docs.map(d => d.doc_type_name).join(', ') : '—';
+        console.log('[PDF] Drawing person:', per.full_name);
         doc.text(`${pNum++}. ${per.full_name} (${per.position}) — ${docText}`);
       });
       doc.moveDown(0.2);
