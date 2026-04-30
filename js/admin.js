@@ -284,15 +284,22 @@ async function approveDeletion(requestId, assessmentId) {
   loadUsers();
 }
 
-async function rejectDeletion(requestId, reason) {
+async function rejectDeletion(requestId, assessmentId, reason) {
   const u = getUser();
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/assessment_deletion_requests?id=eq.${requestId}`, {
-    method: 'PATCH',
-    headers: { ...getHeaders(), Prefer: 'return=minimal' },
-    body: JSON.stringify({ status: 'rejected', approved_by: u.id, approved_at: new Date().toISOString(), rejection_reason: reason || 'Rejected by admin' })
-  });
+  const [updateRes, notifRes] = await Promise.all([
+    fetch(`${SUPABASE_URL}/rest/v1/assessment_deletion_requests?id=eq.${requestId}`, {
+      method: 'PATCH',
+      headers: { ...getHeaders(), Prefer: 'return=minimal' },
+      body: JSON.stringify({ status: 'rejected', approved_by: u.id, approved_at: new Date().toISOString(), rejection_reason: reason || 'Rejected by admin' })
+    }),
+    fetch(`${SUPABASE_URL}/rest/v1/notifications?entity_type=eq.assessment_deletion_request&entity_id=eq.${assessmentId}`, {
+      method: 'PATCH',
+      headers: { ...getHeaders(), Prefer: 'return=minimal' },
+      body: JSON.stringify({ read: true })
+    }).catch(() => {})
+  ]);
 
-  if (!res.ok) {
+  if (!updateRes.ok) {
     showToast('Failed to reject deletion request', 'error');
     return;
   }
