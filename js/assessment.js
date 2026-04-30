@@ -850,7 +850,6 @@ async function deleteAssessment(id) {
   }
 
   // Log event - notifications auto-created by trigger
-  const u = getUser();
   await logNotificationEvent('deletion_requested', 'assessment', id, { contractor_email: u.email });
 
   logAudit('assessment', id, 'deletion_requested', `Deletion request created by ${u.email}`);
