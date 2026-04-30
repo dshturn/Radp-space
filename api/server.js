@@ -354,67 +354,7 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
     const todayStr = today.toLocaleDateString('en-GB');
     const esc = s => (s || '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
-    // ── Build LoR HTML (same as frontend) ──
-    const byRole = {};
-    personnel.forEach(p => {
-      const role = p.personnel?.position || 'Unassigned';
-      if (!byRole[role]) byRole[role] = [];
-      byRole[role].push(p);
-    });
-
-    let persRows = '';
-    let pNum = 1;
-    const roles = Object.keys(byRole).sort();
-    roles.forEach(role => {
-      persRows += `<tr><td colspan="11" style="background:#1e3a5f;color:white;font-weight:bold;padding:5px 4px;border:1px solid #bbb;">● ${esc(role)}</td></tr>`;
-      byRole[role].forEach(p => {
-        const per = p.personnel;
-        const docs = docsByPersonnel[per.id] || [];
-        if (!docs.length) {
-          persRows += `<tr><td>${pNum++}</td><td>${esc(per?.full_name||'—')}</td><td>${esc(String(per?.years_experience||'—'))}</td><td>${esc(per?.position||'—')}</td><td>—</td><td>—</td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td></tr>`;
-        } else {
-          docs.forEach((d, idx) => {
-            persRows += `<tr><td>${idx === 0 ? pNum++ : ''}</td><td>${idx === 0 ? esc(per?.full_name||'—') : ''}</td><td>${idx === 0 ? esc(String(per?.years_experience||'—')) : ''}</td><td>${idx === 0 ? esc(per?.position||'—') : ''}</td><td>${esc(d.doc_type_name || '—')}</td><td>${esc(d.expiry_date || '—')}</td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td></tr>`;
-          });
-        }
-      });
-    });
-
-    const byType = {};
-    rootItems.forEach(item => {
-      const type = item.equipment_templates?.name || 'Equipment';
-      if (!byType[type]) byType[type] = [];
-      byType[type].push(item);
-    });
-
-    let equipRows = '';
-    let eNum = 1;
-    const itemName = it => esc(it?.equipment_templates?.name || it?.name || it?.model || '—');
-    const itemType = it => esc(it?.equipment_templates?.name || 'Uncategorized');
-    const types = Object.keys(byType).sort();
-    types.forEach(type => {
-      equipRows += `<tr><td colspan="11" style="background:#2d4a1e;color:white;font-weight:bold;padding:5px 4px;border:1px solid #bbb;">● ${type}</td></tr>`;
-      byType[type].forEach(item => {
-        const renderItem = (it, depth) => {
-          const docs = it?.documents || [];
-          const indent = depth === 0 ? '' : '&nbsp;'.repeat(depth * 4) + '└─ ';
-          const label = indent + itemName(it);
-          const numCell = depth === 0 ? String(eNum++) : '';
-          const sn = esc(it?.serial_number || '—');
-          if (!docs.length) {
-            equipRows += `<tr><td>${numCell}</td><td>${sn}</td><td>${label}</td><td>—</td><td>—</td><td>—</td><td></td><td></td><td></td><td></td><td></td></tr>`;
-          } else {
-            docs.forEach((d, idx) => {
-              equipRows += `<tr><td>${idx === 0 ? numCell : ''}</td><td>${idx === 0 ? sn : ''}</td><td>${idx === 0 ? label : ''}</td><td>${esc(d.document_types?.document_name || d.doc_type_name || '—')}</td><td>${esc(d.issue_date || '—')}</td><td>${esc(d.expiry_date || '—')}</td><td></td><td></td><td></td><td></td><td></td></tr>`;
-            });
-          }
-          (kidsByParent[it.id] || []).forEach(child => renderItem(child, depth + 1));
-        };
-        renderItem(item, 0);
-      });
-    });
-
-    // Collect documents based on docType filter
+    // Collect documents based on docType filter (needed for page calculation)
     const allDocs = [];
     if (docType === 'personnel' || docType === 'both') {
       personnel.forEach(p => {
