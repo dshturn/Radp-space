@@ -21,7 +21,8 @@ app.use(cors({
   origin: ['https://sharek.aramco.com.sa', 'https://www.radp.space', 'https://radp.space', 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:5000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'apikey', 'Prefer']
+  allowedHeaders: ['Content-Type', 'Authorization', 'apikey', 'Prefer'],
+  exposedHeaders: ['Content-Range']
 }));
 app.use(express.json());
 
