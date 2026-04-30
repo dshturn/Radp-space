@@ -280,6 +280,7 @@ function showConfirm(message) {
 async function logAudit(entityType, entityId, action, label, metadata = {}) {
   const u = getUser();
   if (!u?.id) return; // not logged in, skip
+  console.log('[AUDIT] Logging:', { entityType, entityId, action, actor: u.id });
   // Fire-and-forget: audit failures must never block the user action
   fetch(`${SUPABASE_URL}/rest/v1/audit_log`, {
     method: 'POST',
@@ -294,7 +295,12 @@ async function logAudit(entityType, entityId, action, label, metadata = {}) {
       company:     u.company || null,
       service_line: u.service_line || null
     })
-  }).catch(() => {}); // silently swallow network errors on audit writes
+  }).then(r => {
+    console.log('[AUDIT] Response status:', r.status);
+    return r;
+  }).catch(e => {
+    console.error('[AUDIT] Error:', e);
+  });
 }
 
 // ─── Document viewer ───
