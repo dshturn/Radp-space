@@ -587,9 +587,18 @@ async function generateLoR() {
     docsByPersonnel[d.personnel_id].push(d);
   });
 
+  // Deduplicate personnel by ID (in case assessment_personnel has duplicates)
+  const seenPersonnelIds = new Set();
+  const uniquePersonnel = personnel.filter(p => {
+    const id = p.personnel?.id;
+    if (seenPersonnelIds.has(id)) return false;
+    seenPersonnelIds.add(id);
+    return true;
+  });
+
   // Group personnel by job role
   const byRole = {};
-  personnel.forEach(p => {
+  uniquePersonnel.forEach(p => {
     const role = p.personnel?.position || 'Unassigned';
     if (!byRole[role]) byRole[role] = [];
     byRole[role].push(p);
