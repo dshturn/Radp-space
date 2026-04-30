@@ -167,23 +167,6 @@ async function createAssessment() {
   showDetail(data[0].id);
 }
 
-async function loadSharePointContract(companyName) {
-  if (!companyName) return null;
-  try {
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/sharepoint-get-contractor`, {
-      method: 'POST',
-      headers: { ...getHeaders(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contractorName: companyName })
-    });
-    if (!res.ok) return null;
-    const result = await res.json();
-    return result.success ? result.data : null;
-  } catch (err) {
-    console.error('SharePoint fetch error:', err);
-    return null;
-  }
-}
-
 async function approveAssessment(assessmentId) {
   const u = getUser();
   if (u.role !== 'admin' && u.role !== 'assessor') { showToast('Only assessors can approve', 'warn'); return; }
