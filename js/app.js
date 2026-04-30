@@ -10,7 +10,7 @@ const ROLE_NAV     = {
   contractor: new Set(['contractor', 'assessment', 'operations', 'audit']),
   operations: new Set(['operations']),
   assessor:   new Set(['assessment']),
-  admin:      new Set(['contractor', 'assessment', 'operations', 'admin', 'audit']),
+  admin:      new Set(['contractor', 'assessment', 'operations', 'admin', 'notifications', 'audit']),
 };
 
 function roleOf(user) {
