@@ -6,10 +6,6 @@ function adminInit() {
   loadUsers();
 }
 
-function auditInit() {
-  loadAuditLog();
-}
-
 async function loadUsers() {
   let endpoint = `/rest/v1/user_profiles?select=*&order=status.asc,created_at.desc`;
   const roleFilter = document.getElementById('usersRoleFilter')?.value;
