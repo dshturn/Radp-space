@@ -168,7 +168,7 @@ async function register() {
   });
   const data = await res.json();
   if (data.user) {
-    await fetch(`/api?endpoint=${encodeURIComponent('/rest/v1/user_profiles')}&Prefer=resolution=merge-duplicates`, {
+    await fetch((window.location.hostname === 'localhost' ? 'http://localhost:5000' : '') + `/api?endpoint=${encodeURIComponent('/rest/v1/user_profiles')}&Prefer=resolution=merge-duplicates`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: data.user.id, email, full_name: fullName, company, service_line: serviceLine })
