@@ -72,11 +72,15 @@ function onTypeOfJobChange(sel) {
 function showDetail(id) {
   currentAssessmentId = id;
   document.querySelectorAll('#assessment-page .as-view').forEach(v => v.classList.remove('active'));
-  document.getElementById('detailView').classList.add('active');
+  const detailView = document.getElementById('detailView');
+  if (detailView) detailView.classList.add('active');
   document.querySelectorAll('#detailTabs .tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('#detailTabs .tab')[0].classList.add('active');
-  document.getElementById('personnelTab').style.display = 'block';
-  document.getElementById('equipmentTab').style.display = 'none';
+  const firstTab = document.querySelectorAll('#detailTabs .tab')[0];
+  if (firstTab) firstTab.classList.add('active');
+  const persTab = document.getElementById('personnelTab');
+  if (persTab) persTab.style.display = 'block';
+  const equipTab = document.getElementById('equipmentTab');
+  if (equipTab) equipTab.style.display = 'none';
   loadAssessmentDetail(id);
 }
 
