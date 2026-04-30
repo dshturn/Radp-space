@@ -843,26 +843,46 @@ async function saveEditAssessment() {
 }
 
 async function deleteAssessment(id) {
-  if (!confirm('Request deletion of this assessment? An admin must approve before it is permanently deleted.')) return;
-
   const u = getUser();
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/assessment_deletion_requests`, {
-    method: 'POST',
-    headers: { ...getHeaders(), Prefer: 'return=minimal' },
-    body: JSON.stringify({ assessment_id: id, requested_by: u.id, status: 'pending' })
-  });
-  if (!res.ok) {
-    const err = await res.text().catch(() => '');
-    console.error('Request failed:', res.status, err);
-    showToast(`Failed to request deletion (${res.status})`, 'error');
-    return;
+  const isAdmin = u.role === 'admin';
+
+  const confirmMsg = isAdmin
+    ? 'Delete this assessment permanently?'
+    : 'Request deletion of this assessment? An admin must approve before it is permanently deleted.';
+  if (!confirm(confirmMsg)) return;
+
+  if (isAdmin) {
+    // Admins delete directly
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${id}`, {
+      method: 'DELETE',
+      headers: { ...getHeaders(), Prefer: 'return=minimal' }
+    });
+    if (!res.ok) {
+      const err = await res.text().catch(() => '');
+      console.error('Delete failed:', res.status, err);
+      showToast(`Failed to delete assessment (${res.status})`, 'error');
+      return;
+    }
+    logAudit('assessment', id, 'deleted', `Assessment deleted by admin ${u.email}`);
+    showToast('Assessment deleted.', 'success');
+  } else {
+    // Contractors request approval
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/assessment_deletion_requests`, {
+      method: 'POST',
+      headers: { ...getHeaders(), Prefer: 'return=minimal' },
+      body: JSON.stringify({ assessment_id: id, requested_by: u.id, status: 'pending' })
+    });
+    if (!res.ok) {
+      const err = await res.text().catch(() => '');
+      console.error('Request failed:', res.status, err);
+      showToast(`Failed to request deletion (${res.status})`, 'error');
+      return;
+    }
+    await logNotificationEvent('deletion_requested', 'assessment', id, { contractor_email: u.email });
+    logAudit('assessment', id, 'deletion_requested', `Deletion request created by ${u.email}`);
+    showToast('Deletion request submitted. Awaiting admin approval.', 'success');
   }
 
-  // Log event - notifications auto-created by trigger
-  await logNotificationEvent('deletion_requested', 'assessment', id, { contractor_email: u.email });
-
-  logAudit('assessment', id, 'deletion_requested', `Deletion request created by ${u.email}`);
-  showToast('Deletion request submitted. Awaiting admin approval.', 'success');
   loadAssessments();
 }
 
