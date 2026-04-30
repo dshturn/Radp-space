@@ -108,7 +108,7 @@ async function addNewCompany() {
   const msg  = document.getElementById('newCompanyMsg');
   if (!name) { msg.style.color = '#fda4af'; msg.textContent = 'Please enter a company name.'; return; }
   msg.style.color = '#94a3b8'; msg.textContent = 'Adding...';
-  const res = await fetch((window.location.hostname === 'localhost' ? 'http://localhost:5000' : '') + `/api?endpoint=${encodeURIComponent('/rest/v1/companies')}&Prefer=return=minimal`, {
+  const res = await fetch(`/api?endpoint=${encodeURIComponent('/rest/v1/companies')}&Prefer=return=minimal`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name })
