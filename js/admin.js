@@ -352,6 +352,73 @@ async function renderDeletionRequests() {
 // Page initialization - called when admin page is shown
 async function adminInit() {
   await loadUsers();
+  await loadAdminNotifications();
+}
+
+async function loadAdminNotifications() {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/notifications?order=created_at.desc&limit=100`, {
+    headers: getHeaders()
+  });
+  if (!res.ok) {
+    console.error('Failed to load notifications');
+    return;
+  }
+  const notifications = await res.json();
+  const list = document.getElementById('adminNotificationsList');
+
+  if (!notifications.length) {
+    list.innerHTML = '<div class="empty">No notifications</div>';
+    return;
+  }
+
+  list.innerHTML = `
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr style="border-bottom:2px solid var(--border);">
+            <th style="padding:12px;text-align:left;color:var(--text-3);font-weight:600;">User</th>
+            <th style="padding:12px;text-align:left;color:var(--text-3);font-weight:600;">Type</th>
+            <th style="padding:12px;text-align:left;color:var(--text-3);font-weight:600;">Label</th>
+            <th style="padding:12px;text-align:left;color:var(--text-3);font-weight:600;">Status</th>
+            <th style="padding:12px;text-align:left;color:var(--text-3);font-weight:600;">Date</th>
+            <th style="padding:12px;text-align:center;color:var(--text-3);font-weight:600;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${notifications.map(n => `
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:12px;color:var(--text-2);">${esc(n.contractor_id?.substring(0, 8) || '?')}</td>
+              <td style="padding:12px;"><span style="font-size:11px;padding:2px 6px;border-radius:4px;background:var(--surface-3);color:var(--text-2);">${esc(n.type)}</span></td>
+              <td style="padding:12px;color:var(--text-1);">${esc(n.entity_label || '—')}</td>
+              <td style="padding:12px;">
+                <span style="font-size:11px;padding:4px 8px;border-radius:4px;${n.read ? 'background:var(--surface-3);color:var(--text-3);' : 'background:var(--warn-bg);color:var(--warn);font-weight:600;'}">${n.read ? 'Read' : 'Unread'}</span>
+              </td>
+              <td style="padding:12px;color:var(--text-3);font-size:12px;">${new Date(n.created_at).toLocaleDateString()}</td>
+              <td style="padding:12px;text-align:center;">
+                ${n.read
+                  ? `<button class="btn-warning btn-sm" onclick="toggleNotifReadStatus('${n.id}', false)">Mark Unread</button>`
+                  : `<button class="btn-success btn-sm" onclick="toggleNotifReadStatus('${n.id}', true)">Mark Read</button>`
+                }
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+async function toggleNotifReadStatus(notifId, shouldBeRead) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/notifications?id=eq.${notifId}`, {
+    method: 'PATCH',
+    headers: { ...getHeaders(), Prefer: 'return=minimal' },
+    body: JSON.stringify({ read: shouldBeRead })
+  });
+  if (res.ok) {
+    loadAdminNotifications();
+  } else {
+    showToast('Failed to update notification', 'error');
+  }
 }
 
 // Audit page initialization
