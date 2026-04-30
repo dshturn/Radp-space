@@ -351,9 +351,45 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
     [...childItems, ...grandItems].forEach(c => { (kidsByParent[c.parent_id] = kidsByParent[c.parent_id] || []).push(c); });
 
     const today = new Date().toLocaleDateString('en-GB');
+    const esc = s => (s || '').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 
-    // Simple HTML LoR for PDF generation
-    const lorHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;font-size:11px;margin:16px}h1{font-size:14px;margin:0 0 5px 0}h2{font-size:11px;margin:10px 0 3px 0;background:#1e3a5f;color:white;padding:5px}h3{font-size:11px;margin:8px 0 3px 0;background:#2d4a1e;color:white;padding:5px}ul{margin:3px 0;padding-left:20px}li{margin:2px 0}</style></head><body><h1>List of Readiness</h1><p>Assessment: ${assessment.id} | ${assessment.company_name || '—'} | ${today}</p><h2>Personnel</h2><ul>${personnel.map(p => `<li>${p.personnel.full_name} (${p.personnel.position})</li>`).join('')}</ul><h2>Equipment</h2><ul>${rootItems.map(e => `<li>${e.equipment_templates?.name || e.name || '—'}</li>`).join('')}</ul></body></html>`;
+    // Build personnel rows with document links
+    let persRows = '';
+    personnel.forEach((p, idx) => {
+      const per = p.personnel;
+      const docs = docsByPersonnel[per.id] || [];
+      if (!docs.length) {
+        persRows += `<tr><td>${idx + 1}</td><td>${esc(per?.full_name||'—')}</td><td>${esc(per?.position||'—')}</td><td>—</td></tr>`;
+      } else {
+        docs.forEach((d, dIdx) => {
+          const docName = d.doc_type_name || '—';
+          const docLink = d.file_url ? `<a href="${d.file_url}" style="color:#0066cc;text-decoration:underline;">${esc(docName)}</a>` : esc(docName);
+          persRows += `<tr><td>${dIdx === 0 ? idx + 1 : ''}</td><td>${dIdx === 0 ? esc(per?.full_name||'—') : ''}</td><td>${dIdx === 0 ? esc(per?.position||'—') : ''}</td><td>${docLink}</td></tr>`;
+        });
+      }
+    });
+
+    // Build equipment rows with document links
+    let equipRows = '';
+    const indentFor = depth => depth === 0 ? '' : '&nbsp;'.repeat(depth * 3) + '└ ';
+    function renderEquipment(item, depth, idx) {
+      const docs = item?.documents || [];
+      const label = indentFor(depth) + esc(item?.equipment_templates?.name || item?.name || item?.model || '—');
+      if (!docs.length) {
+        equipRows += `<tr><td>${depth === 0 ? idx : ''}</td><td>${label}</td><td>—</td></tr>`;
+      } else {
+        docs.forEach((d, dIdx) => {
+          const docName = d.document_types?.document_name || d.doc_type_name || '—';
+          const docLink = d.file_url ? `<a href="${d.file_url}" style="color:#0066cc;text-decoration:underline;">${esc(docName)}</a>` : esc(docName);
+          equipRows += `<tr><td>${dIdx === 0 && depth === 0 ? idx : ''}</td><td>${dIdx === 0 ? label : ''}</td><td>${docLink}</td></tr>`;
+        });
+      }
+      (kidsByParent[item.id] || []).forEach(child => renderEquipment(child, depth + 1, idx));
+    }
+    rootItems.forEach((item, idx) => renderEquipment(item, 0, idx + 1));
+
+    // Generate HTML LoR with document links
+    const lorHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;font-size:11px;margin:16px;color:#000}h1{font-size:14px;margin:0 0 5px 0;font-weight:bold}p{margin:5px 0;font-size:10px}h2{font-size:11px;margin:10px 0 5px 0;background:#1e3a5f;color:white;padding:5px;font-weight:bold}table{width:100%;border-collapse:collapse;margin-bottom:10px}th{padding:4px;text-align:left;font-size:10px;border:1px solid #999;background:#e8e8e8;font-weight:bold}td{padding:4px;border:1px solid #ccc;font-size:10px}a{color:#0066cc;text-decoration:underline;cursor:pointer}</style></head><body><h1>List of Readiness</h1><p>Assessment: ${assessment.id} | ${assessment.company_name || '—'} | ${today}</p><h2>Personnel</h2><table><thead><tr><th>#</th><th>Name</th><th>Position</th><th>Document</th></tr></thead><tbody>${persRows || '<tr><td colspan="4" style="text-align:center;color:#999;">No personnel</td></tr>'}</tbody></table><h2>Equipment</h2><table><thead><tr><th>#</th><th>Equipment</th><th>Document</th></tr></thead><tbody>${equipRows || '<tr><td colspan="3" style="text-align:center;color:#999;">No equipment</td></tr>'}</tbody></table></body></html>`;
 
     console.log('[PDF] Generating LoR PDF from HTML...');
     pdf.create(lorHtml, { format: 'A4' }).toBuffer((err, buffer) => {
