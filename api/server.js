@@ -159,7 +159,7 @@ app.get('/api/*', async (req, res) => {
 app.post('/api/generate-lor-pdf', async (req, res) => {
   let browser;
   try {
-    const { assessmentId } = req.body;
+    const { assessmentId, docType = 'both' } = req.body;
     const headers = {
       apikey: SUPABASE_ANON_KEY,
       Authorization: req.headers.authorization || `Bearer ${SUPABASE_ANON_KEY}`,
