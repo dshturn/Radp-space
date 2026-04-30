@@ -340,11 +340,10 @@ async function renderDeletionRequests() {
 // Page initialization - called when admin page is shown
 async function adminInit() {
   await loadUsers();
-  await renderDeletionRequests();
-  await loadAuditLog();
 }
 
 // Audit page initialization
 async function auditInit() {
+  await renderDeletionRequests();
   await loadAuditLog();
 }
