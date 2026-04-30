@@ -322,7 +322,12 @@ async function renderDeletionRequests() {
   const section = document.getElementById('deletionRequestsSection');
   const list = document.getElementById('deletionRequestsList');
 
+  console.log('[ADMIN] Deletion requests:', requests);
+  console.log('[ADMIN] Section element:', section);
+  console.log('[ADMIN] List element:', list);
+
   if (!requests || requests.length === 0) {
+    console.log('[ADMIN] No deletion requests to display');
     if (section) section.style.display = 'none';
     return;
   }
