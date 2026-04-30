@@ -131,6 +131,7 @@ h3 { font-size: clamp(16px, 3vw, 20px); font-weight: 600; }
 .badge.draft     { background: var(--border);  color: var(--text-2); }
 .badge.submitted { background: var(--info-bg); color: var(--info); }
 .badge.approved  { background: var(--good-bg); color: var(--good); }
+.badge.awaiting_deletion { background: var(--warn-bg); color: var(--warn); }
 /* ── Status badges: card/group headers (JS-generated, replaces inline styles) ── */
 .sbadge { display:inline-flex; align-items:center; font-size:11px; font-weight:bold; padding:3px 8px; border-radius:20px; }
 .sbadge-missing  { background: var(--bad-bg);  color: var(--bad);  }
