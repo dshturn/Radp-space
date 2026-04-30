@@ -324,7 +324,7 @@ function equipItemCard(item, name, docs, subs = [], docsByItem = {}, subsByParen
                 <span class="doc-group-title">Documents</span>
                 ${scAlertBadge}
                 <span class="doc-group-count">${scDocs.length}</span>
-                <span class="doc-group-toggle">▾</span>
+                <span class="doc-group-toggle" aria-expanded="false">▾</span>
               </div>
               <div class="doc-group-body"><div class="doc-group-inner">
                 ${scDocsHtml}
