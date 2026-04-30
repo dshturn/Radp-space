@@ -297,6 +297,25 @@ async function rejectDeletion(requestId, assessmentId, reason) {
   renderDeletionRequests();
 }
 
+async function adminCancelDeletion(requestId, assessmentId) {
+  if (!confirm('Cancel this deletion request?')) return;
+
+  const u = getUser();
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/assessment_deletion_requests?id=eq.${requestId}`, {
+    method: 'DELETE',
+    headers: { ...getHeaders(), Prefer: 'return=minimal' }
+  });
+
+  if (!res.ok) {
+    showToast('Failed to cancel deletion request', 'error');
+    return;
+  }
+
+  logAudit('assessment_deletion_request', requestId, 'cancelled_by_admin', `Deletion request cancelled by admin ${u.email}`);
+  showToast('Deletion request cancelled', 'success');
+  renderDeletionRequests();
+}
+
 // ── Display deletion requests on admin page ──
 async function renderDeletionRequests() {
   const requests = await loadDeletionRequests();
