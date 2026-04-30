@@ -192,6 +192,8 @@ async function _renderAuditLog() {
 
   const list = document.getElementById('auditLogList');
   console.log('auditLogList element:', list);
+  console.log('Response headers - Content-Range:', res.headers.get('Content-Range'));
+  console.log('All response headers:', Array.from(res.headers.entries()));
   if (!rows.length) { list.innerHTML = '<div class="empty">No audit entries found</div>'; document.getElementById('auditLogPagination').innerHTML = ''; return; }
 
   try {
