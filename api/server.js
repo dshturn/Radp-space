@@ -439,6 +439,75 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
       });
     }
 
+    // First, calculate page numbers for all documents (dry run)
+    let pageCounter = 1; // LoR will be on page 1 (might span multiple)
+    const docPageMap = {};
+    for (const doc of allDocs) {
+      docPageMap[doc.id] = pageCounter;
+      if (doc.fileUrl?.match(/\.pdf$/i)) {
+        try {
+          const docResponse = await axios.get(doc.fileUrl, { responseType: 'arraybuffer', timeout: 10000 });
+          const srcPdf = await PDFDocument.load(docResponse.data);
+          pageCounter += srcPdf.getPageCount();
+        } catch (e) {
+          pageCounter++; // Assume 1 page on error
+        }
+      } else {
+        pageCounter++; // Images are 1 page
+      }
+    }
+    console.log(`[PDF] Document page map: ${JSON.stringify(docPageMap)}`);
+
+    // Build LoR with page numbers in links
+    let persRows = '';
+    let pNum = 1;
+    const roles = Object.keys(byRole).sort();
+    roles.forEach(role => {
+      persRows += `<tr><td colspan="11" style="background:#1e3a5f;color:white;font-weight:bold;padding:5px 4px;border:1px solid #bbb;">● ${esc(role)}</td></tr>`;
+      byRole[role].forEach(p => {
+        const per = p.personnel;
+        const docs = docsByPersonnel[per.id] || [];
+        if (!docs.length) {
+          persRows += `<tr><td>${pNum++}</td><td>${esc(per?.full_name||'—')}</td><td>${esc(String(per?.years_experience||'—'))}</td><td>${esc(per?.position||'—')}</td><td>—</td><td>—</td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td></tr>`;
+        } else {
+          docs.forEach((d, idx) => {
+            const pageRef = docPageMap[d.id] ? ` (p.${docPageMap[d.id]})` : '';
+            persRows += `<tr><td>${idx === 0 ? pNum++ : ''}</td><td>${idx === 0 ? esc(per?.full_name||'—') : ''}</td><td>${idx === 0 ? esc(String(per?.years_experience||'—')) : ''}</td><td>${idx === 0 ? esc(per?.position||'—') : ''}</td><td>${esc(d.doc_type_name || '—')}${pageRef}</td><td>${esc(d.expiry_date || '—')}</td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td><td class="ac"></td></tr>`;
+          });
+        }
+      });
+    });
+
+    let equipRows = '', eNum = 1;
+    const byType = {};
+    rootItems.forEach(item => {
+      const type = item.equipment_templates?.name || 'Equipment';
+      if (!byType[type]) byType[type] = [];
+      byType[type].push(item);
+    });
+
+    const types = Object.keys(byType).sort();
+    types.forEach(type => {
+      equipRows += `<tr><td colspan="11" style="background:#2d4a1e;color:white;font-weight:bold;padding:5px 4px;border:1px solid #bbb;">● ${type}</td></tr>`;
+      const renderItem = (it, depth) => {
+        const docs = it?.documents || [];
+        const indent = depth === 0 ? '' : '&nbsp;'.repeat(depth * 4) + '└─ ';
+        const label = indent + (it?.equipment_templates?.name || it?.name || it?.model || '—');
+        const numCell = depth === 0 ? String(eNum++) : '';
+        const sn = esc(it?.serial_number || '—');
+        if (!docs.length) {
+          equipRows += `<tr><td>${numCell}</td><td>${sn}</td><td>${label}</td><td>—</td><td>—</td><td>—</td><td></td><td></td><td></td><td></td><td></td></tr>`;
+        } else {
+          docs.forEach((d, idx) => {
+            const pageRef = docPageMap[d.id] ? ` (p.${docPageMap[d.id]})` : '';
+            equipRows += `<tr><td>${idx === 0 ? numCell : ''}</td><td>${idx === 0 ? sn : ''}</td><td>${idx === 0 ? label : ''}</td><td>${esc(d.document_types?.document_name || d.doc_type_name || '—')}${pageRef}</td><td>${esc(d.issue_date || '—')}</td><td>${esc(d.expiry_date || '—')}</td><td></td><td></td><td></td><td></td><td></td></tr>`;
+          });
+        }
+        (kidsByParent[it.id] || []).forEach(child => renderItem(child, depth + 1));
+      };
+      byType[type].forEach(item => renderItem(item, 0));
+    });
+
     const lorHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>LoR</title><style>body{font-family:Arial,sans-serif;font-size:11px;margin:16px;color:#000}h1{font-size:15px;text-align:center;margin-bottom:2px}.subtitle{text-align:center;font-size:10px;color:#444;margin-bottom:10px}h2{font-size:13px;margin:12px 0 8px;background:#1e3a5f;color:white;padding:8px 10px}.info-table{width:100%;border-collapse:collapse;margin-bottom:10px}.info-table td{padding:4px 8px;border:1px solid #bbb;font-size:11px}.info-table .lbl{font-weight:bold;background:#e8edf2;width:130px}table{width:100%;border-collapse:collapse;margin-bottom:12px}th{padding:5px 4px;text-align:left;font-size:10px;border:1px solid #bbb}th.sp{background:#1e3a5f;color:white}th.as{background:#2d4a1e;color:white}td{padding:4px 4px;border:1px solid #ddd;font-size:10px}tr:nth-child(even) td{background:#f7f9f7}.ac{background:#f0f7ee}img{max-width:95%;height:auto;}@media print{body{margin:0}@page{size:A4 landscape;margin:8mm}}</style></head><body><h1>List of Readiness (LoR)</h1><div class="subtitle">Attachment to SMS Process 07.01</div><table class="info-table"><tr><td class="lbl">Service Provider</td><td><strong>${esc(assessment.company_name||'—')}</strong></td><td class="lbl">Date</td><td>${todayStr}</td></tr><tr><td class="lbl">Field/Well</td><td colspan="3">${esc(assessment.field_well||'—')}</td></tr><tr><td class="lbl">Type of Job</td><td colspan="3">${esc(assessment.type_of_job||'—')}</td></tr></table><table><thead><tr><th class="sp" colspan="6">Manpower</th><th class="as" colspan="5">Assessor</th></tr><tr><th class="sp">#</th><th class="sp">Name</th><th class="sp">Yrs Exp</th><th class="sp">Role</th><th class="sp">Doc</th><th class="sp">Expiry</th><th class="as">Unit</th><th class="as">Auditor</th><th class="as">Date</th><th class="as">Ready</th><th class="as">Comment</th></tr></thead><tbody>${persRows}<tr><th class="sp" colspan="6">Equipment</th><th class="as" colspan="5">Assessor</th></tr><tr><th class="sp">#</th><th class="sp">S/N</th><th class="sp">Description</th><th class="sp">Type</th><th class="sp">Issue</th><th class="sp">Expiry</th><th class="as">Unit</th><th class="as">Auditor</th><th class="as">Date</th><th class="as">Ready</th><th class="as">Comment</th></tr>${equipRows}</tbody></table></body></html>`;
 
     // Generate LoR PDF from HTML
