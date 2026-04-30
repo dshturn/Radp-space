@@ -113,7 +113,7 @@ function showPage(name, replace = false) {
   if (name === 'assessment') { assessmentInit?.(); loadAssessments(); }
   if (name === 'operations') { operationsInit?.(); loadOperations(); }
   if (name === 'admin')      { adminInit(); }
-  if (name === 'audit')      { auditInit?.(); loadAuditLog(); }
+  if (name === 'audit')      { console.log('[APP] Showing audit page, calling auditInit'); auditInit?.(); loadAuditLog(); }
   if (name === 'register')   { configureRegisterForm(); loadRegisterOptions(); }
 }
 
