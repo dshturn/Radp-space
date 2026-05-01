@@ -215,6 +215,17 @@ async function register() {
     body: JSON.stringify(signupData)
   });
   const data = await res.json();
+
+  if (data.error) {
+    msg.className = 'auth-msg error';
+    if (data.error_code === 'user_already_registered' || data.error.includes('already')) {
+      msg.textContent = `User with email "${email}" already exists. Please login or use a different email.`;
+    } else {
+      msg.textContent = `Registration error: ${data.error_description || data.error || 'Unknown error'}`;
+    }
+    return;
+  }
+
   if (data.user) {
     const profileData = { id: data.user.id, email, full_name: fullName, company, role, status: 'pending' };
     if (isContractor) {
@@ -231,7 +242,8 @@ async function register() {
       msg.className = 'auth-msg success'; msg.textContent = 'Account created! Waiting for admin approval.';
       logAudit('user', data.user.id, 'registered', `${fullName} (${email})`, { company, role, department_or_service_line: serviceLine });
     } else {
-      msg.className = 'auth-msg error'; msg.textContent = `Failed to create profile: ${profileRes.status}`;
+      const errData = await profileRes.json().catch(() => ({}));
+      msg.className = 'auth-msg error'; msg.textContent = `Failed to create profile: ${errData.message || profileRes.status}`;
     }
   } else {
     msg.className = 'auth-msg error'; msg.textContent = 'Registration failed. Try again.';
