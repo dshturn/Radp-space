@@ -65,21 +65,33 @@ function logout() {
 
 async function loadRegisterOptions() {
   try {
+    const role = sessionStorage.getItem('radp_reg_role') || 'contractor';
+    const isContractor = role === 'contractor';
+
+    // For contractors: load companies + service_lines
+    // For assessors/operations: load companies + aramco_departments
+    const endpoint1 = isContractor
+      ? '/rest/v1/service_lines?select=name&order=name'
+      : '/rest/v1/aramco_departments?select=name&order=name';
+
     const [cRes, sRes] = await Promise.all([
       fetch((window.location.hostname === 'localhost' ? 'http://localhost:5000' : '') + `/api?endpoint=${encodeURIComponent('/rest/v1/companies?select=name&order=name')}`),
-      fetch((window.location.hostname === 'localhost' ? 'http://localhost:5000' : '') + `/api?endpoint=${encodeURIComponent('/rest/v1/service_lines?select=name&order=name')}`)
+      fetch((window.location.hostname === 'localhost' ? 'http://localhost:5000' : '') + `/api?endpoint=${encodeURIComponent(endpoint1)}`)
     ]);
     if (!cRes.ok || !sRes.ok) throw new Error('Failed to load options');
     const c = await cRes.json();
     const s = await sRes.json();
+
     const sel     = document.getElementById('regCompany');
     const current = sel.value;
     sel.innerHTML = '<option value="">Select company...</option>'
       + c.map(x => `<option value="${x.name}">${x.name}</option>`).join('')
       + '<option value="__new__">+ Add new company...</option>';
     if (current) sel.value = current;
+
     const svcSel = document.getElementById('regServiceLine');
-    svcSel.innerHTML = '<option value="">Select service line...</option>'
+    const placeholder = isContractor ? 'Select service line...' : 'Select department...';
+    svcSel.innerHTML = `<option value="">${placeholder}</option>`
       + s.map(x => `<option value="${x.name}">${x.name}</option>`).join('');
   } catch (err) {
     console.error('Failed to load register options:', err);
