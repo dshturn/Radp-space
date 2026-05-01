@@ -106,6 +106,15 @@
           </div>
           <div id="newServiceLineMsg" class="form-hint"></div>
         </div>
+        <script>
+          // Update placeholder text based on role
+          const updateNewSLPlaceholder = () => {
+            const role = sessionStorage.getItem('radp_reg_role') || 'contractor';
+            const input = document.getElementById('newServiceLineName');
+            if (input) input.placeholder = role === 'contractor' ? 'Enter service line name' : 'Enter department name';
+          };
+          updateNewSLPlaceholder();
+        </script>
         <button type="submit" class="btn-main">Create Account</button>
       </form>
       <div id="registerMsg" class="auth-msg" role="alert"></div>
