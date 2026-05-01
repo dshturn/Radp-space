@@ -91,8 +91,10 @@ async function loadRegisterOptions() {
 
     const svcSel = document.getElementById('regServiceLine');
     const placeholder = isContractor ? 'Select service line...' : 'Select department...';
+    const addNewOption = isContractor ? '+ Add new service line...' : '+ Add new department...';
     svcSel.innerHTML = `<option value="">${placeholder}</option>`
-      + s.map(x => `<option value="${x.name}">${x.name}</option>`).join('');
+      + s.map(x => `<option value="${x.name}">${x.name}</option>`).join('')
+      + `<option value="__new__">${addNewOption}</option>`;
   } catch (err) {
     console.error('Failed to load register options:', err);
   }
