@@ -95,8 +95,10 @@
             <div id="newCompanyMsg" class="form-hint"></div>
           </div>
         </div>
-        <label class="auth-label" for="regServiceLine" id="regServiceLineLabel">Service Line</label>
-        <select id="regServiceLine" onchange="onServiceLineChange(this)"><option value="">Select service line...</option></select>
+        <div id="regServiceLineWrap">
+          <label class="auth-label" for="regServiceLine" id="regServiceLineLabel">Service Line</label>
+          <select id="regServiceLine" onchange="onServiceLineChange(this)"><option value="">Select service line...</option></select>
+        </div>
         <div id="newServiceLineWrap" style="display:none;">
           <div class="row-gap-sm">
             <input type="text" id="newServiceLineName" placeholder="Enter service line name" class="mb-0">
