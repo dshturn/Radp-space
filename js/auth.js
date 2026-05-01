@@ -143,11 +143,16 @@ async function addNewCompany() {
 }
 
 async function addNewServiceLine() {
+  const role = sessionStorage.getItem('radp_reg_role') || 'contractor';
+  const isContractor = role === 'contractor';
+  const endpoint = isContractor ? '/rest/v1/service_lines' : '/rest/v1/aramco_departments';
+  const type = isContractor ? 'service line' : 'department';
+
   const name = document.getElementById('newServiceLineName').value.trim();
   const msg  = document.getElementById('newServiceLineMsg');
-  if (!name) { msg.style.color = '#fda4af'; msg.textContent = 'Please enter a service line name.'; return; }
+  if (!name) { msg.style.color = '#fda4af'; msg.textContent = `Please enter a ${type} name.`; return; }
   msg.style.color = '#94a3b8'; msg.textContent = 'Adding...';
-  const res = await fetch((window.location.hostname === 'localhost' ? 'http://localhost:5000' : '') + `/api?endpoint=${encodeURIComponent('/rest/v1/service_lines')}&Prefer=return=minimal`, {
+  const res = await fetch((window.location.hostname === 'localhost' ? 'http://localhost:5000' : '') + `/api?endpoint=${encodeURIComponent(endpoint)}&Prefer=return=minimal`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name })
