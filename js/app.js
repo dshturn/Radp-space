@@ -54,7 +54,7 @@ function configureRegisterForm() {
   if (emailInput) emailInput.placeholder = isContractor ? 'you@company.com' : 'you@aramco.com';
 
   // Service line/department field: hidden for assessors, visible for contractors & operations
-  const slWrap = document.getElementById('regServiceLine')?.parentElement;
+  const slWrap = document.getElementById('regServiceLineWrap');
   const slLabel = document.getElementById('regServiceLineLabel');
   if (slWrap) slWrap.style.display = isAssessor ? 'none' : '';
   if (slLabel) slLabel.textContent = isContractor ? 'Service Line' : 'Aramco Department';
