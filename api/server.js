@@ -549,6 +549,84 @@ app.post('/api/*', async (req, res) => {
   }
 });
 
+// ── Proxy: PATCH request to Supabase ──
+app.patch('/api', async (req, res) => {
+  try {
+    if (!req.query.endpoint) {
+      return res.status(400).json({ error: 'Missing endpoint parameter' });
+    }
+
+    let fullEndpoint = req.query.endpoint;
+    const [path, ...queryParts] = fullEndpoint.split('?');
+    const endpointQuery = queryParts.length > 0 ? '?' + queryParts.join('?') : '';
+    const { endpoint, ...otherParams } = req.query;
+    const otherQuery = new URLSearchParams(otherParams).toString();
+    const finalQuery = endpointQuery + (otherQuery ? (endpointQuery ? '&' : '?') + otherQuery : '');
+
+    let url;
+    if (path.startsWith('/auth/') || path.startsWith('/storage/') || path.startsWith('/functions/')) {
+      url = `${SUPABASE_URL}${path}${finalQuery}`;
+    } else if (path.startsWith('/rest/v1/')) {
+      url = `${SUPABASE_URL}${path}${finalQuery}`;
+    } else {
+      url = `${SUPABASE_URL}/rest/v1/${path}${finalQuery}`;
+    }
+
+    console.log('[API] PATCH URL:', url);
+    const response = await axios.patch(url, req.body, {
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: req.headers.authorization || `Bearer ${SUPABASE_ANON_KEY}`,
+        Prefer: req.headers.prefer || '',
+        'Content-Type': 'application/json',
+      },
+    });
+    res.status(response.status).json(response.data || {});
+  } catch (err) {
+    console.error('[API] PATCH error:', {
+      message: err.message,
+      status: err.response?.status,
+      data: err.response?.data,
+      url: err.config?.url
+    });
+    res.status(err.response?.status || 500).json({ error: err.message, details: err.response?.data });
+  }
+});
+
+app.patch('/api/*', async (req, res) => {
+  try {
+    let path = req.params[0];
+    let query = new URLSearchParams(req.query).toString();
+
+    if (req.query.endpoint) {
+      path = req.query.endpoint;
+      const { endpoint, ...otherParams } = req.query;
+      query = new URLSearchParams(otherParams).toString();
+    }
+
+    const url = `${SUPABASE_URL}/rest/v1/${path}${query ? '?' + query : ''}`;
+    console.log('[API] PATCH URL:', url);
+
+    const response = await axios.patch(url, req.body, {
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: req.headers.authorization || `Bearer ${SUPABASE_ANON_KEY}`,
+        Prefer: req.headers.prefer || '',
+        'Content-Type': 'application/json',
+      },
+    });
+    res.status(response.status).json(response.data || {});
+  } catch (err) {
+    console.error('[API] PATCH error:', {
+      message: err.message,
+      status: err.response?.status,
+      data: err.response?.data,
+      url: err.config?.url
+    });
+    res.status(err.response?.status || 500).json({ error: err.message, details: err.response?.data });
+  }
+});
+
 // ── Error Handler ──
 app.use((err, req, res, next) => {
   console.error('Error:', err);
