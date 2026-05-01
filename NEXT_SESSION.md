@@ -1,6 +1,40 @@
-# Next Session Prompt: Phase 2 - Email-Based Assessment Workflow
+# Next Session Prompt: Phase 2 Implementation Planning
 
+**Status**: Phase 1 MVP ✅ (2026-04-28) | Comprehensive audit complete (2026-05-01)
+
+**IMPORTANT**: Two Phase 2 paths exist. **Recommend Priority 1 first**, then evaluate Priority 2.
+
+## Priority 1: Audit-Focused Phase 2 (Weeks 1–2)
+**Status**: Design specs ready, implementation roadmap finalized  
+**Timeline**: 2026-05-01 to 2026-05-22 (3 weeks: fix + build)  
+**Effort**: 17 days total (7 days P0/P1 fixes + 10 days Phase 2)
+
+**What's Included**:
+1. **P0/P1 Fixes** (Week 1):
+   - ARIA labels (A11y, blocking Phase 2)
+   - Form loading states (UX, blocking Phase 2)
+   - PDF size validation, cache docs, responsive tables, color tokens
+   - Split assessment.js into 5 modules
+
+2. **Phase 2 Features** (Week 2):
+   - Audit Export (PDF/CSV with filtering)
+   - Audit Log Search (real-time)
+   - Email Alerts (admin actions)
+
+**Rationale**:
+- Unblocks Phase 2 work (A11y + form states required)
+- Delivers operational value immediately (audit export, search, email alerts)
+- Improves code quality (assessment.js split makes future work faster)
+- Addresses all P0/P1 issues identified in audit
+
+**Reference**: `docs/superpowers/specs/2026-05-01-phase2-audit-features-design.md` (detailed design)
+**Reference**: `docs/superpowers/plans/2026-05-01-p0p1-fixes-implementation.md` (implementation roadmap)
+
+---
+
+## Priority 2: Email-Based Assessment Workflow (Alternative Phase 2)
 **Status**: Architecture finalized (2026-04-28). Ready to implement three new modules.
+**Timeline**: 2026-05-22+ (after Priority 1, or in parallel if resources available)
 
 ## Problem & Solution
 
