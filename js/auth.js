@@ -203,15 +203,11 @@ async function register() {
     return;
   }
 
-  // Aramco users: auto-set company to 'Aramco', use aramco_department instead of service_line
+  // Aramco users: auto-set company to 'Aramco'
   if (isAramco) company = 'Aramco';
 
-  const signupData = { email, password, options: { data: { full_name: fullName, company, role } } };
-  if (isContractor) {
-    signupData.options.data.service_line = serviceLine;
-  } else {
-    signupData.options.data.aramco_department = serviceLine;
-  }
+  // Signup only needs email + password; profile data goes to user_profiles table
+  const signupData = { email, password };
 
   const res  = await fetch((window.location.hostname === 'localhost' ? 'http://localhost:5000' : '') + `/api?endpoint=${encodeURIComponent('/auth/v1/signup')}`, {
     method: 'POST',
