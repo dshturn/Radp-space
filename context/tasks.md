@@ -183,126 +183,175 @@
 
 ## P1: High (Next 2–3 weeks)
 
-## P1: High (Next 2–3 weeks)
+## Phase 3: Expiry Alert System (Weeks 3–4)
 
-### Mobile UX: Faster Lookups
-- **Problem**: Field supervisor lookup 2–3 min; target < 2 min
-- **Actions**:
-  - Reduce API payload (select only needed columns)
-  - Cache crew + equipment lists locally
-  - Optimize CSS rendering
-- **Estimate**: 2–3 days
-- **Owner**: Frontend Engineer
-- **Success metric**: < 2 min on 3G
-
-### Expiry Alert System
+### Smart Notifications
 - **Features**:
-  - Daily check: flag personnel/equipment expiring in 30 days
-  - Email: "H2S cert expires 2026-05-10"
-  - In-app banner: red badge on expiring items
-- **Estimate**: 3–5 days
-- **Owner**: Full-stack Engineer
-- **Dependency**: Email template design
+  - Daily Edge Function checks personnel/equipment expiring in 30 days
+  - Flags: critical (≤0 days), urgent (1–7 days), warning (8–30 days)
+  - In-app notification bell + email digest
+  - Users can customize alert preferences
+- **Effort**: 3–4 days
+- **Owner**: Dev 2
+- **Dependency**: Phase 1 ✅ (notifications table exists)
+- **Success metric**: Email sent within 1h of flagged expiry
 
-### CSV Bulk Import
-- **Feature**: Upload CSV (name, email, cert_type, expiry_date)
-- **Validation**: Type check, date parsing, error report
-- **Recovery**: Show invalid rows, allow fix + retry
-- **Estimate**: 2–3 days
-- **Owner**: Frontend Engineer
-- **Success**: Import 50 crew in < 2 min
+---
 
-### Code Refactor
-- **Problem**: assessment.js 31KB (hard to debug)
-- **Actions**:
-  - Split into: assessment-list.js + assessment-editor.js
-  - Extract utils to shared.js
-  - Document module boundaries
-- **Estimate**: 3–5 days
-- **Owner**: Tech Lead
-- **Benefit**: Faster debugging, parallel dev
+## Phase 4: Mobile Performance & Offline (Weeks 4–6)
 
-## P2: Medium (4–6 weeks)
+### Faster Lookups (< 2 min on 3G)
+- Reduce API payload (select only needed columns)
+- Cache crew + equipment lists to IndexedDB
+- Optimize CSS rendering (avoid layout thrash)
+- **Effort**: 2–3 days
+
+### Mobile Offline Sync
+- Cache full rosters on app load
+- Allow offline status checks (read-only)
+- Sync when back online
+- **Effort**: 3–5 days
+
+---
+
+## Phase 5: Admin Insights (Weeks 5–7)
 
 ### Admin Dashboard
 - Approval rates by assessor
 - Contractor compliance trends (approval %)
-- Audit log search + export
-- **Estimate**: 4–5 days
-- **Owner**: Frontend Engineer
+- Top blockers (most-rejected cert types)
+- **Effort**: 4–5 days
+- **Owner**: Dev 1
 
-### SAML/LDAP Integration
-- Aramco SSO (replace email/password)
-- Map AD groups to roles
-- **Estimate**: 5–7 days
-- **Dependency**: Aramco IT approval + SAML endpoint
-
-### Advanced Filtering
-- Filter assessments: status, date range, contractor, service line
-- Export to CSV with audit trail
-- Save custom filters
-- **Estimate**: 3–4 days
-
-### Mobile Offline Sync
-- Cache full crew + equipment rosters on app load
-- Allow offline status checks (read-only)
-- **Estimate**: 3–5 days
-
-## P3: Low (Future)
-
-- Equipment maintenance log (service intervals, inspections)
-- Multi-language (Arabic + English)
-- Contractor performance ratings
-- QR code scanning (equipment serial lookup)
-- SAP integration (nightly sync)
-
-## Known Bugs (Backlog)
-
-- [ ] PDF upload fails > 10MB (investigate size limits)
-- [ ] Expiry calc off by 1 day in some timezones (UTC fix pending)
-- [ ] Service line dropdown resets after adding company
-- [ ] Audit log search capped at 50 rows (pagination issue)
-
-## Completed (Last 30 days)
-
-✅ Audit logging
-✅ Multi-role auth (contractor, assessor, operations, admin)
-✅ Equipment hierarchy (parent/child components)
-✅ PWA (offline read, install to home)
-✅ Assessment approval workflow
-✅ Aramco departments + service lines
-
-## Team Capacity
-
-Current: 1 Tech Lead + 1 Full-Stack Engineer + 0.5 Designer
-Velocity: ~8–10 points/week (1 pt ≈ 4–6 hours)
-Available next 4 weeks: ~18 days
-Allocation: P0 (3–5 days) + P1 (1–2 tasks) + buffer (code review, debug)
-
-## Success Metrics
-
-| Metric | Target | Owner |
-|--------|--------|-------|
-| Assessment submit | < 5 min | UX |
-| Assessment approve | 24h routine | Ops |
-| Field lookup (3G) | < 2 min | Mobile |
-| Cert upload | 99%+ | Files |
-| API response | < 500ms | Backend |
-| Uptime | 99.5%+ | DevOps |
-
-## Severity Levels
-
-- **P0**: Outage, data loss, security breach → fix < 2h
-- **P1**: Feature broken, major perf issue → fix < 24h
-- **P2**: Minor bug, UX inconsistency → fix < 1 week
-- **P3**: Nice-to-have improvement → backlog
-
-## Communication
-
-Weekly stand-up: Tue 10am (Tech Lead + Aramco Ops)
-Release cadence: Wed + Fri (after QA)
-Status: Shared with Aramco CTO
+### CSV Bulk Import
+- Upload CSV (name, email, cert_type, expiry_date)
+- Validation + error report with retry
+- Success: import 50 crew in < 2 min
+- **Effort**: 2–3 days
+- **Owner**: Dev 1
 
 ---
 
-Owner: Tech Lead | Last updated: 2026-04-27 (Phase 2 Backend Migration Initiated)
+## Phase 6: Enterprise Integration (Weeks 8+)
+
+### SAML/LDAP (Aramco SSO)
+- Replace email/password with Aramco Active Directory
+- Auto-provision users
+- Map AD groups to RADP roles
+- **Effort**: 5–7 days
+- **Dependency**: Aramco IT approval + SAML endpoint
+
+### Email-Based Assessment Workflow (Alternative Path)
+- Email Analyzer (receives SharePoint emails)
+- PDF Generator (hierarchical PDFs with TOC links)
+- SharePoint Email Generator (integration)
+- **Effort**: 1 week
+- **Advantage**: Firewall-friendly, email always works
+- **Status**: See NEXT_SESSION.md for architecture
+
+### SAP Integration
+- Sync contractor + crew data from SAP nightly
+- Reconcile with RADP records
+- Flag mismatches
+- **Effort**: 7 days
+
+---
+
+## Backlog (P2: Nice-to-Have)
+
+- Equipment maintenance log (service intervals, inspections)
+- Multi-language support (Arabic + English)
+- Contractor performance ratings
+- QR code scanning (equipment serial lookup)
+- Advanced assessment filtering (status, date, service line, contractor)
+- AI-powered certificate OCR (extract dates from PDFs)
+
+---
+
+## Known Bugs (Fixed in P0/P1)
+
+- ✅ PDF upload lacks size validation → Fixed (P1.2)
+- ✅ Forms don't show loading state → Fixed (P0.2)
+- ✅ A11y: ARIA labels missing → Fixed (P0.1)
+- ✅ assessment.js is monolithic → Fixed (P1.1, Phase 2)
+- ⚠️ Expiry calc off by 1 day in some timezones → *TBD: investigate*
+- ⚠️ Service line dropdown resets after adding company → *TBD: investigate*
+
+---
+
+## Completed (Phase 1 MVP)
+
+✅ Audit logging (11 action types, full RLS)  
+✅ Multi-role auth (contractor, assessor, operations, admin)  
+✅ Equipment hierarchy (parent/child components)  
+✅ PWA (offline read, install to home)  
+✅ Assessment approval workflow  
+✅ Aramco departments + service lines  
+✅ Personnel qualifications tracking  
+✅ Document upload (PDFs, JPGs)
+
+---
+
+## Team Capacity & Allocation
+
+**Current Team**:
+- Dev 1 (Full-stack, focus: frontend/forms)
+- Dev 2 (Full-stack, focus: backend/integration)
+- Tech Lead (Architecture, code review)
+
+**Next 4 Weeks** (2026-05-01 to 2026-05-29):
+- **Week 1**: P0/P1 fixes (7 days)
+- **Week 2**: Phase 2 features (10 days)
+- **Week 3**: Expiry system + contingency buffer (5 days)
+- **Total available**: ~22 days (2 devs × ~11 days each, accounting for meetings/review)
+
+**Velocity**: ~5–6 features/week (depends on complexity)  
+**Release cadence**: Weekly deploys (Mon/Wed/Fri) after testing
+
+---
+
+## Success Metrics (Track Quarterly)
+
+| Metric | Target | Q2 2026 | Q3 2026 | Owner |
+|--------|--------|---------|---------|-------|
+| System uptime | 99.5%+ | ✅ | ✅ | DevOps |
+| Assessment approval SLA | 95% on-time | TBD | TBD | Ops |
+| Audit log completeness | 100% | ✅ | ✅ | QA |
+| Field lookup time (3G) | < 2 min | TBD | ✅ | Frontend |
+| A11y compliance | WCAG 2.1 AA | ✅ May 1 | ✅ | QA |
+| Code review turnaround | < 24h | — | ✅ | Tech Lead |
+| User satisfaction | 4.0+ / 5.0 | TBD | TBD | Product |
+
+---
+
+## Severity Definitions
+
+- **P0 (Critical)**: Blocking release, data loss, security, A11y violation → fix < 4h
+- **P1 (High)**: Major feature broken, significant perf issue, usability gap → fix < 24h
+- **P2 (Medium)**: Minor bug, UX inconsistency, tech debt → fix < 1 week
+- **P3 (Low)**: Nice-to-have, polish, future optimization → backlog
+
+---
+
+## Communication
+
+- **Weekly stand-up**: Tue 10am (Dev 1, Dev 2, Tech Lead, Aramco Ops)
+- **Release review**: Wed 3pm (post-deployment QA review)
+- **Architecture sync**: Fri 2pm (optional, as needed)
+- **Status shared with**: Aramco CTO (weekly digest)
+
+---
+
+## References
+
+- **Phase 2 Audit Features Spec**: `docs/superpowers/specs/2026-05-01-phase2-audit-features-design.md`
+- **P0/P1 Implementation Roadmap**: `docs/superpowers/plans/2026-05-01-p0p1-fixes-implementation.md`
+- **Phase 2 Email Workflow (Alternative)**: `NEXT_SESSION.md`
+- **Design Context**: `.impeccable.md`
+- **Code Standards**: `CLAUDE.md`
+
+---
+
+**Owner**: Tech Lead  
+**Last updated**: 2026-05-01 (Comprehensive audit + planning complete)  
+**Next review**: 2026-05-08 (post-Week 1 fixes)
