@@ -203,23 +203,40 @@ async function register() {
     return;
   }
 
-  // Aramco users: auto-set company to 'Aramco'
+  // Aramco users: auto-set company to 'Aramco', use aramco_department instead of service_line
   if (isAramco) company = 'Aramco';
+
+  const signupData = { email, password, options: { data: { full_name: fullName, company, role } } };
+  if (isContractor) {
+    signupData.options.data.service_line = serviceLine;
+  } else {
+    signupData.options.data.aramco_department = serviceLine;
+  }
 
   const res  = await fetch((window.location.hostname === 'localhost' ? 'http://localhost:5000' : '') + `/api?endpoint=${encodeURIComponent('/auth/v1/signup')}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password, options: { data: { full_name: fullName, company, service_line: serviceLine, role } } })
+    body: JSON.stringify(signupData)
   });
   const data = await res.json();
   if (data.user) {
-    await fetch((window.location.hostname === 'localhost' ? 'http://localhost:5000' : '') + `/api?endpoint=${encodeURIComponent('/rest/v1/user_profiles')}&Prefer=resolution=merge-duplicates`, {
+    const profileData = { id: data.user.id, email, full_name: fullName, company, role, status: 'pending' };
+    if (isContractor) {
+      profileData.service_line = serviceLine;
+    } else {
+      profileData.aramco_department = serviceLine;
+    }
+    const profileRes = await fetch((window.location.hostname === 'localhost' ? 'http://localhost:5000' : '') + `/api?endpoint=${encodeURIComponent('/rest/v1/user_profiles')}&Prefer=resolution=merge-duplicates`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: data.user.id, email, full_name: fullName, company, service_line: serviceLine, role, status: 'pending' })
+      body: JSON.stringify(profileData)
     });
-    msg.className = 'auth-msg success'; msg.textContent = 'Account created! Waiting for admin approval.';
-    logAudit('user', data.user.id, 'registered', `${fullName} (${email})`, { company, service_line: serviceLine, role });
+    if (profileRes.ok || profileRes.status === 201) {
+      msg.className = 'auth-msg success'; msg.textContent = 'Account created! Waiting for admin approval.';
+      logAudit('user', data.user.id, 'registered', `${fullName} (${email})`, { company, role, department_or_service_line: serviceLine });
+    } else {
+      msg.className = 'auth-msg error'; msg.textContent = `Failed to create profile: ${profileRes.status}`;
+    }
   } else {
     msg.className = 'auth-msg error'; msg.textContent = 'Registration failed. Try again.';
   }
