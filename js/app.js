@@ -36,6 +36,7 @@ function pickRegistrationRole(role) {
 function configureRegisterForm() {
   const role = sessionStorage.getItem('radp_reg_role') || 'contractor';
   const isContractor = role === 'contractor';
+  const isAssessor = role === 'assessor';
 
   const companyWrap = document.getElementById('regCompanyWrap');
   if (companyWrap) companyWrap.style.display = isContractor ? '' : 'none';
@@ -52,9 +53,12 @@ function configureRegisterForm() {
   if (emailLabel) emailLabel.textContent = isContractor ? 'Email' : 'Aramco Email';
   if (emailInput) emailInput.placeholder = isContractor ? 'you@company.com' : 'you@aramco.com';
 
-  // Aramco users pick a department (from aramco_departments) instead of a service line.
+  // Service line/department field: hidden for assessors, visible for contractors & operations
+  const slWrap = document.getElementById('regServiceLine')?.parentElement;
   const slLabel = document.getElementById('regServiceLineLabel');
+  if (slWrap) slWrap.style.display = isAssessor ? 'none' : '';
   if (slLabel) slLabel.textContent = isContractor ? 'Service Line' : 'Aramco Department';
+
   const newSLName = document.getElementById('newServiceLineName');
   if (newSLName) {
     newSLName.placeholder = isContractor ? 'Enter service line name' : 'Enter department name';
