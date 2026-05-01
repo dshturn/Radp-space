@@ -20,7 +20,13 @@ async function login() {
 
   if (!data.access_token) {
     msg.className = 'auth-msg error';
-    msg.textContent = 'Invalid email or password.';
+    if (data.error_description?.includes('Invalid login credentials')) {
+      msg.textContent = 'Invalid email or password. Please try again.';
+    } else if (data.error_description) {
+      msg.textContent = data.error_description;
+    } else {
+      msg.textContent = 'Login failed. Please check your email and password.';
+    }
     return;
   }
 
