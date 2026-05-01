@@ -216,12 +216,18 @@ async function register() {
   });
   const data = await res.json();
 
-  if (data.error) {
+  if (data.error || data.details?.error_code) {
     msg.className = 'auth-msg error';
-    if (data.error_code === 'user_already_registered' || data.error.includes('already')) {
-      msg.textContent = `User with email "${email}" already exists. Please login or use a different email.`;
+    const errorCode = data.details?.error_code || data.error_code;
+
+    if (errorCode === 'user_already_exists' || errorCode === 'user_already_registered') {
+      msg.textContent = `Email "${email}" is already registered. Please use a different email or login with this account.`;
+    } else if (data.error?.includes('password')) {
+      msg.textContent = 'Password must be at least 6 characters long.';
+    } else if (data.error?.includes('email')) {
+      msg.textContent = 'Please enter a valid email address.';
     } else {
-      msg.textContent = `Registration error: ${data.error_description || data.error || 'Unknown error'}`;
+      msg.textContent = `Registration failed: ${data.details?.msg || data.error_description || 'Please try again'}`;
     }
     return;
   }
