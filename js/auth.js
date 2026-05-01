@@ -251,9 +251,16 @@ async function register() {
       msg.className = 'auth-msg success'; msg.textContent = 'Account created! Waiting for admin approval.';
       logAudit('user', data.user.id, 'registered', `${fullName} (${email})`, { company, role, department_or_service_line: serviceLine });
     } else {
-      const errText = await profileRes.text().catch(() => '');
-      console.error('Profile creation failed:', profileRes.status, errText);
-      msg.className = 'auth-msg error'; msg.textContent = `Failed to create profile: ${errText || profileRes.status}`;
+      const errData = await profileRes.json().catch(() => ({}));
+      console.error('Profile creation failed:', profileRes.status, errData);
+      msg.className = 'auth-msg error';
+      if (errData.details?.message?.includes('filter')) {
+        msg.textContent = 'Error creating profile. Please try again.';
+      } else if (errData.error) {
+        msg.textContent = `Profile error: ${errData.error}`;
+      } else {
+        msg.textContent = 'Failed to create your profile. Please contact support.';
+      }
     }
   } else {
     msg.className = 'auth-msg error'; msg.textContent = 'Registration failed. Try again.';
