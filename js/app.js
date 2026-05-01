@@ -65,6 +65,12 @@ function configureRegisterForm() {
     newSLName.value = '';
   }
 
+  // Update button text in the new service line wrapper
+  const addBtn = document.querySelector('#newServiceLineWrap .btn-success');
+  if (addBtn) {
+    addBtn.textContent = isContractor ? 'Add' : 'Add';
+  }
+
   // Clear any lingering custom-entry state on form re-entry.
   const newSLWrap = document.getElementById('newServiceLineWrap');
   if (newSLWrap) newSLWrap.style.display = 'none';
