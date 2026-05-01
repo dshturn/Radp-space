@@ -154,28 +154,53 @@ async function register() {
   const fullName    = document.getElementById('regFullName').value;
   const email       = document.getElementById('regEmail').value;
   const password    = document.getElementById('regPassword').value;
-  const company     = document.getElementById('regCompany').value;
+  const role        = sessionStorage.getItem('radp_reg_role') || 'contractor';
+  const isContractor = role === 'contractor';
+  const isAramco    = ['assessor', 'operations', 'admin'].includes(role);
+
+  let company       = document.getElementById('regCompany').value;
   const serviceLine = document.getElementById('regServiceLine').value;
   const msg         = document.getElementById('registerMsg');
-  if (!fullName || !email || !password || !company || !serviceLine || company === '__new__') {
+
+  // Validation
+  if (!fullName || !email || !password) {
     msg.className = 'auth-msg error';
-    msg.textContent = company === '__new__' ? 'Please finish adding your company first.' : 'Please fill all fields.';
+    msg.textContent = 'Please fill all required fields.';
     return;
   }
+  if (isContractor && !company) {
+    msg.className = 'auth-msg error';
+    msg.textContent = 'Please select a company.';
+    return;
+  }
+  if (company === '__new__') {
+    msg.className = 'auth-msg error';
+    msg.textContent = 'Please finish adding your company first.';
+    return;
+  }
+  if (isContractor && !serviceLine) {
+    msg.className = 'auth-msg error';
+    msg.textContent = 'Please select a service line.';
+    return;
+  }
+
+  // Aramco users: auto-set company to 'Aramco'
+  if (isAramco) company = 'Aramco';
+
   const res  = await fetch((window.location.hostname === 'localhost' ? 'http://localhost:5000' : '') + `/api?endpoint=${encodeURIComponent('/auth/v1/signup')}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password, options: { data: { full_name: fullName, company, service_line: serviceLine } } })
+    body: JSON.stringify({ email, password, options: { data: { full_name: fullName, company, service_line: serviceLine, role } } })
   });
   const data = await res.json();
   if (data.user) {
     await fetch((window.location.hostname === 'localhost' ? 'http://localhost:5000' : '') + `/api?endpoint=${encodeURIComponent('/rest/v1/user_profiles')}&Prefer=resolution=merge-duplicates`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: data.user.id, email, full_name: fullName, company, service_line: serviceLine })
+      body: JSON.stringify({ id: data.user.id, email, full_name: fullName, company, service_line: serviceLine, role, status: 'pending' })
     });
     msg.className = 'auth-msg success'; msg.textContent = 'Account created! Waiting for admin approval.';
-    logAudit('user', data.user.id, 'registered', `${fullName} (${email})`, { company, service_line: serviceLine });
+    logAudit('user', data.user.id, 'registered', `${fullName} (${email})`, { company, service_line: serviceLine, role });
   } else {
     msg.className = 'auth-msg error'; msg.textContent = 'Registration failed. Try again.';
   }
