@@ -377,6 +377,11 @@ input[type="file"] { display: none; }
 #newCompanyWrap input { flex: 1; margin-bottom: 0; }
 #newCompanyMsg { font-size: 12px; margin-top: 6px; }
 
+#newServiceLineWrap { display: none; margin-top: -10px; margin-bottom: 16px; }
+#newServiceLineWrap .row-gap-sm { align-items: stretch; }
+#newServiceLineWrap input { flex: 1; margin-bottom: 0; }
+#newServiceLineMsg { font-size: 12px; margin-top: 6px; }
+
 /* === Operations Module === */
 .ops-view { display: none; }
 .ops-view.active { display: block; }
