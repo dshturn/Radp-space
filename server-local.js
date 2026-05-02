@@ -77,8 +77,13 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // Serve static files from public directory
-  let filePath = path.join(PUBLIC_DIR, req.url === '/' ? 'index.html' : req.url);
+  // Serve static files from public or js directory
+  let filePath;
+  if (req.url.startsWith('/js/')) {
+    filePath = path.join(JS_DIR, req.url.slice(4));
+  } else {
+    filePath = path.join(PUBLIC_DIR, req.url === '/' ? 'index.html' : req.url);
+  }
 
   // Remove query parameters from the file path
   filePath = filePath.split('?')[0];
