@@ -32,10 +32,11 @@ Login → Register (select your role) → Add personnel/equipment → Submit ass
 
 ## Tech Stack
 
-- **Frontend**: Vanilla JavaScript, no build step
-- **Backend**: Supabase (PostgreSQL, Auth, REST API)
-- **Deployment**: Vercel (SPA routing)
-- **Storage**: Supabase (documents, PDFs)
+- **Frontend**: Vanilla JavaScript (no build), HTML5, CSS3
+- **Database**: Supabase PostgreSQL (RLS, Auth, REST API)
+- **Deployment**: Vercel (SPA routing, auto-deploy on main)
+- **Storage**: Supabase Storage (documents, PDFs)
+- **PDF Generation**: Client-side `window.print()` (no server needed)
 
 ## Documentation
 
