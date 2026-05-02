@@ -47,15 +47,37 @@ Login → Register (select your role) → Add personnel/equipment → Submit ass
 
 ## Local Development
 
+**Frontend** (port 3000):
 ```bash
-supabase start          # Start local database (port 54321)
-python -m http.server   # Serve app
-# Open http://localhost:8000
+node server-local.js    # Serves /public + /js, proxies API to localhost:5000
+```
+
+**API** (port 5000, development only):
+```bash
+cd api && npm start      # Local Supabase proxy (not needed in production)
+```
+
+## Architecture
+
+```
+Browser → Vercel (radp.space)
+  ├── Static files (HTML/CSS/JS)
+  └── /api/index.js (Supabase proxy)
+
+Browser → Supabase
+  ├── REST API (/rest/v1/*) — all data operations
+  ├── Auth (/auth/v1/*) — login/logout/registration
+  └── Storage (/storage/*) — documents, PDFs
+
+PDF → window.print() in browser → "Save as PDF"
 ```
 
 ## Deployment
 
-Push to `main` → Vercel auto-deploys in ~1 min → test in production
+1. Push to `main` → Vercel auto-deploys in ~1 min
+2. Set Vercel env vars: `SUPABASE_URL`, `SUPABASE_ANON_KEY`
+3. Test at https://radp.space
+4. No backend server needed (Vercel + Supabase only)
 
 ---
 
