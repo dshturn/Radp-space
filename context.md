@@ -19,12 +19,28 @@ Digital platform for pre-mobilization audits of well intervention equipment
 - **Storage**: Supabase Storage for documents, certificates, PDFs
 - **API Proxy**: Vercel Function (`api/index.js`) forwards authenticated requests to Supabase REST
 
-## Current Architecture
-- Row-level security (RLS) enforces multi-tenant isolation
+## Current Architecture (Production)
+
+**Deployment**:
+```
+Browser → Vercel Edge → Static HTML/CSS/JS (cached globally)
+Browser → Vercel Function (api/index.js) → Supabase REST API
+Browser → Supabase REST → PostgreSQL (auth + data)
+Browser → window.print() → PDF (native browser feature)
+```
+
+**Security & Multi-Tenancy**:
+- Row-level security (RLS) enforces contractor isolation
+- Supabase JWT tokens passed to RLS policies via `auth.uid()`
+- Service role key only used in Edge Functions (for admin operations)
+- All data queries filtered client-side via RLS — no app-level filtering needed
+
+**Features**:
 - Event-driven notifications via Postgres triggers
 - Role-based access control (contractor, operations, assessor, admin)
 - Immutable audit trail with timestamps
 - PWA for offline field operations
+- No backend server — Vercel + Supabase only
 
 ## Documentation Index
 - [Notifications & Deletion Workflow](context/FEATURE-NOTIFICATIONS-2026-05-01.md) — Event pipeline, contractor/admin flows
