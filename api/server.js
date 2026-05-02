@@ -304,6 +304,7 @@ app.post('/api', async (req, res) => {
 
 // ── HTML to PDF conversion (for Generate LoR) ──
 app.post('/api/generate-html-pdf', async (req, res) => {
+  let browser;
   try {
     const { html } = req.body;
     if (!html) {
@@ -312,19 +313,20 @@ app.post('/api/generate-html-pdf', async (req, res) => {
     }
 
     console.log('[PDF] Converting HTML to PDF, size:', html.length, 'bytes');
-    pdf.create(html, { format: 'A4', orientation: 'landscape' }).toBuffer((err, buffer) => {
-      if (err) {
-        console.error('[PDF] PDF generation error:', err.message, err.stack);
-        return res.status(500).json({ error: err.message });
-      }
-      console.log('[PDF] Generated PDF', buffer.length, 'bytes');
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="LoR_${new Date().toISOString().split('T')[0]}.pdf"`);
-      res.send(buffer);
-    });
+    browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: 'networkidle2' });
+    const buffer = await page.pdf({ format: 'A4', landscape: true });
+
+    console.log('[PDF] Generated PDF', buffer.length, 'bytes');
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="LoR_${new Date().toISOString().split('T')[0]}.pdf"`);
+    res.send(buffer);
   } catch (err) {
     console.error('[PDF] Error in /api/generate-html-pdf:', err.message, err.stack);
     res.status(500).json({ error: err.message });
+  } finally {
+    if (browser) await browser.close();
   }
 });
 
