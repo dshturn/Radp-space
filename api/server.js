@@ -448,17 +448,24 @@ app.post('/api/generate-lor-pdf', async (req, res) => {
     const lorHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;font-size:11px;margin:16px;color:#000}h1{font-size:14px;margin:0 0 5px 0;font-weight:bold}p{margin:5px 0;font-size:10px}h2{font-size:11px;margin:10px 0 5px 0;background:#1e3a5f;color:white;padding:5px;font-weight:bold}table{width:100%;border-collapse:collapse;margin-bottom:10px}th{padding:4px;text-align:left;font-size:10px;border:1px solid #999;background:#e8e8e8;font-weight:bold}td{padding:4px;border:1px solid #ccc;font-size:10px}a{color:#0066cc;text-decoration:underline;cursor:pointer}</style></head><body><h1>List of Readiness</h1><p>Assessment: ${assessment.id} | ${assessment.company_name || '—'} | ${today}</p><h2>Personnel</h2><table><thead><tr><th>#</th><th>Name</th><th>Position</th><th>Document</th></tr></thead><tbody>${persRows || '<tr><td colspan="4" style="text-align:center;color:#999;">No personnel</td></tr>'}</tbody></table><h2>Equipment</h2><table><thead><tr><th>#</th><th>Equipment</th><th>Document</th></tr></thead><tbody>${equipRows || '<tr><td colspan="3" style="text-align:center;color:#999;">No equipment</td></tr>'}</tbody></table></body></html>`;
 
     console.log('[PDF] Generating LoR PDF from HTML...');
-    pdf.create(lorHtml, { format: 'A4' }).toBuffer((err, buffer) => {
-      if (err) {
-        console.error('[PDF] Error:', err.message);
-        return res.status(500).json({ error: err.message });
-      }
+    let browser;
+    try {
+      browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
+      const page = await browser.newPage();
+      await page.setContent(lorHtml, { waitUntil: 'networkidle2' });
+      const buffer = await page.pdf({ format: 'A4' });
+
       console.log('[PDF] Generated', buffer.length, 'bytes');
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="LoR_${assessment.field_well || 'Assessment'}_${today}.pdf"`);
       res.send(buffer);
       console.log('[PDF] PDF sent');
-    });
+    } catch (err) {
+      console.error('[PDF] Error:', err.message);
+      res.status(500).json({ error: err.message });
+    } finally {
+      if (browser) await browser.close();
+    }
 
   } catch (err) {
     console.error('[PDF] Error:', err.message, err.stack);
