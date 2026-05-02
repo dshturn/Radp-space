@@ -754,48 +754,102 @@ async function generateLoR() {
 
 async function generateLoRWithDocs(type = 'both') {
   if (!currentAssessmentId) { showToast('No assessment selected', 'error'); return; }
+  showToast('Fetching data...', 'info');
 
-  const typeLabel = type === 'personnel' ? 'Personnel LoR + Docs' : type === 'equipment' ? 'Equipment LoR + Docs' : 'LoR + Docs';
-  showToast(`Fetching data for ${typeLabel}...`, 'info');
+  const h = getHeaders();
+  const base = `${SUPABASE_URL}/rest/v1`;
 
   try {
-    const apiUrl = typeof window !== 'undefined' && window.location.port === '3001'
-      ? 'http://localhost:5000/api/generate-lor-pdf'
-      : '/api/generate-lor-pdf';
+    const [aRes, eRes, pRes] = await Promise.all([
+      fetch(`${base}/assessments?id=eq.${currentAssessmentId}`, { headers: h }).then(r => r.json()),
+      fetch(`${base}/assessment_equipment?assessment_id=eq.${currentAssessmentId}&select=*,equipment_items(id,serial_number,model,name,parent_id,equipment_templates(name),documents(*,document_types(document_name)))`, { headers: h }).then(r => r.json()),
+      fetch(`${base}/assessment_personnel?assessment_id=eq.${currentAssessmentId}&select=*,personnel(*)`, { headers: h }).then(r => r.json()),
+    ]);
 
-    showToast(`Generating PDF (this may take a moment)...`, 'info');
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': getHeaders().Authorization
-      },
-      body: JSON.stringify({ assessmentId: currentAssessmentId, docType: type })
-    });
+    const assessment = aRes[0];
+    if (!assessment) { showToast('Assessment not found', 'error'); return; }
 
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      showToast('PDF generation failed: ' + (err.error || response.status), 'error');
-      return;
+    const equipment = eRes;
+    const personnel = pRes;
+
+    let allPersonnelDocs = [];
+    if (personnel.length) {
+      const ids = personnel.map(p => p.personnel?.id).filter(Boolean);
+      allPersonnelDocs = await fetch(`${base}/personnel_documents?personnel_id=in.(${ids.join(',')})&select=*`, { headers: h }).then(r => r.json());
     }
 
-    showToast('Processing documents...', 'info');
-    const blob = await response.blob();
+    const rootItems = equipment.map(e => e.equipment_items).filter(Boolean);
+    const rootIds = rootItems.map(i => i.id);
+    let childItems = [];
+    if (rootIds.length) childItems = await fetch(`${base}/equipment_items?dismissed=is.false&parent_id=in.(${rootIds.join(',')})&select=id,parent_id,serial_number,model,name,equipment_templates(name),documents(*,document_types(document_name))`, { headers: h }).then(r => r.json());
+    const childIds = childItems.map(i => i.id);
+    let grandItems = [];
+    if (childIds.length) grandItems = await fetch(`${base}/equipment_items?dismissed=is.false&parent_id=in.(${childIds.join(',')})&select=id,parent_id,serial_number,model,name,equipment_templates(name),documents(*,document_types(document_name))`, { headers: h }).then(r => r.json());
 
-    showToast('Finalizing PDF...', 'info');
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    const assessment = window._currentAssessment || { field_well: 'Assessment' };
-    link.href = url;
-    link.download = `LoR_${type}_${assessment.field_well || 'Assessment'}_${new Date().toISOString().split('T')[0]}.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    showToast('PDF generated successfully', 'success');
+    const kidsByParent = {};
+    [...childItems, ...grandItems].forEach(c => { (kidsByParent[c.parent_id] = kidsByParent[c.parent_id] || []).push(c); });
+
+    const seenDocs = new Set();
+    const uniqueDocs = allPersonnelDocs.filter(d => {
+      const key = `${d.personnel_id}:${d.doc_type_name}`;
+      if (seenDocs.has(key)) return false;
+      seenDocs.add(key);
+      return true;
+    });
+    const docsByPersonnel = {};
+    uniqueDocs.forEach(d => { (docsByPersonnel[d.personnel_id] = docsByPersonnel[d.personnel_id] || []).push(d); });
+    const seenIds = new Set();
+    const uniquePersonnel = personnel.filter(p => {
+      const id = p.personnel?.id;
+      if (seenIds.has(id)) return false;
+      seenIds.add(id);
+      return true;
+    });
+
+    const today = new Date().toLocaleDateString('en-GB');
+    let persRows = '';
+    uniquePersonnel.forEach((p, idx) => {
+      const per = p.personnel;
+      const docs = docsByPersonnel[per.id] || [];
+      if (!docs.length) {
+        persRows += `<tr><td>${idx + 1}</td><td>${esc(per?.full_name||'—')}</td><td>${esc(per?.position||'—')}</td><td>—</td></tr>`;
+      } else {
+        docs.forEach((d, dIdx) => {
+          const docName = d.doc_type_name || '—';
+          const docLink = d.file_url ? `<a href="${d.file_url}" target="_blank">${esc(docName)}</a>` : esc(docName);
+          persRows += `<tr><td>${dIdx === 0 ? idx + 1 : ''}</td><td>${dIdx === 0 ? esc(per?.full_name||'—') : ''}</td><td>${dIdx === 0 ? esc(per?.position||'—') : ''}</td><td>${docLink}</td></tr>`;
+        });
+      }
+    });
+
+    let equipRows = '';
+    const indent = depth => depth === 0 ? '' : '&nbsp;'.repeat(depth * 3) + '└ ';
+    function renderEquip(item, depth, idx) {
+      const docs = item?.documents || [];
+      const label = indent(depth) + esc(item?.equipment_templates?.name || item?.name || item?.model || '—');
+      if (!docs.length) {
+        equipRows += `<tr><td>${depth === 0 ? idx : ''}</td><td>${label}</td><td>—</td></tr>`;
+      } else {
+        docs.forEach((d, dIdx) => {
+          const docName = d.document_types?.document_name || d.doc_type_name || '—';
+          const docLink = d.file_url ? `<a href="${d.file_url}" target="_blank">${esc(docName)}</a>` : esc(docName);
+          equipRows += `<tr><td>${dIdx === 0 && depth === 0 ? idx : ''}</td><td>${dIdx === 0 ? label : ''}</td><td>${docLink}</td></tr>`;
+        });
+      }
+      (kidsByParent[item.id] || []).forEach(child => renderEquip(child, depth + 1, idx));
+    }
+    rootItems.forEach((item, idx) => renderEquip(item, 0, idx + 1));
+
+    const lorWithDocsHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;font-size:11px;margin:16px;color:#000}h1{font-size:14px;margin:0 0 5px 0;font-weight:bold}p{margin:5px 0;font-size:10px}h2{font-size:11px;margin:10px 0 5px 0;background:#1e3a5f;color:white;padding:5px;font-weight:bold}table{width:100%;border-collapse:collapse;margin-bottom:10px}th{padding:4px;text-align:left;font-size:10px;border:1px solid #999;background:#e8e8e8;font-weight:bold}td{padding:4px;border:1px solid #ccc;font-size:10px}a{color:#0066cc;text-decoration:underline}@media print{.no-print{display:none}}</style></head><body><h1>List of Readiness</h1><p>Assessment: ${esc(String(assessment.id))} | ${esc(assessment.company_name||'—')} | ${today}</p><h2>Personnel</h2><table><thead><tr><th>#</th><th>Name</th><th>Position</th><th>Document</th></tr></thead><tbody>${persRows||'<tr><td colspan="4" style="text-align:center;color:#999">No personnel</td></tr>'}</tbody></table><h2>Equipment</h2><table><thead><tr><th>#</th><th>Equipment</th><th>Document</th></tr></thead><tbody>${equipRows||'<tr><td colspan="3" style="text-align:center;color:#999">No equipment</td></tr>'}</tbody></table><div class="no-print" style="margin-top:12px"><button onclick="window.print()" style="background:#1e3a5f;color:white;border:none;padding:7px 18px;border-radius:6px;cursor:pointer;font-size:11px">🖨️ Print / Save as PDF</button></div></body></html>`;
+
+    const blob = new Blob([lorWithDocsHtml], { type: 'text/html' });
+    const blobUrl = URL.createObjectURL(blob);
+    window.open(blobUrl, '_blank');
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+    showToast('LoR opened in new window', 'success');
   } catch (err) {
-    console.error('PDF generation error:', err);
-    showToast('Error generating PDF: ' + err.message, 'error');
+    console.error('LoR error:', err);
+    showToast('Error generating LoR: ' + err.message, 'error');
   }
 }
 
