@@ -133,6 +133,7 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, () => {
   console.log(`Local server running at http://localhost:${PORT}`);
-  console.log(`Serving files from: ${PUBLIC_DIR}`);
+  console.log(`Serving public files from: ${PUBLIC_DIR}`);
+  console.log(`Serving JS files from: ${JS_DIR}`);
   console.log(`Proxying API calls to Supabase via /api/proxy`);
 });
