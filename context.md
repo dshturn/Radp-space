@@ -11,12 +11,13 @@ Digital platform for pre-mobilization audits of well intervention equipment
 - Event-driven notifications system
 - Assessment deletion request workflow with admin approval
 
-## Stack
-- **Frontend**: Vanilla JavaScript (no build), HTML5, CSS3
-- **Backend**: Supabase (PostgreSQL, Auth, REST API, RLS)
-- **Deployment**: Vercel (SPA routing, auto-deploy on main)
-- **Storage**: Supabase Storage (documents, PDFs)
-- **Database**: PostgreSQL with RLS policies, audit logging, event triggers
+## Stack (as of May 2026)
+- **Frontend**: Vanilla JavaScript (no build), HTML5, CSS3 — deployed on Vercel
+- **Database**: Supabase PostgreSQL with RLS policies, Auth, REST API
+- **PDF Generation**: Client-side `window.print()` (browser native, no server)
+- **Deployment**: Vercel (SPA routing, auto-deploy on main push)
+- **Storage**: Supabase Storage for documents, certificates, PDFs
+- **API Proxy**: Vercel Function (`api/index.js`) forwards authenticated requests to Supabase REST
 
 ## Current Architecture
 - Row-level security (RLS) enforces multi-tenant isolation
