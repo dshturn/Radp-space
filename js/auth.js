@@ -11,41 +11,39 @@ async function login() {
   try {
     const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
-    if (error) throw error;
+    if (error) {
+      msg.className = 'auth-msg error';
+      if (error.message?.includes('Invalid login credentials')) {
+        msg.textContent = 'Invalid email or password. Please try again.';
+      } else {
+        msg.textContent = error.message || 'Login failed.';
+      }
+      return;
+    }
 
-    const { access_token, user } = data.session || {};
-    if (!access_token) {
+    const access_token = data.session?.access_token;
+    const userId = data.user?.id;
+
+    if (!access_token || !userId) {
       msg.className = 'auth-msg error';
       msg.textContent = 'Login failed. Please check your email and password.';
       return;
     }
 
-  if (!data.access_token) {
-    msg.className = 'auth-msg error';
-    if (data.error_description?.includes('Invalid login credentials')) {
-      msg.textContent = 'Invalid email or password. Please try again.';
-    } else if (data.error_description) {
-      msg.textContent = data.error_description;
-    } else {
-      msg.textContent = 'Login failed. Please check your email and password.';
+    let profile;
+    try {
+      const profileRes = await fetch((window.location.hostname === 'localhost' ? 'http://localhost:5000' : '') + `/api?endpoint=${encodeURIComponent(`/rest/v1/user_profiles?id=eq.${userId}&select=status,full_name,company,service_line,role`)}`, {
+        headers: { Authorization: `Bearer ${access_token}` }
+      });
+      if (!profileRes.ok) throw new Error(`Profile fetch failed: ${profileRes.status}`);
+      const profiles = await profileRes.json();
+      profile = profiles[0];
+    } catch (err) {
+      msg.className = 'auth-msg error';
+      msg.textContent = 'Failed to load profile. Try again.';
+      console.error('Profile fetch error:', err);
+      return;
     }
-    return;
-  }
-
-  let profile;
-  try {
-    const profileRes = await fetch((window.location.hostname === 'localhost' ? 'http://localhost:5000' : '') + `/api?endpoint=${encodeURIComponent(`/rest/v1/user_profiles?id=eq.${data.user.id}&select=status,full_name,company,service_line,role`)}`, {
-      headers: { Authorization: `Bearer ${data.access_token}` }
-    });
-    if (!profileRes.ok) throw new Error(`Profile fetch failed: ${profileRes.status}`);
-    const profiles = await profileRes.json();
-    profile = profiles[0];
-  } catch (err) {
-    msg.className = 'auth-msg error';
-    msg.textContent = 'Failed to load profile. Try again.';
-    console.error('Profile fetch error:', err);
-    return;
-  }
 
   if (!profile || profile.status === 'pending') {
     msg.className = 'auth-msg warning';
