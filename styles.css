@@ -25,6 +25,15 @@
   --danger-h:  #b91c1c;
   --shadow-modal: 0 24px 60px rgba(0,0,0,0.6);
   --skeleton-stop: #2a3a50;
+
+  /* === Typography Scale (1.4x ratio) === */
+  --text-xs:   10px;
+  --text-sm:   12px;
+  --text-base: 14px;
+  --text-lg:   16px;
+  --text-xl:   20px;
+  --text-2xl:  24px;
+  --text-3xl:  28px;
 }
 
 /* === Reset === */
