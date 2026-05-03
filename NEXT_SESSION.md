@@ -223,7 +223,7 @@ C:\Users\dshtu\Radp-space\
 
 ## Architecture Decision Log
 - **2026-04-28**: Email-based workflow ✅ → Approved (firewall-friendly)
-- **2026-05-03**: Heroku & outdated proposals → Removed (using Express API proxy with Supabase)
+- **2026-05-03**: Cleaned up outdated architecture docs (using Express API proxy with Supabase)
 
 ## References
 - Phase 2 Assessment Workflow: context/project.md
