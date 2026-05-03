@@ -28,7 +28,9 @@ self.addEventListener('fetch', e => {
   if (!isStatic) {
     // HTML pages and anything else: always go to network so security
     // patches reach users immediately and no stale data is served.
-    e.respondWith(fetch(e.request));
+    e.respondWith(
+      fetch(e.request).catch(() => caches.match(e.request))
+    );
     return;
   }
 
