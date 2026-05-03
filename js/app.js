@@ -129,6 +129,10 @@ function showPage(name, replace = false) {
     if (name === 'admin') {
       document.getElementById('usersRoleFilter').value = '';
       document.getElementById('usersSearch').value = '';
+      // Reset audit filters too (used in audit tab within admin page)
+      document.getElementById('auditEntityFilter').value = '';
+      document.getElementById('auditDateFrom').value = '';
+      document.getElementById('auditDateTo').value = '';
     }
     if (name === 'audit') {
       document.getElementById('auditEntityFilter').value = '';
