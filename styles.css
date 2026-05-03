@@ -593,22 +593,22 @@ textarea:focus-visible {
 .bulk-bar { background: var(--info-bg); border: 1px solid var(--info); padding: 12px 16px; border-radius: 8px; display: flex; align-items: center; gap: 16px; margin-bottom: 16px; animation: slideInDown 0.2s ease; }
 .bulk-count { color: var(--info); font-weight: 600; font-size: var(--text-sm); }
 .bulk-bar button { margin: 0; }
+.bulk-check { cursor: pointer; accent-color: var(--info); width: 18px; height: 18px; }
 
-/* Inline edit mode for quick updates */
-.inline-edit-mode .sub-card { background: var(--surface-3); border-left: 3px solid var(--info); padding: 12px; margin-bottom: 8px; cursor: pointer; transition: background 0.2s; }
-.inline-edit-mode .sub-card:hover { background: color-mix(in oklch, var(--surface-3) 80%, white 20%); }
-.inline-edit-mode .sub-card.selected { background: color-mix(in oklch, var(--info) 15%, var(--bg) 85%); border-left-color: var(--info); }
-.inline-edit-checkbox { display: inline-block; width: 16px; height: 16px; margin-right: 8px; cursor: pointer; accent-color: var(--info); }
-
-/* Field edit row: appears when user clicks to edit */
-.field-edit-row { display: flex; gap: 8px; align-items: center; padding: 8px; background: var(--surface); border-radius: 6px; margin-top: 8px; }
-.field-edit-row select { flex: 1; min-width: 120px; padding: 6px 10px; font-size: 12px; margin: 0; }
-.field-edit-row button { padding: 6px 12px; font-size: 12px; }
-@media (max-width: 767px) {
-  .bulk-bar { flex-direction: column; align-items: stretch; }
-  .bulk-bar button { width: 100%; }
-  .field-edit-row { flex-direction: column; }
-  .field-edit-row select { width: 100%; }
+/* Bulk mode: highlight selectable cards */
+#personnelList:has(.bulk-check:not([style*="display: none"])) .app-card,
+#equipmentList:has(.bulk-check:not([style*="display: none"])) .app-card {
+  cursor: pointer; transition: background 0.2s; border-left: 3px solid transparent;
+}
+#personnelList:has(.bulk-check:not([style*="display: none"])) .app-card:hover,
+#equipmentList:has(.bulk-check:not([style*="display: none"])) .app-card:hover {
+  background: color-mix(in oklch, var(--surface) 85%, var(--info) 15%);
+  border-left-color: var(--info);
+}
+#personnelList:has(.bulk-check:checked) .app-card:has(.bulk-check:checked),
+#equipmentList:has(.bulk-check:checked) .app-card:has(.bulk-check:checked) {
+  background: color-mix(in oklch, var(--surface) 80%, var(--info) 20%);
+  border-left-color: var(--info);
 }
 
 @keyframes slideInDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
