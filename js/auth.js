@@ -13,8 +13,8 @@ async function login() {
 
   const res  = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password, grant_type: 'password' })
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ email, password, grant_type: 'password' }).toString()
   });
   const data = await res.json();
 
