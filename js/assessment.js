@@ -1004,47 +1004,52 @@ function renderFieldView() {
   const equipHtml = document.getElementById('selectedEquipment');
   const fieldPersList = document.getElementById('fieldPersonnelList');
   const fieldEquipList = document.getElementById('fieldEquipmentList');
+  const perTabVisible = persHtml.style.display !== 'none';
 
   // Extract personnel items from office view
   const persCards = persHtml.querySelectorAll('.sub-card');
-  let persFieldHtml = persCards.length ? `<div class="field-section-title">👥 Personnel</div>` : '';
-  persCards.forEach(card => {
-    const titleEl = card.querySelector('.sub-card-title');
-    const name = titleEl ? titleEl.textContent.trim() : '?';
-    const statusEl = card.querySelector('.sbadge');
-    const status = statusEl ? statusEl.textContent.trim() : '?';
-    const docCount = card.querySelectorAll('.doc-row').length;
-    persFieldHtml += `
-      <div class="field-item">
-        <div class="field-item-name">${esc(name)}</div>
-        <div class="field-item-status">
-          <span class="sbadge ${statusEl?.className || ''}">${status}</span>
-          <span class="field-item-docs">${docCount} doc${docCount !== 1 ? 's' : ''}</span>
+  let persFieldHtml = perTabVisible && persCards.length ? `<div class="field-section-title">👥 Personnel</div>` : '';
+  if (perTabVisible) {
+    persCards.forEach(card => {
+      const titleEl = card.querySelector('.sub-card-title');
+      const name = titleEl ? titleEl.textContent.trim() : '?';
+      const statusEl = card.querySelector('.sbadge');
+      const status = statusEl ? statusEl.textContent.trim() : '?';
+      const docCount = card.querySelectorAll('.doc-row').length;
+      persFieldHtml += `
+        <div class="field-item">
+          <div class="field-item-name">${esc(name)}</div>
+          <div class="field-item-status">
+            <span class="sbadge ${statusEl?.className || ''}">${status}</span>
+            <span class="field-item-docs">${docCount} doc${docCount !== 1 ? 's' : ''}</span>
+          </div>
         </div>
-      </div>
-    `;
-  });
+      `;
+    });
+  }
   fieldPersList.innerHTML = persFieldHtml;
 
   // Extract equipment items from office view
   const equipCards = equipHtml.querySelectorAll('.app-card');
-  let equipFieldHtml = equipCards.length ? `<div class="field-section-title">⚙️ Equipment</div>` : '';
-  equipCards.forEach(card => {
-    const titleEl = card.querySelector('.app-card h2');
-    const name = titleEl ? titleEl.textContent.trim() : '?';
-    const statusEl = card.querySelector('.sbadge');
-    const status = statusEl ? statusEl.textContent.trim() : '?';
-    const docCount = card.querySelectorAll('.doc-row').length;
-    equipFieldHtml += `
-      <div class="field-item">
-        <div class="field-item-name">${esc(name)}</div>
-        <div class="field-item-status">
-          <span class="sbadge ${statusEl?.className || ''}">${status}</span>
-          <span class="field-item-docs">${docCount} doc${docCount !== 1 ? 's' : ''}</span>
+  let equipFieldHtml = !perTabVisible && equipCards.length ? `<div class="field-section-title">⚙️ Equipment</div>` : '';
+  if (!perTabVisible) {
+    equipCards.forEach(card => {
+      const titleEl = card.querySelector('.app-card h2');
+      const name = titleEl ? titleEl.textContent.trim() : '?';
+      const statusEl = card.querySelector('.sbadge');
+      const status = statusEl ? statusEl.textContent.trim() : '?';
+      const docCount = card.querySelectorAll('.doc-row').length;
+      equipFieldHtml += `
+        <div class="field-item">
+          <div class="field-item-name">${esc(name)}</div>
+          <div class="field-item-status">
+            <span class="sbadge ${statusEl?.className || ''}">${status}</span>
+            <span class="field-item-docs">${docCount} doc${docCount !== 1 ? 's' : ''}</span>
+          </div>
         </div>
-      </div>
-    `;
-  });
+      `;
+    });
+  }
   fieldEquipList.innerHTML = equipFieldHtml;
 }
 
