@@ -6,7 +6,7 @@ async function login() {
   const msg      = document.getElementById('loginMsg');
   msg.className  = 'auth-msg';
 
-  const endpoint = '/auth/v1/token?grant_type=password';
+  const endpoint = '/auth/v1/token';
   const url = window.location.hostname === 'localhost'
     ? `http://localhost:5000/api?endpoint=${encodeURIComponent(endpoint)}`
     : `/api?endpoint=${encodeURIComponent(endpoint)}`;
@@ -14,7 +14,7 @@ async function login() {
   const res  = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password })
+    body: JSON.stringify({ email, password, grant_type: 'password' })
   });
   const data = await res.json();
 
