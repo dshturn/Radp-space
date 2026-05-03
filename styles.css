@@ -589,6 +589,30 @@ textarea:focus-visible {
   a { color: black; text-decoration: underline; }
 }
 
+/* === Bulk Operations & Inline Editing === */
+.bulk-bar { background: var(--info-bg); border: 1px solid var(--info); padding: 12px 16px; border-radius: 8px; display: flex; align-items: center; gap: 16px; margin-bottom: 16px; animation: slideInDown 0.2s ease; }
+.bulk-count { color: var(--info); font-weight: 600; font-size: var(--text-sm); }
+.bulk-bar button { margin: 0; }
+
+/* Inline edit mode for quick updates */
+.inline-edit-mode .sub-card { background: var(--surface-3); border-left: 3px solid var(--info); padding: 12px; margin-bottom: 8px; cursor: pointer; transition: background 0.2s; }
+.inline-edit-mode .sub-card:hover { background: color-mix(in oklch, var(--surface-3) 80%, white 20%); }
+.inline-edit-mode .sub-card.selected { background: color-mix(in oklch, var(--info) 15%, var(--bg) 85%); border-left-color: var(--info); }
+.inline-edit-checkbox { display: inline-block; width: 16px; height: 16px; margin-right: 8px; cursor: pointer; accent-color: var(--info); }
+
+/* Field edit row: appears when user clicks to edit */
+.field-edit-row { display: flex; gap: 8px; align-items: center; padding: 8px; background: var(--surface); border-radius: 6px; margin-top: 8px; }
+.field-edit-row select { flex: 1; min-width: 120px; padding: 6px 10px; font-size: 12px; margin: 0; }
+.field-edit-row button { padding: 6px 12px; font-size: 12px; }
+@media (max-width: 767px) {
+  .bulk-bar { flex-direction: column; align-items: stretch; }
+  .bulk-bar button { width: 100%; }
+  .field-edit-row { flex-direction: column; }
+  .field-edit-row select { width: 100%; }
+}
+
+@keyframes slideInDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
 /* === View Toggle: Office vs Field === */
 .view-btn { background: var(--bg); color: var(--text-2); border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600; transition: background 0.2s, color 0.2s; }
 .view-btn:hover { color: var(--text); }
