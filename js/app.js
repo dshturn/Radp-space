@@ -125,11 +125,12 @@ function showPage(name, replace = false) {
       document.querySelectorAll('#contractor-page .ct-section').forEach(s => s.classList.remove('active'));
       document.getElementById('ct-personnel')?.classList.add('active');
     }
-    // Reset filter state when navigating to admin page
-    if (name === 'admin') {
+    // Reset filter state when navigating between pages
+    if (name === 'users') {
       document.getElementById('usersRoleFilter').value = '';
       document.getElementById('usersSearch').value = '';
-      // Reset audit filters too (used in audit tab within admin page)
+    }
+    if (name === 'audit') {
       document.getElementById('auditEntityFilter').value = '';
       document.getElementById('auditDateFrom').value = '';
       document.getElementById('auditDateTo').value = '';
