@@ -247,11 +247,20 @@
           <button class="lor-btn" onclick="generateLoRWithDocs('both')">📋 Export Full Report</button>
         </div>
       </div>
-      <div id="personnelTab">
-        <div id="selectedPersonnel"></div>
+      <!-- Office View: nested collapsibles (default) -->
+      <div id="officeView" class="detail-view-mode">
+        <div id="personnelTab">
+          <div id="selectedPersonnel"></div>
+        </div>
+        <div id="equipmentTab" style="display:none;">
+          <div id="selectedEquipment"></div>
+        </div>
       </div>
-      <div id="equipmentTab" style="display:none;">
-        <div id="selectedEquipment"></div>
+
+      <!-- Field View: flat status list (hidden by default) -->
+      <div id="fieldView" class="detail-view-mode" style="display:none;">
+        <div id="fieldPersonnelList"></div>
+        <div id="fieldEquipmentList" style="margin-top:24px;"></div>
       </div>
     </div>
   </div>
