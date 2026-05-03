@@ -247,11 +247,11 @@ const UPLOAD_MAX_BYTES = 10 * 1024 * 1024; // 10 MB
 function validateUploadFile(file) {
   if (!file) return false;
   if (!UPLOAD_ALLOWED_TYPES.includes(file.type)) {
-    showToast('Only PDF, JPEG, PNG, or WebP files are allowed', 'warn');
+    showToast('❌ File type not supported. Use PDF, JPEG, PNG, or WebP.', 'error');
     return false;
   }
   if (file.size > UPLOAD_MAX_BYTES) {
-    showToast('File must be smaller than 10 MB', 'warn');
+    showToast('❌ File too large (>10 MB). Compress or split into multiple files, then upload again.', 'error');
     return false;
   }
   return true;
