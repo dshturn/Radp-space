@@ -228,9 +228,15 @@
       </div>
       <div class="app-card" id="assessmentInfo"></div>
       <div class="row-between mb-sm">
-        <div class="tabs" id="detailTabs">
-          <button class="tab active" onclick="showDetailTab('personnel', this)">Personnel</button>
-          <button class="tab" onclick="showDetailTab('equipment', this)">Equipment</button>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <div class="tabs" id="detailTabs">
+            <button class="tab active" onclick="showDetailTab('personnel', this)">Personnel</button>
+            <button class="tab" onclick="showDetailTab('equipment', this)">Equipment</button>
+          </div>
+          <div id="viewToggle" style="display:flex;gap:4px;border:1px solid var(--border);border-radius:6px;padding:2px;">
+            <button class="view-btn view-btn-active" onclick="switchDetailView('office')" title="Office view: nested structure">🏢 Office</button>
+            <button class="view-btn" onclick="switchDetailView('field')" title="Field view: quick status">🏗 Field</button>
+          </div>
         </div>
         <div style="display:flex;gap:8px;">
           <button class="btn-primary" onclick="openPersonnelSelector()">+ Personnel</button>
