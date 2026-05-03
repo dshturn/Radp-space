@@ -166,11 +166,15 @@ label { font-weight: 600; }
 /* ── Doc view link button ── */
 .doc-view-btn { background:none; border:none; color: var(--info); font-size:11px; cursor:pointer; padding:4px 2px; text-decoration:underline; transition:color 0.15s; min-height:44px; display:inline-flex; align-items:center; }
 .doc-view-btn:hover { color: var(--text); }
-label { display: block; font-size: 13px; color: var(--text-2); margin-bottom: 6px; }
-input[type="text"], input[type="email"], input[type="password"], textarea, select { width: 100%; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; margin-bottom: 0; }
-textarea { height: 80px; resize: vertical; }
+label { display: block; font-size: var(--text-sm); color: var(--text-2); margin-bottom: 8px; font-weight: 600; }
+input[type="text"], input[type="email"], input[type="password"], textarea, select { width: 100%; padding: 12px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: var(--text-base); margin-bottom: 16px; min-height: 44px; font-family: inherit; }
+textarea { height: 100px; resize: vertical; }
 select { appearance: none; -webkit-appearance: none; }
 input[type="file"] { display: none; }
+/* Touch targets minimum 44px on all platforms */
+@media (max-width: 767px) {
+  input[type="text"], input[type="email"], input[type="password"], textarea, select, button, [role="button"] { min-height: 44px; min-width: 44px; }
+}
 
 /* Contractor */
 .welcome { background: var(--surface); border-radius: 10px; padding: 20px; margin-bottom: 24px; }
