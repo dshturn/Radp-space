@@ -56,10 +56,15 @@ async function login() {
     return;
   }
 
-  localStorage.setItem('radp_token', data.access_token);
-  localStorage.setItem('radp_user', JSON.stringify({ id: data.user.id, email: data.user.email, ...profile }));
-  logAudit('user', data.user.id, 'logged_in', email);
-  showPage('contractor');
+    localStorage.setItem('radp_token', `Bearer ${access_token}`);
+    localStorage.setItem('radp_user', JSON.stringify({ id: userId, email, ...profile }));
+    logAudit('user', userId, 'logged_in', email);
+    showPage('contractor');
+  } catch (err) {
+    msg.className = 'auth-msg error';
+    msg.textContent = err.message || 'Login failed. Try again.';
+    console.error('Login error:', err);
+  }
 }
 
 function logout() {
