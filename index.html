@@ -370,34 +370,38 @@
       </div>
       </div>
     </div>
+  </div>
+</div>
 
-    <!-- Audit Log tab -->
-    <div id="adminTabAudit" class="admin-tab-content" style="display:none;">
-      <div style="margin-bottom:20px;">
-        <h2 style="margin-bottom:16px;">Audit Log</h2>
-        <div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
-          <select id="auditEntityFilter" onchange="loadAuditLog()" style="padding:6px 10px;font-size:13px;border-radius:6px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-1);">
-            <option value="">All types</option>
-            <option value="personnel">Personnel</option>
-            <option value="equipment">Equipment</option>
-            <option value="document">Documents</option>
-            <option value="assessment">Assessments</option>
-            <option value="site">Sites</option>
-            <option value="user">Users</option>
-          </select>
-          <input type="date" id="auditDateFrom" onchange="loadAuditLog()" style="padding:6px 10px;font-size:13px;border-radius:6px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-1);">
-          <input type="date" id="auditDateTo"   onchange="loadAuditLog()" style="padding:6px 10px;font-size:13px;border-radius:6px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-1);">
-        </div>
-        <div id="auditLogList"></div>
-        <div id="auditLogPagination"></div>
+<!-- ══════════════════ AUDIT LOG ══════════════════ -->
+<div id="audit-page" class="page">
+  <div class="container">
+    <div style="margin-bottom:20px;">
+      <h2 style="margin-bottom:16px;">Audit Log</h2>
+      <div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+        <select id="auditEntityFilter" onchange="loadAuditLog()" style="padding:6px 10px;font-size:13px;border-radius:6px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-1);">
+          <option value="">All types</option>
+          <option value="personnel">Personnel</option>
+          <option value="equipment">Equipment</option>
+          <option value="document">Documents</option>
+          <option value="assessment">Assessments</option>
+          <option value="site">Sites</option>
+          <option value="user">Users</option>
+        </select>
+        <input type="date" id="auditDateFrom" onchange="loadAuditLog()" style="padding:6px 10px;font-size:13px;border-radius:6px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-1);">
+        <input type="date" id="auditDateTo"   onchange="loadAuditLog()" style="padding:6px 10px;font-size:13px;border-radius:6px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-1);">
       </div>
+      <div id="auditLogList"></div>
+      <div id="auditLogPagination"></div>
     </div>
+  </div>
+</div>
 
-    <!-- Notifications tab -->
-    <div id="adminTabNotifications" class="admin-tab-content" style="display:none;">
-      <h2 style="margin:0 0 16px 0;">Notifications</h2>
-      <div id="adminNotificationsList"></div>
-    </div>
+<!-- ══════════════════ NOTIFICATIONS ══════════════════ -->
+<div id="notifications-page" class="page">
+  <div class="container">
+    <h2 style="margin:0 0 16px 0;">Notifications</h2>
+    <div id="adminNotificationsList"></div>
   </div>
 </div>
 
