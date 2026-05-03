@@ -104,6 +104,8 @@ function showDetailTab(tab, el) {
   target.classList.remove('slide-in-right', 'slide-in-left');
   target.classList.add(animClass);
   target.addEventListener('animationend', () => target.classList.remove(animClass), { once: true });
+  // Reset view toggle to office view when switching tabs
+  switchDetailView('office');
 }
 
 async function loadAssessments() {
