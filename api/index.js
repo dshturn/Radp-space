@@ -27,9 +27,15 @@ export default async (req, res) => {
 
   try {
     const headers = {
-      'Content-Type': 'application/json',
       'apikey': supabaseKey,
     };
+
+    // Copy Content-Type from original request if present, else default to JSON
+    if (req.headers['content-type']) {
+      headers['Content-Type'] = req.headers['content-type'];
+    } else {
+      headers['Content-Type'] = 'application/json';
+    }
 
     // Copy Authorization header if present
     if (req.headers.authorization) {
