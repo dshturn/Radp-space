@@ -205,14 +205,14 @@
       <div class="app-card">
         <h2>New Assessment</h2>
         <label for="requestId">SharePoint Request ID</label>
-        <input type="text" id="requestId" placeholder="e.g. 176">
+        <input type="text" id="requestId" placeholder="e.g. 176" title="Reference ID from the assessment request in SharePoint. Used for audit traceability.">
         <label for="fieldWellSelect">Field / Well</label>
-        <select id="fieldWellSelect" onchange="onFieldWellChange(this)"></select>
+        <select id="fieldWellSelect" onchange="onFieldWellChange(this)" title="The field or well name where this assessment will be conducted. Select existing or add new."></select>
         <div id="fieldWellNewWrap" style="display:none;">
-          <input type="text" id="fieldWellNew" placeholder="e.g. MANIFA/MNIF-123" autocomplete="off">
+          <input type="text" id="fieldWellNew" placeholder="e.g. MANIFA/MNIF-123" autocomplete="off" title="Format: FIELD/WELL-NUMBER. E.g. MANIFA/MNIF-123">
         </div>
         <label for="typeOfJob">Type of Job</label>
-        <select id="typeOfJob" style="margin-bottom:14px;" onchange="onTypeOfJobChange(this)"><option value="">Select type of job...</option></select>
+        <select id="typeOfJob" style="margin-bottom:14px;" onchange="onTypeOfJobChange(this)" title="Service line or type of work. Determines which personnel/equipment certifications are required."><option value="">Select type of job...</option></select>
         <div id="typeOfJobCustomWrap" style="display:none;">
           <input type="text" id="typeOfJobCustom" placeholder="Enter custom type of job" autocomplete="off">
         </div>
