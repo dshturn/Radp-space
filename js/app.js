@@ -166,6 +166,9 @@ function showContractorTab(tab, el) {
   const section = document.getElementById('ct-' + tab);
   section.classList.add('active', animClass);
   section.addEventListener('animationend', () => section.classList.remove(animClass), { once: true });
+  // Exit bulk mode when switching tabs
+  if (_persBulkMode) { _persBulkMode = false; document.getElementById('persBulkBar').style.display = 'none'; document.getElementById('persBulkToggleBtn').textContent = 'Select'; document.querySelectorAll('#personnelList .bulk-check').forEach(cb => { cb.style.display = 'none'; cb.checked = false; }); }
+  if (_equipBulkMode) { _equipBulkMode = false; document.getElementById('equipBulkBar').style.display = 'none'; document.getElementById('equipBulkToggleBtn').textContent = 'Select'; document.querySelectorAll('#equipmentList .bulk-check').forEach(cb => { cb.style.display = 'none'; cb.checked = false; }); }
 }
 
 // ═══════════════════ PWA ═══════════════════
