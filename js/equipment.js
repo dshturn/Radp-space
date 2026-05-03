@@ -833,3 +833,52 @@ async function saveEditEquipment() {
   closeModal('editEquipModal');
   loadEquipment();
 }
+
+// ── Inline bulk edit mode ──
+function toggleEquipBulkMode() {
+  const list = document.getElementById('equipmentList');
+  const btn = document.getElementById('equipBulkToggleBtn');
+  const bar = document.getElementById('equipBulkBar');
+  const isActive = list.classList.contains('inline-edit-mode');
+
+  if (isActive) {
+    list.classList.remove('inline-edit-mode');
+    btn.textContent = 'Select';
+    bar.style.display = 'none';
+    document.querySelectorAll('.equipment-card').forEach(c => c.onclick = (e) => openEditEquipment(parseInt(c.dataset.id)));
+  } else {
+    list.classList.add('inline-edit-mode');
+    btn.textContent = 'Cancel';
+    bar.style.display = 'flex';
+    document.querySelectorAll('.equipment-card').forEach(c => {
+      c.onclick = (e) => {
+        e.stopPropagation();
+        const chk = c.querySelector('.inline-edit-checkbox');
+        chk.checked = !chk.checked;
+        c.classList.toggle('selected', chk.checked);
+        updateEquipBulkCount();
+      };
+    });
+  }
+}
+
+function updateEquipBulkCount() {
+  const checked = document.querySelectorAll('.equipment-card .inline-edit-checkbox:checked').length;
+  document.getElementById('equipBulkCount').textContent = `${checked} selected`;
+}
+
+async function bulkDeleteEquipment() {
+  const selected = [...document.querySelectorAll('.equipment-card .inline-edit-checkbox:checked')].map(c => parseInt(c.closest('.equipment-card').dataset.id));
+  if (!selected.length) { showToast('Select equipment to delete', 'warn'); return; }
+  if (!await showConfirm(`Delete ${selected.length} equipment record(s)? This cannot be undone.`)) return;
+
+  for (const id of selected) {
+    await fetch(`${SUPABASE_URL}/rest/v1/equipment_items?id=eq.${id}`, {
+      method: 'DELETE',
+      headers: { ...getHeaders(), Prefer: 'return=minimal' }
+    });
+  }
+  showToast(`✓ Deleted ${selected.length} record(s)`, 'success');
+  toggleEquipBulkMode();
+  loadEquipment();
+}
