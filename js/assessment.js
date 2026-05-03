@@ -85,6 +85,7 @@ function showDetail(id) {
   if (persTab) persTab.style.display = 'block';
   const equipTab = document.getElementById('equipmentTab');
   if (equipTab) equipTab.style.display = 'none';
+  switchDetailView('office'); // Initialize view toggle to office view
   loadAssessmentDetail(id);
 }
 
