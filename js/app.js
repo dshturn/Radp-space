@@ -84,6 +84,12 @@ function showPage(name, replace = false) {
   const animClass  = isInitial ? 'entering' : (goingRight ? 'slide-in-right' : 'slide-in-left');
   currentPage = name;
 
+  // Close all open modals when navigating to prevent state leakage between pages
+  document.querySelectorAll('.modal.open').forEach(m => {
+    m.classList.remove('open');
+    if (m._trapFocus) { m.removeEventListener('keydown', m._trapFocus); m._trapFocus = null; }
+  });
+
   document.querySelectorAll('.page').forEach(p =>
     p.classList.remove('active', 'entering', 'slide-in-right', 'slide-in-left'));
   const page = document.getElementById(name + '-page');
