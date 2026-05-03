@@ -6,6 +6,30 @@ const _adminUserMap = new Map();
 
 function adminInit() {
   loadUsers();
+  loadAdminNotifications();
+}
+
+function showAdminTab(tab) {
+  const usersSection = document.getElementById('adminUsersSection');
+  const notificationsSection = document.getElementById('adminNotificationsSection');
+  const usersTab = document.getElementById('adminUsersTab');
+  const notificationsTab = document.getElementById('adminNotificationsTab');
+
+  if (tab === 'users') {
+    usersSection.style.display = 'block';
+    notificationsSection.style.display = 'none';
+    usersTab.style.borderBottomColor = 'var(--primary)';
+    usersTab.style.color = 'var(--primary)';
+    notificationsTab.style.borderBottomColor = 'transparent';
+    notificationsTab.style.color = 'var(--text-3)';
+  } else {
+    usersSection.style.display = 'none';
+    notificationsSection.style.display = 'block';
+    usersTab.style.borderBottomColor = 'transparent';
+    usersTab.style.color = 'var(--text-3)';
+    notificationsTab.style.borderBottomColor = 'var(--primary)';
+    notificationsTab.style.color = 'var(--primary)';
+  }
 }
 
 async function loadUsers() {
