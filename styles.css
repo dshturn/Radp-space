@@ -375,6 +375,35 @@ input[type="file"] { display: none; }
 .toast-warn    { background: #d97706; color: #fff; }
 .toast-info    { background: #2563eb; }
 
+/* === Loading states & spinners === */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin 0.75s linear infinite; margin-right: 8px; }
+.btn-primary:disabled .spinner, .btn-success:disabled .spinner, .btn-danger:disabled .spinner { opacity: 0.7; }
+.btn-loading { opacity: 0.8; pointer-events: none; }
+
+/* === Empty states === */
+.empty-state { text-align: center; padding: 48px 24px; }
+.empty-state-icon { font-size: 48px; margin-bottom: 16px; }
+.empty-state-title { font-size: var(--text-xl); font-weight: 700; color: var(--text); margin-bottom: 8px; }
+.empty-state-text { font-size: var(--text-base); color: var(--text-3); margin-bottom: 24px; max-width: 320px; margin-left: auto; margin-right: auto; line-height: 1.6; }
+.empty-state-action { display: inline-block; }
+
+/* === Spacing improvements: increased gaps between sections === */
+@media (min-width: 1024px) {
+  .app-card { margin-bottom: 32px; }
+  .eq-group { margin-bottom: 24px; }
+  .section-title { margin-top: 48px; }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .app-card { margin-bottom: 24px; }
+  .eq-group { margin-bottom: 18px; }
+}
+@media (max-width: 767px) {
+  .app-card { margin-bottom: 32px; }
+  .eq-group { margin-bottom: 24px; }
+  .section-title { margin-top: 40px; margin-bottom: 20px; }
+}
+
 /* === Layout utilities === */
 .flex-1       { flex: 1; }
 .row-gap-xs   { display: flex; align-items: center; gap: 6px; }
