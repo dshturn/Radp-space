@@ -113,8 +113,9 @@ function showPage(name, replace = false) {
       document.getElementById('welcomeMsg').textContent  = `Welcome, ${u.full_name || 'Contractor'}`;
       document.getElementById('companyInfo').textContent = u.role === 'admin' ? 'Admin' : `${u.company || ''} · ${u.service_line || ''}`;
       // Reset to Personnel tab when returning to Contractor page
-      document.querySelectorAll('#contractor-page .tab').forEach(t => t.classList.remove('active'));
-      document.getElementById('personCtractorTab')?.classList.add('active');
+      const tabs = document.querySelectorAll('#contractor-page .tabs .tab');
+      tabs.forEach(t => t.classList.remove('active'));
+      if (tabs[0]) tabs[0].classList.add('active');
       document.querySelectorAll('#contractor-page .ct-section').forEach(s => s.classList.remove('active'));
       document.getElementById('ct-personnel')?.classList.add('active');
     }
