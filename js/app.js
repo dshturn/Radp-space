@@ -143,7 +143,9 @@ function showPage(name, replace = false) {
   if (name === 'contractor') { loadEquipment(); loadPersonnel(); loadDashAssessments(); }
   if (name === 'assessment') { assessmentInit?.(); loadAssessments(); }
   if (name === 'operations') { operationsInit?.(); loadOperations(); }
-  if (name === 'admin')      { adminInit(); }
+  if (name === 'users')      { adminInit(); }
+  if (name === 'audit')      { auditInit?.(); }
+  if (name === 'notifications') { notificationsInit?.(); }
   if (name === 'register')   { configureRegisterForm(); loadRegisterOptions(); }
 }
 
