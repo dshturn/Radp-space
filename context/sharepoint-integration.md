@@ -207,23 +207,18 @@ getDocumentStatus(expiryDate) {
 - Accent: `--accent`
 - Status: `--success` (valid), `--warn` (expiring), `--error` (expired)
 
-### Database Selector Configuration
+### API Proxy Configuration
 
-**Dual-Stack Implementation** (in script.js):
+**Current Implementation** (Express on localhost:5000 or Vercel):
 ```javascript
-// Configuration with database selector
-const RADP_CONFIG = {
-  backend: 'azure', // 'azure' or 'supabase' — controls which API to call
-  apis: {
-    azure: 'https://radp-api.herokuapp.com',     // Heroku API endpoint
-    supabase: 'https://fslleuedqlxpjnerruzt.supabase.co/functions/v1/lor-proxy'
-  }
-};
+// API requests go through Express proxy
+const API_PROXY = process.env.NODE_ENV === 'production' 
+  ? 'https://radp.space/api'     // Vercel production
+  : 'http://localhost:5000/api'; // Local development
 
-// API calls use selector
+// API calls use proxy
 async function fetchAssessment(id) {
-  const apiUrl = RADP_CONFIG.apis[RADP_CONFIG.backend];
-  const response = await fetch(`${apiUrl}/assessments/${id}`, {
+  const response = await fetch(`${API_PROXY}?endpoint=/rest/v1/assessments/${id}`, {
     headers: { 'Authorization': `Bearer ${token}` }
   });
   return response.json();
@@ -231,18 +226,11 @@ async function fetchAssessment(id) {
 ```
 
 **Benefits**:
-- Existing Supabase users unaffected (`backend: 'supabase'`)
-- New SharePoint LoR access routed to Heroku (`backend: 'azure'`)
-- Gradual migration: switch users batch-by-batch
-- Easy rollback: flip selector if issues arise
-- No downtime during transition
-
-**Migration Timeline**:
-1. Set up Azure + Heroku (both backends operational)
-2. Set `backend: 'azure'` for new assessments
-3. Monitor stability for 1–2 weeks
-4. Migrate existing Supabase users to `backend: 'azure'`
-5. Decommission Supabase (after cutover complete)
+- Single unified architecture (Supabase via Express proxy)
+- Handles PDF generation server-side
+- Binary file support (images, PDFs)
+- CORS headers managed at proxy layer
+- Easy deployment (no separate backend services)
 
 ### Authentication Challenge (CORS) [Legacy — Resolved with Backend Migration]
 
