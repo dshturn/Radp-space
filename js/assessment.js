@@ -105,8 +105,9 @@ function showDetailTab(tab, el) {
   target.classList.remove('slide-in-right', 'slide-in-left');
   target.classList.add(animClass);
   target.addEventListener('animationend', () => target.classList.remove(animClass), { once: true });
-  // Reset view toggle to office view when switching tabs
-  switchDetailView('office');
+  // Re-render field view if it's currently active (to show correct tab content)
+  const fieldView = document.getElementById('fieldView');
+  if (fieldView && fieldView.style.display !== 'none') { renderFieldView(); }
 }
 
 async function loadAssessments() {
