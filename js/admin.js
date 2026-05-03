@@ -372,13 +372,6 @@ async function renderDeletionRequests() {
     </div>
   `).join('');
 }
-
-// Page initialization - called when admin page is shown
-async function adminInit() {
-  await loadUsers();
-  await loadAdminNotifications();
-}
-
 async function loadAdminNotifications() {
   const endpoint = `/rest/v1/notifications?order=created_at.desc&limit=100`;
   const url = window.location.hostname === 'localhost'
