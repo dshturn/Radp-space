@@ -170,19 +170,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// ═══════════════════ ADMIN TABS ═══════════════════
-
-function showAdminTab(tab, el) {
-  document.querySelectorAll('.admin-tab').forEach(t => {
-    t.style.color = 'var(--text-2)';
-    t.style.borderBottomColor = 'transparent';
-  });
-  document.querySelectorAll('.admin-tab-content').forEach(c => c.style.display = 'none');
-  el.style.color = 'var(--text-1)';
-  el.style.borderBottomColor = 'var(--accent)';
-  document.getElementById('adminTab' + tab.charAt(0).toUpperCase() + tab.slice(1)).style.display = 'block';
-}
-
 // ═══════════════════ CONTRACTOR TABS ═══════════════════
 
 const CT_ORDER = { personnel: 0, equipment: 1 };
