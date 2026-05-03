@@ -977,6 +977,74 @@ async function deleteAssessment(id) {
   loadAssessments();
 }
 
+// ── View toggle: Office vs Field ──
+function switchDetailView(viewType) {
+  const officeView = document.getElementById('officeView');
+  const fieldView = document.getElementById('fieldView');
+  const btns = document.querySelectorAll('.view-btn');
+
+  btns.forEach(b => b.classList.remove('view-btn-active'));
+  if (viewType === 'field') {
+    officeView.style.display = 'none';
+    fieldView.style.display = 'block';
+    btns[1].classList.add('view-btn-active');
+    renderFieldView();
+  } else {
+    officeView.style.display = 'block';
+    fieldView.style.display = 'none';
+    btns[0].classList.add('view-btn-active');
+  }
+}
+
+function renderFieldView() {
+  const persHtml = document.getElementById('selectedPersonnel');
+  const equipHtml = document.getElementById('selectedEquipment');
+  const fieldPersList = document.getElementById('fieldPersonnelList');
+  const fieldEquipList = document.getElementById('fieldEquipmentList');
+
+  // Extract personnel items from office view
+  const persCards = persHtml.querySelectorAll('.sub-card');
+  let persFieldHtml = persCards.length ? `<div class="field-section-title">👥 Personnel</div>` : '';
+  persCards.forEach(card => {
+    const titleEl = card.querySelector('.sub-card-title');
+    const name = titleEl ? titleEl.textContent.trim() : '?';
+    const statusEl = card.querySelector('.sbadge');
+    const status = statusEl ? statusEl.textContent.trim() : '?';
+    const docCount = card.querySelectorAll('.doc-row').length;
+    persFieldHtml += `
+      <div class="field-item">
+        <div class="field-item-name">${esc(name)}</div>
+        <div class="field-item-status">
+          <span class="sbadge ${statusEl?.className || ''}">${status}</span>
+          <span class="field-item-docs">${docCount} doc${docCount !== 1 ? 's' : ''}</span>
+        </div>
+      </div>
+    `;
+  });
+  fieldPersList.innerHTML = persFieldHtml;
+
+  // Extract equipment items from office view
+  const equipCards = equipHtml.querySelectorAll('.app-card');
+  let equipFieldHtml = equipCards.length ? `<div class="field-section-title">⚙️ Equipment</div>` : '';
+  equipCards.forEach(card => {
+    const titleEl = card.querySelector('.app-card h2');
+    const name = titleEl ? titleEl.textContent.trim() : '?';
+    const statusEl = card.querySelector('.sbadge');
+    const status = statusEl ? statusEl.textContent.trim() : '?';
+    const docCount = card.querySelectorAll('.doc-row').length;
+    equipFieldHtml += `
+      <div class="field-item">
+        <div class="field-item-name">${esc(name)}</div>
+        <div class="field-item-status">
+          <span class="sbadge ${statusEl?.className || ''}">${status}</span>
+          <span class="field-item-docs">${docCount} doc${docCount !== 1 ? 's' : ''}</span>
+        </div>
+      </div>
+    `;
+  });
+  fieldEquipList.innerHTML = equipFieldHtml;
+}
+
 // Page initialization
 async function assessmentInit() {
   await loadAssessments();
