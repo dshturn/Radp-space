@@ -337,18 +337,9 @@
 </div>
 
 <!-- ══════════════════ ADMIN ══════════════════ -->
-<div id="admin-page" class="page">
+<div id="users-page" class="page">
   <div class="container">
-    <!-- Admin tabs -->
-    <div style="display:flex;gap:8px;margin-bottom:20px;border-bottom:1px solid var(--border);">
-      <button class="admin-tab active" onclick="showAdminTab('users', this)" style="padding:12px 16px;border:none;background:none;cursor:pointer;color:var(--text-1);border-bottom:2px solid transparent;transition:all 200ms;">Users</button>
-      <button class="admin-tab" onclick="showAdminTab('audit', this)" style="padding:12px 16px;border:none;background:none;cursor:pointer;color:var(--text-2);border-bottom:2px solid transparent;transition:all 200ms;">Audit Log</button>
-      <button class="admin-tab" onclick="showAdminTab('notifications', this)" style="padding:12px 16px;border:none;background:none;cursor:pointer;color:var(--text-2);border-bottom:2px solid transparent;transition:all 200ms;">Notifications</button>
-    </div>
-
-    <!-- Users tab -->
-    <div id="adminTabUsers" class="admin-tab-content" style="display:block;">
-      <div id="adminUsersSection" style="display:block;">
+    <div id="adminUsersSection" style="display:block;">
       <div class="page-header-row" style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
         <h2 style="margin:0;">Users</h2>
         <div style="display:flex;gap:8px;flex:1;flex-wrap:wrap;">
