@@ -4,9 +4,9 @@ console.log('[ADMIN] admin.js loaded, auditInit defined:', typeof auditInit);
 
 const _adminUserMap = new Map();
 
-function adminInit() {
-  loadUsers();
-  loadAdminNotifications();
+async function adminInit() {
+  await loadUsers();
+  await loadAdminNotifications();
 }
 
 function showAdminTab(tab) {
