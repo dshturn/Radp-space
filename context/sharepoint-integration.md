@@ -520,14 +520,8 @@ C:\Users\dshtu\Radp-space\
 
 **2026-04-27 — Dual-Stack Migration Approach**
 - **Issue**: Aramco firewall blocks Supabase (supabase.co domain)
-- **Testing**: Created firewall-test.html; ran from Aramco network
-- **Results**: Azure AD, Azure SQL, Firebase, Heroku whitelisted; AWS/GCP/Vercel/Supabase blocked
-- **Decision**: Migrate to **Azure SQL + Heroku API** with **dual-stack approach**
-  - Rationale: Both whitelisted; Azure SQL is core Microsoft service (lowest future-block risk)
-  - Dual-stack: Keep Supabase for existing users; add Heroku in parallel; gradual migration
-  - Alternative: Firebase (single service, higher risk) — rejected
-- **Config Strategy**: Add database selector in script.js (`RADP_CONFIG.backend`)
-  - `backend: 'supabase'` → existing users (no disruption)
-  - `backend: 'azure'` → new assessments (Aramco firewall compatible)
-  - Easy rollback if needed
-- **Next Step**: Phase 1 — Create Azure SQL + Heroku accounts and deploy skeleton
+- **Current Workaround**: Use Express API proxy (localhost:5000 or Vercel) with Supabase backend for non-firewall environments
+- **Alternative (Phase 2)**: Email-based assessment workflow (firewall-friendly; email always accessible)
+  - Rationale: Email bypasses firewall entirely; no external service access needed
+  - Architecture: Email Analyzer → PDF Generator → SharePoint
+- **Status**: Phase 1 MVP complete; Phase 2 email workflow under evaluation
