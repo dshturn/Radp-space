@@ -15,7 +15,7 @@ async function login() {
       'Content-Type': 'application/json',
       'apikey': 'sb_publishable_O_f8pz1TnglyqJlO6z2EEA_J3EcJbwV'
     },
-    body: JSON.stringify({ email, password, grant_type: 'password' })
+    body: JSON.stringify({ email, password })
   });
   const data = await res.json();
 
