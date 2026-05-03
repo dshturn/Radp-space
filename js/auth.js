@@ -6,15 +6,16 @@ async function login() {
   const msg      = document.getElementById('loginMsg');
   msg.className  = 'auth-msg';
 
-  const endpoint = '/auth/v1/token';
-  const url = window.location.hostname === 'localhost'
-    ? `http://localhost:5000/api?endpoint=${encodeURIComponent(endpoint)}`
-    : `/api?endpoint=${encodeURIComponent(endpoint)}`;
+  const supabaseUrl = 'https://fslleuedqlxpjnerruzt.supabase.co';
+  const url = `${supabaseUrl}/auth/v1/token`;
 
   const res  = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ email, password, grant_type: 'password' }).toString()
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': 'sb_publishable_O_f8pz1TnglyqJlO6z2EEA_J3EcJbwV'
+    },
+    body: JSON.stringify({ email, password, grant_type: 'password' })
   });
   const data = await res.json();
 
