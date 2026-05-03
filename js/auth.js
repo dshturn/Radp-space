@@ -1,22 +1,24 @@
 // ═══════════════════ AUTH ═══════════════════
 
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 async function login() {
   const email    = document.getElementById('loginEmail').value;
   const password = document.getElementById('loginPassword').value;
   const msg      = document.getElementById('loginMsg');
   msg.className  = 'auth-msg';
 
-  const url = `${SUPABASE_URL}/auth/v1/token`;
+  try {
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
-  const res  = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'apikey': SUPABASE_KEY
-    },
-    body: JSON.stringify({ email, password })
-  });
-  const data = await res.json();
+    if (error) throw error;
+
+    const { access_token, user } = data.session || {};
+    if (!access_token) {
+      msg.className = 'auth-msg error';
+      msg.textContent = 'Login failed. Please check your email and password.';
+      return;
+    }
 
   if (!data.access_token) {
     msg.className = 'auth-msg error';
