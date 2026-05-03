@@ -12,10 +12,10 @@ async function login() {
   const res  = await fetch(url, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/x-www-form-urlencoded',
       'apikey': 'sb_publishable_O_f8pz1TnglyqJlO6z2EEA_J3EcJbwV'
     },
-    body: JSON.stringify({ email, password })
+    body: new URLSearchParams({ email, password }).toString()
   });
   const data = await res.json();
 
