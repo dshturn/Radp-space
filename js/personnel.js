@@ -665,6 +665,55 @@ async function saveEditPersonnel() {
   loadPersonnel();
 }
 
+// ── Inline bulk edit mode ──
+function togglePersBulkMode() {
+  const list = document.getElementById('personnelList');
+  const btn = document.getElementById('persBulkToggleBtn');
+  const bar = document.getElementById('persBulkBar');
+  const isActive = list.classList.contains('inline-edit-mode');
+
+  if (isActive) {
+    list.classList.remove('inline-edit-mode');
+    btn.textContent = 'Select';
+    bar.style.display = 'none';
+    document.querySelectorAll('.personnel-card').forEach(c => c.onclick = (e) => openEditPersonnel(parseInt(c.dataset.id)));
+  } else {
+    list.classList.add('inline-edit-mode');
+    btn.textContent = 'Cancel';
+    bar.style.display = 'flex';
+    document.querySelectorAll('.personnel-card').forEach(c => {
+      c.onclick = (e) => {
+        e.stopPropagation();
+        const chk = c.querySelector('.inline-edit-checkbox');
+        chk.checked = !chk.checked;
+        c.classList.toggle('selected', chk.checked);
+        updateBulkCount();
+      };
+    });
+  }
+}
+
+function updateBulkCount() {
+  const checked = document.querySelectorAll('.personnel-card .inline-edit-checkbox:checked').length;
+  document.getElementById('persBulkCount').textContent = `${checked} selected`;
+}
+
+async function bulkDeletePersonnel() {
+  const selected = [...document.querySelectorAll('.personnel-card .inline-edit-checkbox:checked')].map(c => parseInt(c.closest('.personnel-card').dataset.id));
+  if (!selected.length) { showToast('Select personnel to delete', 'warn'); return; }
+  if (!await showConfirm(`Delete ${selected.length} personnel record(s)? This cannot be undone.`)) return;
+
+  for (const id of selected) {
+    await fetch(`${SUPABASE_URL}/rest/v1/personnel?id=eq.${id}`, {
+      method: 'DELETE',
+      headers: { ...getHeaders(), Prefer: 'return=minimal' }
+    });
+  }
+  showToast(`✓ Deleted ${selected.length} record(s)`, 'success');
+  togglePersBulkMode();
+  loadPersonnel();
+}
+
 // Page initialization
 async function contractorInit() {
   await loadPersonnel();
