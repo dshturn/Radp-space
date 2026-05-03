@@ -457,7 +457,6 @@ C:\Users\dshtu\Radp-space\
   - Azure AD (login.microsoftonline.com)
   - Azure SQL (database.windows.net)
   - Firebase (firebaseio.com)
-  - Heroku (herokuapp.com)
 
 ❌ BLOCKED:
   - Azure App Service (azurewebsites.net)
