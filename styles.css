@@ -71,8 +71,9 @@ label { font-weight: 600; }
 .page { display: none; }
 .page.active { display: block; }
 .page.entering  { animation: fadeSlideUp  0.32s cubic-bezier(0.22,1,0.36,1) both; }
-#audit-page, #notifications-page { min-height: calc(100vh - 60px); }
-#auditLogList, #adminNotificationsList { min-height: auto; overflow: visible; }
+#audit-page, #notifications-page { min-height: calc(100vh - 60px); display: block; }
+#auditLogList, #adminNotificationsList { display: block; min-height: auto; overflow: visible; }
+#audit-page .container, #notifications-page .container { display: block; }
 .slide-in-right { animation: slideInRight 0.28s cubic-bezier(0.22,1,0.36,1) both; }
 .slide-in-left  { animation: slideInLeft  0.28s cubic-bezier(0.22,1,0.36,1) both; }
 
