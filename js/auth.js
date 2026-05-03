@@ -6,16 +6,15 @@ async function login() {
   const msg      = document.getElementById('loginMsg');
   msg.className  = 'auth-msg';
 
-  const supabaseUrl = 'https://fslleuedqlxpjnerruzt.supabase.co';
-  const url = `${supabaseUrl}/auth/v1/token`;
+  const url = `${SUPABASE_URL}/auth/v1/token`;
 
   const res  = await fetch(url, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'apikey': 'sb_publishable_O_f8pz1TnglyqJlO6z2EEA_J3EcJbwV'
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_KEY
     },
-    body: new URLSearchParams({ email, password }).toString()
+    body: JSON.stringify({ email, password })
   });
   const data = await res.json();
 
