@@ -589,6 +589,25 @@ textarea:focus-visible {
   a { color: black; text-decoration: underline; }
 }
 
+/* === View Toggle: Office vs Field === */
+.view-btn { background: var(--bg); color: var(--text-2); border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600; transition: background 0.2s, color 0.2s; }
+.view-btn:hover { color: var(--text); }
+.view-btn-active { background: var(--accent); color: white; }
+.view-btn-active:hover { background: var(--accent-h); }
+
+/* Field view: flat list with status badges */
+.detail-view-mode { animation: fadeIn 0.2s ease; }
+.field-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--surface); border-radius: 8px; margin-bottom: 12px; flex-wrap: wrap; gap: 12px; }
+.field-item-name { flex: 1; min-width: 150px; }
+.field-item-status { display: flex; align-items: center; gap: 8px; }
+.field-item-docs { display: flex; align-items: center; gap: 4px; font-size: 11px; }
+.field-section-title { font-size: var(--text-lg); font-weight: 700; color: var(--accent); margin-bottom: 12px; margin-top: 16px; }
+@media (max-width: 767px) {
+  .field-item { flex-direction: column; align-items: flex-start; }
+  .field-item-status { width: 100%; }
+  .view-btn { padding: 6px 10px; font-size: 11px; }
+}
+
 /* Register: new company input row */
 #newCompanyWrap { display: none; margin-top: -10px; margin-bottom: 16px; }
 #newCompanyWrap .row-gap-sm { align-items: stretch; }
