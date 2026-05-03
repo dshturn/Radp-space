@@ -222,10 +222,8 @@ C:\Users\dshtu\Radp-space\
 ```
 
 ## Architecture Decision Log
-- **2026-04-27**: Heroku proxy → Rejected (domain blocked)
-- **2026-04-28**: Azure Storage static site → Rejected (domain blocked)
-- **2026-04-28**: Power BI + database connections → Rejected (SQL blocked)
 - **2026-04-28**: Email-based workflow ✅ → Approved (firewall-friendly)
+- **2026-05-03**: Heroku & outdated proposals → Removed (using Express API proxy with Supabase)
 
 ## References
 - Phase 2 Assessment Workflow: context/project.md
