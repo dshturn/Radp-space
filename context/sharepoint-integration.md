@@ -264,47 +264,6 @@ from origin 'https://sharek.aramco.com.sa' has been blocked by CORS policy
 | **Host on SharePoint server** | Same-origin; no CORS; simplest | Requires file hosting on Aramco infrastructure | ⏳ Recommended next step |
 | **Change auth flow** | Could use SharePoint's SSO context | Requires Aramco IT integration; more complex | ⏳ Future consideration |
 
-### Migration Plan: Supabase → Azure SQL + Heroku (Dual-Stack)
-
-**Phase 1: Setup & Dual-Stack (Week 1)**
-1. Create Azure SQL Database (PostgreSQL)
-2. Create Node.js Express API project
-3. Deploy API skeleton to Heroku
-4. Verify both Heroku and Azure accessible from Aramco network
-5. Add database selector to script.js (`RADP_CONFIG.backend = 'azure'`)
-6. Both Supabase and Heroku operational (no downtime)
-
-**Phase 2: Data Migration (Week 1)**
-1. Export Supabase PostgreSQL schema
-2. Import schema to Azure SQL
-3. Export assessment data from Supabase
-4. Import data to Azure SQL
-5. Verify data integrity
-6. Keep Supabase as-is (not touched during migration)
-
-**Phase 3: API Implementation (Week 2)**
-1. Rewrite API endpoints (assessment, personnel, equipment, documents)
-2. Implement RLS logic (move from Supabase policies → API middleware)
-3. Implement JWT auth (use same token logic as Supabase)
-4. Test all endpoints locally
-5. Deploy to Heroku
-
-**Phase 4: Frontend Update & Testing (Week 2)**
-1. Update script.js: add Heroku API endpoint to `RADP_CONFIG.apis`
-2. Test with `backend: 'azure'` from SharePoint
-3. Test with `backend: 'supabase'` to verify fallback works
-4. Verify RLS enforcement (contractors see only own data)
-5. Monitor both backends for stability
-
-**Phase 5: Cutover (Week 3)**
-1. Default to `backend: 'azure'` for new assessments
-2. Keep `backend: 'supabase'` option available
-3. Gradually migrate existing users to Heroku (batch-by-batch)
-4. Monitor for issues; easy rollback if needed
-5. After 1–2 weeks stable: decommission Supabase
-6. Remove Supabase code from script.js
-
----
 
 ## Security Considerations
 
