@@ -7,10 +7,10 @@ const NAV_PAGES  = new Set(['contractor', 'assessment', 'operations', 'admin', '
 // Role → landing page after login, and which nav tabs are visible
 const ROLE_LANDING = { contractor: 'contractor', operations: 'operations', assessor: 'assessment', admin: 'admin' };
 const ROLE_NAV     = {
-  contractor: new Set(['contractor', 'assessment', 'operations', 'audit']),
+  contractor: new Set(['contractor', 'assessment', 'operations']),
   operations: new Set(['operations']),
   assessor:   new Set(['assessment']),
-  admin:      new Set(['contractor', 'assessment', 'operations', 'admin', 'notifications', 'audit']),
+  admin:      new Set(['contractor', 'assessment', 'operations', 'admin']),
 };
 
 function roleOf(user) {
