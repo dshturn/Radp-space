@@ -117,7 +117,16 @@ label { font-weight: 600; }
 .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0; flex-wrap: wrap; gap: 8px; padding-top: 0; }
 .card-title { font-size: 15px; font-weight: bold; }
 .section-label { font-size: 12px; color: var(--text-3); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
-.empty { color: var(--text-4); text-align: center; padding: 32px; animation: fadeIn 0.4s ease; }
+.empty { color: var(--text-4); text-align: center; padding: 48px 24px; animation: fadeIn 0.4s ease; }
+.empty-title { font-size: var(--text-xl); font-weight: 700; color: var(--text); margin-bottom: 8px; margin-top: 0; }
+.empty-message { font-size: var(--text-base); color: var(--text-3); }
+
+/* === Quick-status badge (field view) === */
+.status-badge { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; font-weight: 700; font-size: var(--text-sm); }
+.status-badge-ok { background: var(--good-bg); color: var(--good); }
+.status-badge-warn { background: var(--warn-bg); color: var(--warn); animation: pulseBadge 2s ease-in-out infinite; }
+.status-badge-bad { background: var(--bad-bg); color: var(--bad); animation: pulseBadge 1.5s ease-in-out infinite; }
+.status-badge-info { background: var(--info-bg); color: var(--info); }
 .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
 .tab { padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; border: none; background: var(--surface); color: var(--text-2); transition: background 0.2s ease, color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease; }
 .tab:hover:not(.active) { background: color-mix(in oklch, var(--surface) 82%, white 18%); color: var(--text); }
