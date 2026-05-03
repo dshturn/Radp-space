@@ -467,17 +467,11 @@ C:\Users\dshtu\Radp-space\
   - Supabase (supabase.co)
 ```
 
-**Selected Solution: Azure SQL + Heroku API (Dual-Stack Migration)** ✅
-- **Why**: Both services whitelisted; Azure SQL is core Microsoft service (very unlikely to be blocked in future); familiar PostgreSQL + REST API tech stack
-- **Data Storage**: Azure SQL Database (PostgreSQL-compatible)
-- **API Layer**: Node.js Express on Heroku
-- **Migration Path**: Export from Supabase → Import to Azure SQL (straightforward SQL migration)
-
-**Dual-Stack Approach**:
-- Keep existing Supabase backend operational (don't break existing users)
-- Add Heroku backend in parallel
-- Use database selector in script.js to choose which backend to call
-- Gradually migrate users; cutover when ready
+**Selected Solution: Express API Proxy with Supabase** ✅
+- **Current Stack**: Express on localhost:5000 (dev) or Vercel Functions (prod)
+- **Data Storage**: Supabase PostgreSQL
+- **API Layer**: Node.js Express proxy for binary file handling, PDF generation, CORS management
+- **Status**: Simplifies integration; single unified backend
 - Easy rollback if needed
 
 **Alternative Considered**: Firebase Firestore
