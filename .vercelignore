@@ -3,5 +3,3 @@ api/frontend-serve.js
 api/Procfile
 api/api.log
 api/node_modules
-api/package.json
-api/package-lock.json
