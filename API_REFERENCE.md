@@ -51,10 +51,10 @@ fetch('/api?endpoint=/rest/v1/assessments?id=eq.456', {
 
 ### Login
 ```javascript
-await fetch('/api?endpoint=/auth/v1/token?grant_type=password', {
+await fetch('/api?endpoint=/auth/v1/token', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ email, password })
+  body: JSON.stringify({ email, password, grant_type: 'password' })
 });
 // Returns: { access_token, user: { id, email } }
 ```
