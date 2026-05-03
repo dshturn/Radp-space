@@ -257,6 +257,14 @@ function validateUploadFile(file) {
   return true;
 }
 
+// ─── Tooltip helper ───
+function addFieldHelp(fieldId, helpText) {
+  const field = document.getElementById(fieldId);
+  if (!field) return;
+  field.title = helpText;
+  field.setAttribute('aria-describedby', fieldId + '-help');
+}
+
 // ─── Debounce ───
 function debounce(fn, delay) {
   let timer;
