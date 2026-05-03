@@ -420,7 +420,7 @@ C:\Users\dshtu\Radp-space\
 **Firewall Testing Tool**:
 - `firewall-test.html` — Browser-based tool to test which cloud services are accessible from Aramco network
 - Run from SharePoint or any Aramco-networked browser
-- Tests: Azure (AD, SQL, App Service), AWS (all), GCP (all), Firebase, Heroku, Vercel, Supabase
+- Tests: Azure (AD, SQL, App Service), AWS (all), GCP (all), Firebase, Vercel, Supabase
 - Shows real-time results: ✅ whitelisted or ❌ blocked
 
 ---
