@@ -121,12 +121,12 @@ async function exportAssessmentDetailCSV() {
     if (!assessments.length) { showToast('Assessment not found', 'error'); return; }
     const assess = assessments[0];
 
-    // Fetch personnel for this assessment
-    const persRes = await fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?assessment_id=eq.${currentAssessmentId}`, { headers: getHeaders() });
+    // Fetch personnel for this assessment with JOIN to personnel table
+    const persRes = await fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?assessment_id=eq.${currentAssessmentId}&select=*,personnel(full_name,position,national_id)`, { headers: getHeaders() });
     const personnel = persRes.ok ? await persRes.json() : [];
 
-    // Fetch equipment for this assessment
-    const equipRes = await fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment?assessment_id=eq.${currentAssessmentId}`, { headers: getHeaders() });
+    // Fetch equipment for this assessment with JOINs
+    const equipRes = await fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment?assessment_id=eq.${currentAssessmentId}&select=*,equipment_items(serial_number,model,equipment_template_id,equipment_templates(name))`, { headers: getHeaders() });
     const equipment = equipRes.ok ? await equipRes.json() : [];
 
     // CSV content
@@ -141,34 +141,35 @@ async function exportAssessmentDetailCSV() {
       assess.date_of_issue || '',
       (assess.objective || '').replace(/"/g, '""'),
       assess.status || 'draft',
-      new Date(assess.created_at).toLocaleDateString()
+      assess.created_at ? new Date(assess.created_at).toLocaleDateString() : ''
     ].map(cell => typeof cell === 'string' && cell.includes(',') ? `"${cell}"` : cell).join(','));
 
     // Personnel section
     lines.push('');
     lines.push('PERSONNEL');
-    lines.push(['Name', 'Position', 'Company', 'Service Line', 'Date Added'].join(','));
+    lines.push(['Name', 'Position', 'National ID', 'Date Added'].join(','));
     personnel.forEach(p => {
+      const pers = p.personnel || {};
       lines.push([
-        p.full_name || '',
-        p.position || '',
-        p.company || '',
-        p.service_line || '',
-        new Date(p.created_at).toLocaleDateString()
+        pers.full_name || '',
+        pers.position || '',
+        pers.national_id || '',
+        p.created_at ? new Date(p.created_at).toLocaleDateString() : ''
       ].map(cell => typeof cell === 'string' && cell.includes(',') ? `"${cell}"` : cell).join(','));
     });
 
     // Equipment section
     lines.push('');
     lines.push('EQUIPMENT');
-    lines.push(['Tag', 'Type', 'Serial Number', 'Status', 'Date Added'].join(','));
+    lines.push(['Serial Number', 'Model', 'Equipment Type', 'Date Added'].join(','));
     equipment.forEach(e => {
+      const equip = e.equipment_items || {};
+      const template = equip.equipment_templates || {};
       lines.push([
-        e.tag || '',
-        e.type || '',
-        e.serial_number || '',
-        e.status || '',
-        new Date(e.created_at).toLocaleDateString()
+        equip.serial_number || '',
+        equip.model || '',
+        template.name || '',
+        e.created_at ? new Date(e.created_at).toLocaleDateString() : ''
       ].map(cell => typeof cell === 'string' && cell.includes(',') ? `"${cell}"` : cell).join(','));
     });
 
