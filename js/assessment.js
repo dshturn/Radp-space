@@ -136,6 +136,15 @@ async function exportAssessmentDetailCSV() {
       allPersonnelDocs = pDocsRes.ok ? await pDocsRes.json() : [];
     }
 
+    // Deduplicate personnel documents
+    const seenDocs = new Set();
+    const uniquePersonnelDocs = allPersonnelDocs.filter(d => {
+      const key = `${d.personnel_id}:${d.doc_type_name}`;
+      if (seenDocs.has(key)) return false;
+      seenDocs.add(key);
+      return true;
+    });
+
     // Build CSV
     const lines = [];
     const esc = (s) => typeof s === 'string' ? s.replace(/"/g, '""') : s;
@@ -151,7 +160,7 @@ async function exportAssessmentDetailCSV() {
     lines.push(['Name', 'Years Experience', 'Position', 'Document Name', 'Issue Date', 'Expiry Date'].join(','));
 
     const docsByPersonnel = {};
-    allPersonnelDocs.forEach(d => {
+    uniquePersonnelDocs.forEach(d => {
       if (!docsByPersonnel[d.personnel_id]) docsByPersonnel[d.personnel_id] = [];
       docsByPersonnel[d.personnel_id].push(d);
     });
