@@ -110,6 +110,85 @@ function showDetailTab(tab, el) {
   if (fieldView && fieldView.style.display !== 'none') { renderFieldView(); }
 }
 
+async function exportAssessmentDetailCSV() {
+  if (!currentAssessmentId) { showToast('No assessment selected', 'warn'); return; }
+
+  try {
+    // Fetch assessment
+    const assessRes = await fetch(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${currentAssessmentId}`, { headers: getHeaders() });
+    if (!assessRes.ok) { showToast('Failed to load assessment', 'error'); return; }
+    const assessments = await assessRes.json();
+    if (!assessments.length) { showToast('Assessment not found', 'error'); return; }
+    const assess = assessments[0];
+
+    // Fetch personnel for this assessment
+    const persRes = await fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?assessment_id=eq.${currentAssessmentId}`, { headers: getHeaders() });
+    const personnel = persRes.ok ? await persRes.json() : [];
+
+    // Fetch equipment for this assessment
+    const equipRes = await fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment?assessment_id=eq.${currentAssessmentId}`, { headers: getHeaders() });
+    const equipment = equipRes.ok ? await equipRes.json() : [];
+
+    // CSV content
+    const lines = [];
+
+    // Assessment section
+    lines.push('ASSESSMENT');
+    lines.push(['Field/Well', 'Type of Job', 'Date of Issue', 'Objective', 'Status', 'Created Date'].join(','));
+    lines.push([
+      assess.field_well || '',
+      assess.type_of_job || '',
+      assess.date_of_issue || '',
+      (assess.objective || '').replace(/"/g, '""'),
+      assess.status || 'draft',
+      new Date(assess.created_at).toLocaleDateString()
+    ].map(cell => typeof cell === 'string' && cell.includes(',') ? `"${cell}"` : cell).join(','));
+
+    // Personnel section
+    lines.push('');
+    lines.push('PERSONNEL');
+    lines.push(['Name', 'Position', 'Company', 'Service Line', 'Date Added'].join(','));
+    personnel.forEach(p => {
+      lines.push([
+        p.full_name || '',
+        p.position || '',
+        p.company || '',
+        p.service_line || '',
+        new Date(p.created_at).toLocaleDateString()
+      ].map(cell => typeof cell === 'string' && cell.includes(',') ? `"${cell}"` : cell).join(','));
+    });
+
+    // Equipment section
+    lines.push('');
+    lines.push('EQUIPMENT');
+    lines.push(['Tag', 'Type', 'Serial Number', 'Status', 'Date Added'].join(','));
+    equipment.forEach(e => {
+      lines.push([
+        e.tag || '',
+        e.type || '',
+        e.serial_number || '',
+        e.status || '',
+        new Date(e.created_at).toLocaleDateString()
+      ].map(cell => typeof cell === 'string' && cell.includes(',') ? `"${cell}"` : cell).join(','));
+    });
+
+    const csv = lines.join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `assessment_${assess.field_well || 'export'}_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast('Assessment exported', 'success');
+  } catch (err) {
+    console.error('Export error:', err);
+    showToast('Export failed', 'error');
+  }
+}
+
 async function exportAssessmentsCSV() {
   const u = getUser();
   const isAdmin = u.role === 'admin' || u.role === 'assessor';
