@@ -147,21 +147,46 @@ async function exportAssessmentDetailCSV() {
     // Personnel section
     lines.push('');
     lines.push('PERSONNEL');
-    lines.push(['Name', 'Position', 'National ID', 'Date Added'].join(','));
+    lines.push(['Name', 'Position', 'National ID', 'Date Added', 'Documents'].join(','));
     personnel.forEach(p => {
       const pers = p.personnel || {};
+      const persId = p.personnel_id || p.id;
       lines.push([
         pers.full_name || '',
         pers.position || '',
         pers.national_id || '',
-        p.created_at ? new Date(p.created_at).toLocaleDateString() : ''
+        p.created_at ? new Date(p.created_at).toLocaleDateString() : '',
+        ''
       ].map(cell => typeof cell === 'string' && cell.includes(',') ? `"${cell}"` : cell).join(','));
     });
+
+    // Fetch and add personnel documents
+    if (personnel.length > 0) {
+      const perIds = personnel.map(p => p.personnel_id || p.id).filter(id => id);
+      if (perIds.length > 0) {
+        const perDocRes = await fetch(`${SUPABASE_URL}/rest/v1/personnel_documents?personnel_id=in.(${perIds.join(',')})&select=*,document_types(document_name)`, { headers: getHeaders() });
+        const perDocs = perDocRes.ok ? await perDocRes.json() : [];
+        if (perDocs.length > 0) {
+          lines.push('');
+          lines.push('PERSONNEL DOCUMENTS');
+          lines.push(['Personnel Name', 'Document Type', 'Document Name'].join(','));
+          perDocs.forEach(d => {
+            const pers = personnel.find(p => (p.personnel_id || p.id) === d.personnel_id)?.personnel || {};
+            const docType = d.document_types?.document_name || d.doc_type_name || '';
+            lines.push([
+              pers.full_name || '',
+              docType,
+              d.document_name || d.original_filename || ''
+            ].map(cell => typeof cell === 'string' && cell.includes(',') ? `"${cell}"` : cell).join(','));
+          });
+        }
+      }
+    }
 
     // Equipment section
     lines.push('');
     lines.push('EQUIPMENT');
-    lines.push(['Serial Number', 'Model', 'Equipment Type', 'Date Added'].join(','));
+    lines.push(['Serial Number', 'Model', 'Equipment Type', 'Date Added', 'Documents'].join(','));
     equipment.forEach(e => {
       const equip = e.equipment_items || {};
       const template = equip.equipment_templates || {};
@@ -169,9 +194,33 @@ async function exportAssessmentDetailCSV() {
         equip.serial_number || '',
         equip.model || '',
         template.name || '',
-        e.created_at ? new Date(e.created_at).toLocaleDateString() : ''
+        e.created_at ? new Date(e.created_at).toLocaleDateString() : '',
+        ''
       ].map(cell => typeof cell === 'string' && cell.includes(',') ? `"${cell}"` : cell).join(','));
     });
+
+    // Fetch and add equipment documents
+    if (equipment.length > 0) {
+      const equipIds = equipment.map(e => e.equipment_item_id || e.id).filter(id => id);
+      if (equipIds.length > 0) {
+        const equipDocRes = await fetch(`${SUPABASE_URL}/rest/v1/documents?equipment_item_id=in.(${equipIds.join(',')})&select=*,document_types(document_name)`, { headers: getHeaders() });
+        const equipDocs = equipDocRes.ok ? await equipDocRes.json() : [];
+        if (equipDocs.length > 0) {
+          lines.push('');
+          lines.push('EQUIPMENT DOCUMENTS');
+          lines.push(['Equipment Serial Number', 'Document Type', 'Document Name'].join(','));
+          equipDocs.forEach(d => {
+            const equip = equipment.find(e => (e.equipment_item_id || e.id) === d.equipment_item_id)?.equipment_items || {};
+            const docType = d.document_types?.document_name || d.doc_type_name || '';
+            lines.push([
+              equip.serial_number || '',
+              docType,
+              d.document_name || d.original_filename || ''
+            ].map(cell => typeof cell === 'string' && cell.includes(',') ? `"${cell}"` : cell).join(','));
+          });
+        }
+      }
+    }
 
     const csv = lines.join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
