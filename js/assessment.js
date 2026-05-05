@@ -114,113 +114,148 @@ async function exportAssessmentDetailCSV() {
   if (!currentAssessmentId) { showToast('No assessment selected', 'warn'); return; }
 
   try {
-    // Fetch assessment
-    const assessRes = await fetch(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${currentAssessmentId}`, { headers: getHeaders() });
-    if (!assessRes.ok) { showToast('Failed to load assessment', 'error'); return; }
-    const assessments = await assessRes.json();
-    if (!assessments.length) { showToast('Assessment not found', 'error'); return; }
-    const assess = assessments[0];
+    const h = getHeaders();
+    // Fetch with same queries as LoR
+    const [aRes, eRes, pRes] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/assessments?id=eq.${currentAssessmentId}`, { headers: h }),
+      fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment?assessment_id=eq.${currentAssessmentId}&select=*,equipment_items(id,serial_number,model,name,parent_id,equipment_templates(name),documents(*,document_types(document_name)))`, { headers: h }),
+      fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?assessment_id=eq.${currentAssessmentId}&select=*,personnel(*)`, { headers: h })
+    ]);
 
-    // Fetch personnel for this assessment with JOIN to personnel table
-    const persRes = await fetch(`${SUPABASE_URL}/rest/v1/assessment_personnel?assessment_id=eq.${currentAssessmentId}&select=*,personnel(full_name,position,national_id)`, { headers: getHeaders() });
-    const personnel = persRes.ok ? await persRes.json() : [];
+    const assess = (await aRes.json())[0];
+    const equipment = await eRes.json();
+    const personnel = await pRes.json();
 
-    // Fetch equipment for this assessment with JOINs
-    const equipRes = await fetch(`${SUPABASE_URL}/rest/v1/assessment_equipment?assessment_id=eq.${currentAssessmentId}&select=*,equipment_items(serial_number,model,equipment_template_id,equipment_templates(name))`, { headers: getHeaders() });
-    const equipment = equipRes.ok ? await equipRes.json() : [];
+    if (!assess) { showToast('Assessment not found', 'error'); return; }
 
-    // CSV content
+    // Fetch personnel documents
+    const personnelIds = personnel.map(p => p.personnel?.id).filter(Boolean);
+    let allPersonnelDocs = [];
+    if (personnelIds.length) {
+      const pDocsRes = await fetch(`${SUPABASE_URL}/rest/v1/personnel_documents?personnel_id=in.(${personnelIds.join(',')})&select=*`, { headers: h });
+      allPersonnelDocs = pDocsRes.ok ? await pDocsRes.json() : [];
+    }
+
+    // Build CSV
     const lines = [];
+    const esc = (s) => typeof s === 'string' ? s.replace(/"/g, '""') : s;
 
-    // Assessment section
-    lines.push('ASSESSMENT');
-    lines.push(['Field/Well', 'Type of Job', 'Date of Issue', 'Objective', 'Status', 'Created Date'].join(','));
-    lines.push([
-      assess.field_well || '',
-      assess.type_of_job || '',
-      assess.date_of_issue || '',
-      (assess.objective || '').replace(/"/g, '""'),
-      assess.status || 'draft',
-      assess.created_at ? new Date(assess.created_at).toLocaleDateString() : ''
-    ].map(cell => typeof cell === 'string' && cell.includes(',') ? `"${cell}"` : cell).join(','));
+    // Assessment info
+    lines.push('Assessment');
+    lines.push(['Field/Well', 'Type of Job', 'Request ID', 'Objective'].join(','));
+    lines.push([assess.field_well, assess.type_of_job, assess.sharepoint_request_id, esc(assess.objective || '—')].map(c => `"${c}"`).join(','));
 
-    // Personnel section
+    // Personnel grouped by role
     lines.push('');
-    lines.push('PERSONNEL');
-    lines.push(['Name', 'Position', 'National ID', 'Date Added', 'Documents'].join(','));
-    personnel.forEach(p => {
-      const pers = p.personnel || {};
-      const persId = p.personnel_id || p.id;
-      lines.push([
-        pers.full_name || '',
-        pers.position || '',
-        pers.national_id || '',
-        p.created_at ? new Date(p.created_at).toLocaleDateString() : '',
-        ''
-      ].map(cell => typeof cell === 'string' && cell.includes(',') ? `"${cell}"` : cell).join(','));
+    lines.push('MANPOWER');
+    lines.push(['Name', 'Years Experience', 'Position', 'Document Name', 'Issue Date', 'Expiry Date'].join(','));
+
+    const docsByPersonnel = {};
+    allPersonnelDocs.forEach(d => {
+      if (!docsByPersonnel[d.personnel_id]) docsByPersonnel[d.personnel_id] = [];
+      docsByPersonnel[d.personnel_id].push(d);
     });
 
-    // Fetch and add personnel documents
-    if (personnel.length > 0) {
-      const perIds = personnel.map(p => p.personnel_id || p.id).filter(id => id);
-      if (perIds.length > 0) {
-        const perDocRes = await fetch(`${SUPABASE_URL}/rest/v1/personnel_documents?personnel_id=in.(${perIds.join(',')})&select=*,document_types(document_name)`, { headers: getHeaders() });
-        const perDocs = perDocRes.ok ? await perDocRes.json() : [];
-        if (perDocs.length > 0) {
-          lines.push('');
-          lines.push('PERSONNEL DOCUMENTS');
-          lines.push(['Personnel Name', 'Document Type', 'Document Name'].join(','));
-          perDocs.forEach(d => {
-            const pers = personnel.find(p => (p.personnel_id || p.id) === d.personnel_id)?.personnel || {};
-            const docType = d.document_types?.document_name || d.doc_type_name || '';
+    const seenPersonnelIds = new Set();
+    const uniquePersonnel = personnel.filter(p => {
+      const id = p.personnel?.id;
+      if (seenPersonnelIds.has(id)) return false;
+      seenPersonnelIds.add(id);
+      return true;
+    });
+
+    const byRole = {};
+    uniquePersonnel.forEach(p => {
+      const role = p.personnel?.position || 'Unassigned';
+      if (!byRole[role]) byRole[role] = [];
+      byRole[role].push(p);
+    });
+
+    const roles = Object.keys(byRole).sort();
+    roles.forEach(role => {
+      lines.push(`${role},,,,`);
+      byRole[role].forEach(p => {
+        const per = p.personnel;
+        const docs = docsByPersonnel[per.id] || [];
+        if (!docs.length) {
+          lines.push([per.full_name, per.years_experience || '', role, '—', '', ''].map(c => `"${c}"`).join(','));
+        } else {
+          docs.forEach((d, idx) => {
+            const isFirst = idx === 0;
             lines.push([
-              pers.full_name || '',
-              docType,
-              d.document_name || d.original_filename || ''
-            ].map(cell => typeof cell === 'string' && cell.includes(',') ? `"${cell}"` : cell).join(','));
+              isFirst ? per.full_name : '',
+              isFirst ? (per.years_experience || '') : '',
+              isFirst ? role : '',
+              d.doc_type_name || '—',
+              d.issue_date || '',
+              d.expiry_date || ''
+            ].map(c => `"${c}"`).join(','));
           });
         }
-      }
-    }
+      });
+    });
 
     // Equipment section
     lines.push('');
     lines.push('EQUIPMENT');
-    lines.push(['Serial Number', 'Model', 'Equipment Type', 'Date Added', 'Documents'].join(','));
-    equipment.forEach(e => {
-      const equip = e.equipment_items || {};
-      const template = equip.equipment_templates || {};
-      lines.push([
-        equip.serial_number || '',
-        equip.model || '',
-        template.name || '',
-        e.created_at ? new Date(e.created_at).toLocaleDateString() : '',
-        ''
-      ].map(cell => typeof cell === 'string' && cell.includes(',') ? `"${cell}"` : cell).join(','));
+    lines.push(['S/N', 'Equipment Description', 'Type of Check', 'Issue Date', 'Expiry Date'].join(','));
+
+    const kidsByParent = {};
+    const rootItems = equipment.map(e => e.equipment_items).filter(Boolean);
+
+    // Fetch sub-items
+    const rootIds = rootItems.map(i => i.id);
+    let childItems = [];
+    if (rootIds.length) {
+      const cRes = await fetch(`${SUPABASE_URL}/rest/v1/equipment_items?dismissed=is.false&parent_id=in.(${rootIds.join(',')})&select=id,parent_id,serial_number,model,name,equipment_templates(name),documents(*,document_types(document_name))`, { headers: h });
+      if (cRes.ok) childItems = await cRes.json();
+    }
+
+    const childIds = childItems.map(i => i.id);
+    let grandItems = [];
+    if (childIds.length) {
+      const gcRes = await fetch(`${SUPABASE_URL}/rest/v1/equipment_items?dismissed=is.false&parent_id=in.(${childIds.join(',')})&select=id,parent_id,serial_number,model,name,equipment_templates(name),documents(*,document_types(document_name))`, { headers: h });
+      if (gcRes.ok) grandItems = await gcRes.json();
+    }
+
+    [...childItems, ...grandItems].forEach(c => { (kidsByParent[c.parent_id] = kidsByParent[c.parent_id] || []).push(c); });
+
+    const byType = {};
+    rootItems.forEach(item => {
+      const type = item?.equipment_templates?.name || 'Uncategorized';
+      if (!byType[type]) byType[type] = [];
+      byType[type].push(item);
     });
 
-    // Fetch and add equipment documents
-    if (equipment.length > 0) {
-      const equipIds = equipment.map(e => e.equipment_item_id || e.id).filter(id => id);
-      if (equipIds.length > 0) {
-        const equipDocRes = await fetch(`${SUPABASE_URL}/rest/v1/documents?equipment_item_id=in.(${equipIds.join(',')})&select=*,document_types(document_name)`, { headers: getHeaders() });
-        const equipDocs = equipDocRes.ok ? await equipDocRes.json() : [];
-        if (equipDocs.length > 0) {
-          lines.push('');
-          lines.push('EQUIPMENT DOCUMENTS');
-          lines.push(['Equipment Serial Number', 'Document Type', 'Document Name'].join(','));
-          equipDocs.forEach(d => {
-            const equip = equipment.find(e => (e.equipment_item_id || e.id) === d.equipment_item_id)?.equipment_items || {};
-            const docType = d.document_types?.document_name || d.doc_type_name || '';
+    const types = Object.keys(byType).sort();
+
+    function renderEquipItem(item, indent = '') {
+      const docs = item?.documents || [];
+      const label = indent + (item?.equipment_templates?.name || item?.name || item?.model || '—');
+      if (!docs.length) {
+        lines.push([item?.serial_number || '—', label, '—', '', ''].map(c => `"${c}"`).join(','));
+      } else {
+        docs.forEach((d, idx) => {
+          if (idx === 0) {
             lines.push([
-              equip.serial_number || '',
-              docType,
-              d.document_name || d.original_filename || ''
-            ].map(cell => typeof cell === 'string' && cell.includes(',') ? `"${cell}"` : cell).join(','));
-          });
-        }
+              item?.serial_number || '—',
+              label,
+              d.document_types?.document_name || d.doc_type_name || '—',
+              d.issue_date || '',
+              d.expiry_date || ''
+            ].map(c => `"${c}"`).join(','));
+          } else {
+            lines.push(['', '', d.document_types?.document_name || d.doc_type_name || '—', d.issue_date || '', d.expiry_date || ''].map(c => `"${c}"`).join(','));
+          }
+        });
       }
+      (kidsByParent[item.id] || []).forEach(child => renderEquipItem(child, indent + '  └─ '));
     }
+
+    types.forEach(type => {
+      lines.push(`${type},,,,`);
+      byType[type].forEach(item => renderEquipItem(item));
+    });
 
     const csv = lines.join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
