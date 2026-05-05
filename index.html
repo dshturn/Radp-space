@@ -241,10 +241,11 @@
             <button class="view-btn" onclick="switchDetailView('field')" title="Field view: quick status">🏗 Field</button>
           </div>
         </div>
-        <div style="display:flex;gap:8px;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button class="btn-primary" onclick="openPersonnelSelector()">+ Personnel</button>
           <button class="btn-primary" onclick="openEquipmentSelector()">+ Equipment</button>
           <button class="lor-btn" onclick="generateLoR()">📄 View LoR</button>
+          <button class="lor-btn" onclick="exportAssessmentDetailCSV()">⬇ Export CSV</button>
           <button class="lor-btn" onclick="generateLoRWithDocs('personnel')">👥 Export Personnel + Docs</button>
           <button class="lor-btn" onclick="generateLoRWithDocs('equipment')">⚙️ Export Equipment + Docs</button>
           <button class="lor-btn" onclick="generateLoRWithDocs('both')">📋 Export Full Report</button>
