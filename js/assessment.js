@@ -239,7 +239,15 @@ async function exportAssessmentDetailCSV() {
     const types = Object.keys(byType).sort();
 
     function renderEquipItem(item, indent = '') {
-      const docs = item?.documents || [];
+      let docs = item?.documents || [];
+      // Deduplicate equipment documents
+      const seenEquipDocs = new Set();
+      docs = docs.filter(d => {
+        const key = `${item.id}:${d.document_types?.document_name || d.doc_type_name}`;
+        if (seenEquipDocs.has(key)) return false;
+        seenEquipDocs.add(key);
+        return true;
+      });
       const label = indent + (item?.equipment_templates?.name || item?.name || item?.model || '—');
       if (!docs.length) {
         lines.push([item?.serial_number || '—', label, '—', '', ''].map(c => `"${c}"`).join(','));
