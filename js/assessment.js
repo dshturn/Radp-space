@@ -110,6 +110,54 @@ function showDetailTab(tab, el) {
   if (fieldView && fieldView.style.display !== 'none') { renderFieldView(); }
 }
 
+async function exportAssessmentsCSV() {
+  const u = getUser();
+  const isAdmin = u.role === 'admin' || u.role === 'assessor';
+  const endpoint = isAdmin
+    ? `/rest/v1/assessments?order=created_at.desc`
+    : `/rest/v1/assessments?contractor_id=eq.${u.id}&order=created_at.desc`;
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}${endpoint}`, { headers: getHeaders() });
+    if (!res.ok) { showToast('Failed to export assessments', 'error'); return; }
+    const assessments = await res.json();
+
+    if (!assessments.length) { showToast('No assessments to export', 'warn'); return; }
+
+    // CSV headers
+    const headers = ['ID', 'Field/Well', 'Type of Job', 'Date of Issue', 'Objective', 'Status', 'Created Date'];
+    const rows = assessments.map(a => [
+      a.id,
+      a.field_well || '',
+      a.type_of_job || '',
+      a.date_of_issue || '',
+      (a.objective || '').replace(/"/g, '""'),
+      a.status || 'draft',
+      new Date(a.created_at).toLocaleDateString()
+    ]);
+
+    // Build CSV
+    const csv = [headers, ...rows].map(row =>
+      row.map(cell => typeof cell === 'string' && cell.includes(',') ? `"${cell}"` : cell).join(',')
+    ).join('\n');
+
+    // Download
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `assessments_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast(`Exported ${assessments.length} assessments`, 'success');
+  } catch (err) {
+    console.error('Export error:', err);
+    showToast('Export failed', 'error');
+  }
+}
+
 async function loadAssessments() {
   const u = getUser();
   const from = _assessPage * _ASSESS_PAGE_SIZE;
