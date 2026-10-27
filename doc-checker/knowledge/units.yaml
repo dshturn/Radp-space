@@ -1,0 +1,9 @@
+# Map the "Responsible unit" codes used in the LoR to disciplines.
+# Add your organisation's unit codes with: python -m radp_check alias add unit engineering "<code>"
+units:
+  engineering:
+    name: Engineering
+    aliases: [eng, engineering]
+  safety:
+    name: Safety
+    aliases: [hse, safety]

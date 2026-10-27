@@ -1,103 +1,410 @@
-# Check rule base. ALL rules below are PROTOTYPE EXAMPLES (status: draft,
-# source: PLACEHOLDER). Real requirements are entered from the corporate manuals
-# with document, clause and revision, then approved (status: approved).
+# Check rule base. ALL rules below are DRAFTS (status: draft, source: PLACEHOLDER) inferred from the
+# pattern of a contractor LoR - not from Aramco standards. Enter the real requirements from the corporate
+# manuals with document, clause and revision, then approve them (status: approved).
 rules:
-- id: SL-BOP-001
-  service_line: slickline
+- id: PCE-BOP-001
+  service_line: any
   equipment: wireline_bop
-  document: pressure_test_certificate
-  when: {}
-  max_age_months: 6
-  serial_must_match: true
-  third_party_required: true
-  status: draft
-  source: {document: PLACEHOLDER, clause: '', revision: ''}
-  note: Example rule
-- id: SL-BOP-002
-  service_line: slickline
-  equipment: wireline_bop
-  document: third_party_inspection
+  document: mpi
   when: {}
   max_age_months: 12
-  serial_must_match: true
-  third_party_required: true
-  status: draft
-  source: {document: PLACEHOLDER, clause: '', revision: ''}
-  note: Example rule
-- id: SL-LUB-001
-  service_line: slickline
-  equipment: lubricator
-  document: pressure_test_certificate
-  when: {}
-  max_age_months: 6
-  serial_must_match: true
-  third_party_required: true
-  status: draft
-  source: {document: PLACEHOLDER, clause: '', revision: ''}
-  note: Example rule
-- id: SL-SFB-001
-  service_line: slickline
-  equipment: stuffing_box
-  document: pressure_test_certificate
-  when: {}
-  max_age_months: 6
-  serial_must_match: true
-  third_party_required: true
-  status: draft
-  source: {document: PLACEHOLDER, clause: '', revision: ''}
-  note: Example rule
-- id: SL-UNT-001
-  service_line: slickline
-  equipment: slickline_unit
-  document: third_party_inspection
-  when: {}
-  max_age_months: 12
-  serial_must_match: true
-  third_party_required: true
-  status: draft
-  source: {document: PLACEHOLDER, clause: '', revision: ''}
-  note: Example rule
-- id: SL-WIR-001
-  service_line: slickline
-  equipment: slickline_wire
-  document: wire_test_certificate
-  when: {}
-  max_age_months: 6
   serial_must_match: true
   third_party_required: false
   status: draft
-  source: {document: PLACEHOLDER, clause: '', revision: ''}
-  note: Example rule
-- id: SL-WIR-002
-  service_line: slickline
-  equipment: slickline_wire
-  document: certificate_of_conformity
-  when: {h2s_service: true}
+  source:
+    document: PLACEHOLDER
+    clause: ''
+    revision: ''
+  note: Inferred from contractor LoR pattern - confirm against standard
+- id: PCE-BOP-002
+  service_line: any
+  equipment: wireline_bop
+  document: hydrostatic_test
+  when: {}
+  max_age_months: 12
+  serial_must_match: true
+  third_party_required: true
+  status: draft
+  source:
+    document: PLACEHOLDER
+    clause: ''
+    revision: ''
+  note: Inferred from contractor LoR pattern - confirm interval and whether in-house charts are accepted
+- id: PCE-BOP-003
+  service_line: any
+  equipment: wireline_bop
+  document: coc
+  when: {}
   max_age_months: null
   serial_must_match: true
   third_party_required: false
   status: draft
-  source: {document: PLACEHOLDER, clause: '', revision: ''}
-  note: Example conditional rule - H2S service only
-- id: SL-WI-001
-  service_line: slickline
-  equipment: weight_indicator
-  document: calibration_certificate
+  source:
+    document: PLACEHOLDER
+    clause: ''
+    revision: ''
+  note: Inferred from contractor LoR pattern - confirm against standard
+- id: PCE-LUB-001
+  service_line: any
+  equipment: lubricator
+  document: mpi
   when: {}
   max_age_months: 12
   serial_must_match: true
   third_party_required: false
   status: draft
-  source: {document: PLACEHOLDER, clause: '', revision: ''}
-  note: Example rule
-- id: SL-MST-001
-  service_line: slickline
-  equipment: mast
-  document: load_test_certificate
+  source:
+    document: PLACEHOLDER
+    clause: ''
+    revision: ''
+  note: Inferred from contractor LoR pattern - confirm against standard
+- id: PCE-LUB-002
+  service_line: any
+  equipment: lubricator
+  document: hydrostatic_test
   when: {}
   max_age_months: 12
   serial_must_match: true
   third_party_required: true
   status: draft
-  source: {document: PLACEHOLDER, clause: '', revision: ''}
-  note: Example rule
+  source:
+    document: PLACEHOLDER
+    clause: ''
+    revision: ''
+  note: Inferred from contractor LoR pattern - confirm interval and whether in-house charts are accepted
+- id: PCE-LUB-003
+  service_line: any
+  equipment: lubricator
+  document: coc
+  when: {}
+  max_age_months: null
+  serial_must_match: true
+  third_party_required: false
+  status: draft
+  source:
+    document: PLACEHOLDER
+    clause: ''
+    revision: ''
+  note: Inferred from contractor LoR pattern - confirm against standard
+- id: PCE-XO-001
+  service_line: any
+  equipment: crossover
+  document: mpi
+  when: {}
+  max_age_months: 12
+  serial_must_match: true
+  third_party_required: false
+  status: draft
+  source:
+    document: PLACEHOLDER
+    clause: ''
+    revision: ''
+  note: Inferred from contractor LoR pattern - confirm against standard
+- id: PCE-XO-002
+  service_line: any
+  equipment: crossover
+  document: hydrostatic_test
+  when: {}
+  max_age_months: 12
+  serial_must_match: true
+  third_party_required: true
+  status: draft
+  source:
+    document: PLACEHOLDER
+    clause: ''
+    revision: ''
+  note: Inferred from contractor LoR pattern - confirm interval and whether in-house charts are accepted
+- id: PCE-XO-003
+  service_line: any
+  equipment: crossover
+  document: coc
+  when: {}
+  max_age_months: null
+  serial_must_match: true
+  third_party_required: false
+  status: draft
+  source:
+    document: PLACEHOLDER
+    clause: ''
+    revision: ''
+  note: Inferred from contractor LoR pattern - confirm against standard
+- id: PCE-TT-001
+  service_line: any
+  equipment: tool_trap
+  document: mpi
+  when: {}
+  max_age_months: 12
+  serial_must_match: true
+  third_party_required: false
+  status: draft
+  source:
+    document: PLACEHOLDER
+    clause: ''
+    revision: ''
+  note: Inferred from contractor LoR pattern - confirm against standard
+- id: PCE-TT-002
+  service_line: any
+  equipment: tool_trap
+  document: hydrostatic_test
+  when: {}
+  max_age_months: 12
+  serial_must_match: true
+  third_party_required: true
+  status: draft
+  source:
+    document: PLACEHOLDER
+    clause: ''
+    revision: ''
+  note: Inferred from contractor LoR pattern - confirm interval and whether in-house charts are accepted
+- id: PCE-TT-003
+  service_line: any
+  equipment: tool_trap
+  document: coc
+  when: {}
+  max_age_months: null
+  serial_must_match: true
+  third_party_required: false
+  status: draft
+  source:
+    document: PLACEHOLDER
+    clause: ''
+    revision: ''
+  note: Inferred from contractor LoR pattern - confirm against standard
+- id: PCE-TC-001
+  service_line: any
+  equipment: tool_catcher
+  document: mpi
+  when: {}
+  max_age_months: 12
+  serial_must_match: true
+  third_party_required: false
+  status: draft
+  source:
+    document: PLACEHOLDER
+    clause: ''
+    revision: ''
+  note: Inferred from contractor LoR pattern - confirm against standard
+- id: PCE-TC-002
+  service_line: any
+  equipment: tool_catcher
+  document: hydrostatic_test
+  when: {}
+  max_age_months: 12
+  serial_must_match: true
+  third_party_required: true
+  status: draft
+  source:
+    document: PLACEHOLDER
+    clause: ''
+    revision: ''
+  note: Inferred from contractor LoR pattern - confirm interval and whether in-house charts are accepted
+- id: PCE-TC-003
+  service_line: any
+  equipment: tool_catcher
+  document: coc
+  when: {}
+  max_age_months: null
+  serial_must_match: true
+  third_party_required: false
+  status: draft
+  source:
+    document: PLACEHOLDER
+    clause: ''
+    revision: ''
+  note: Inferred from contractor LoR pattern - confirm against standard
+- id: PCE-PIS-001
+  service_line: any
+  equipment: pump_in_sub
+  document: mpi
+  when: {}
+  max_age_months: 12
+  serial_must_match: true
+  third_party_required: false
+  status: draft
+  source:
+    document: PLACEHOLDER
+    clause: ''
+    revision: ''
+  note: Inferred from contractor LoR pattern - confirm against standard
+- id: PCE-PIS-002
+  service_line: any
+  equipment: pump_in_sub
+  document: hydrostatic_test
+  when: {}
+  max_age_months: 12
+  serial_must_match: true
+  third_party_required: true
+  status: draft
+  source:
+    document: PLACEHOLDER
+    clause: ''
+    revision: ''
+  note: Inferred from contractor LoR pattern - confirm interval and whether in-house charts are accepted
+- id: PCE-PIS-003
+  service_line: any
+  equipment: pump_in_sub
+  document: coc
+  when: {}
+  max_age_months: null
+  serial_must_match: true
+  third_party_required: false
+  status: draft
+  source:
+    document: PLACEHOLDER
+    clause: ''
+    revision: ''
+  note: Inferred from contractor LoR pattern - confirm against standard
+- id: PCE-QTS-001
+  service_line: any
+  equipment: quick_test_sub
+  document: mpi
+  when: {}
+  max_age_months: 12
+  serial_must_match: true
+  third_party_required: false
+  status: draft
+  source:
+    document: PLACEHOLDER
+    clause: ''
+    revision: ''
+  note: Inferred from contractor LoR pattern - confirm against standard
+- id: PCE-QTS-002
+  service_line: any
+  equipment: quick_test_sub
+  document: hydrostatic_test
+  when: {}
+  max_age_months: 12
+  serial_must_match: true
+  third_party_required: true
+  status: draft
+  source:
+    document: PLACEHOLDER
+    clause: ''
+    revision: ''
+  note: Inferred from contractor LoR pattern - confirm interval and whether in-house charts are accepted
+- id: PCE-QTS-003
+  service_line: any
+  equipment: quick_test_sub
+  document: coc
+  when: {}
+  max_age_months: null
+  serial_must_match: true
+  third_party_required: false
+  status: draft
+  source:
+    document: PLACEHOLDER
+    clause: ''
+    revision: ''
+  note: Inferred from contractor LoR pattern - confirm against standard
+- id: PCE-GIH-001
+  service_line: any
+  equipment: grease_injection_head
+  document: mpi
+  when: {}
+  max_age_months: 12
+  serial_must_match: true
+  third_party_required: false
+  status: draft
+  source:
+    document: PLACEHOLDER
+    clause: ''
+    revision: ''
+  note: Inferred from contractor LoR pattern - confirm against standard
+- id: PCE-GIH-002
+  service_line: any
+  equipment: grease_injection_head
+  document: hydrostatic_test
+  when: {}
+  max_age_months: 12
+  serial_must_match: true
+  third_party_required: true
+  status: draft
+  source:
+    document: PLACEHOLDER
+    clause: ''
+    revision: ''
+  note: Inferred from contractor LoR pattern - confirm interval and whether in-house charts are accepted
+- id: PCE-GIH-003
+  service_line: any
+  equipment: grease_injection_head
+  document: coc
+  when: {}
+  max_age_months: null
+  serial_must_match: true
+  third_party_required: false
+  status: draft
+  source:
+    document: PLACEHOLDER
+    clause: ''
+    revision: ''
+  note: Inferred from contractor LoR pattern - confirm against standard
+- id: PCE-SFB-001
+  service_line: any
+  equipment: stuffing_box
+  document: mpi
+  when: {}
+  max_age_months: 12
+  serial_must_match: true
+  third_party_required: false
+  status: draft
+  source:
+    document: PLACEHOLDER
+    clause: ''
+    revision: ''
+  note: Inferred from contractor LoR pattern - confirm against standard
+- id: PCE-SFB-002
+  service_line: any
+  equipment: stuffing_box
+  document: hydrostatic_test
+  when: {}
+  max_age_months: 12
+  serial_must_match: true
+  third_party_required: true
+  status: draft
+  source:
+    document: PLACEHOLDER
+    clause: ''
+    revision: ''
+  note: Inferred from contractor LoR pattern - confirm interval and whether in-house charts are accepted
+- id: PCE-SFB-003
+  service_line: any
+  equipment: stuffing_box
+  document: coc
+  when: {}
+  max_age_months: null
+  serial_must_match: true
+  third_party_required: false
+  status: draft
+  source:
+    document: PLACEHOLDER
+    clause: ''
+    revision: ''
+  note: Inferred from contractor LoR pattern - confirm against standard
+- id: PCE-CC-001
+  service_line: any
+  equipment: cable_cutter
+  document: mpi
+  when: {}
+  max_age_months: 12
+  serial_must_match: true
+  third_party_required: false
+  status: draft
+  source:
+    document: PLACEHOLDER
+    clause: ''
+    revision: ''
+  note: Inferred from contractor LoR pattern - confirm against standard
+- id: PCE-CC-003
+  service_line: any
+  equipment: cable_cutter
+  document: coc
+  when: {}
+  max_age_months: null
+  serial_must_match: true
+  third_party_required: false
+  status: draft
+  source:
+    document: PLACEHOLDER
+    clause: ''
+    revision: ''
+  note: Inferred from contractor LoR pattern - confirm against standard

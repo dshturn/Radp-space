@@ -1,9 +1,11 @@
-"""Fake slickline package generator with seeded defects.
+"""Fake package generator in the layout of a real service-provider LoR, with seeded defects modelled on
+issues found in real packages. All names, serials and companies are fictitious.
 expected.json is the answer key: what the system must find. Serves as both test and demo."""
 from __future__ import annotations
 
 import json
 import zipfile
+from datetime import date
 from pathlib import Path
 
 import yaml
@@ -11,88 +13,160 @@ from openpyxl import Workbook
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
-REQUEST = {"request_id": "RADP-DEMO-0001", "service_line": "slickline",
-           "work_start": "2026-11-10", "work_end": "2026-11-30", "flags": {"h2s_service": True}}
+REQUEST = {"request_id": "RADP-DEMO-0002", "service_line": "wireline", "discipline": "engineering",
+           "work_start": "2026-11-10", "work_end": "2026-11-30"}
+D = date
 
-# (LoR description, LoR serial number, LoR document references)
-LOR_ROWS = [
-    ("Slickline Unit c/w power pack", "SLU-4471", "TPI TPI-2026-0311"),
-    ('Wireline BOP 5k, 2-1/2"', "BOP-77812", "Pressure Test PT-2026-0145; TPI TPI-2026-0298"),
-    ("Lubricator 3 x 8ft, 5k", "LUB-20931", "Pressure Test PT-2026-0377"),
-    ("Hydraulic Stuffing Box", "SFB-5520", "Pressure Test PT-2026-0402"),
-    ('Slickline Wire 0.108"', "WR-108-3321", "Wire Test WT-2026-0088"),
-    ("Weight Indicator", "WI-9012", ""),
-    ("Telescopic Mast", "MST-1180", "Load Test LT-2026-0221"),
-    ("Tool string assembly", "TS-001", ""),
+
+def _xl(d: date) -> int:
+    """Excel serial number, as found in LoR cells formatted as numbers."""
+    return (d - date(1899, 12, 30)).days
+
+
+MPI = (D(2026, 1, 28), D(2027, 1, 27))
+HT = (D(2026, 1, 29), D(2027, 1, 28))
+
+# (serial, description, check, inspection date, expiry, responsible unit)
+EQUIPMENT = [
+    ("EMX20C011", "WL VALVE (BOP)", "MPI", _xl(MPI[0]), MPI[1], "ENG"),
+    ("EMX20C011", "WL VALVE (BOP)", "HT", _xl(HT[0]), HT[1], "ENG"),
+    ("EMX20C011", "WL VALVE (BOP)", "COC", _xl(D(2025, 2, 13)), "-", "ENG"),
+    ("WX-201", "LUBRICATOR", "MPI", _xl(MPI[0]), MPI[1], "ENG"),
+    ("WX-201", "LUBRICATOR", "HT", _xl(HT[0]), HT[1], "ENG"),
+    ("WX-201", "LUBRICATOR", "COC", _xl(D(2025, 1, 20)), "-", "ENG"),
+    ("WX-202", "LUBRICATOR", "MPI", _xl(MPI[0]), MPI[1], "ENG"),
+    ("WX-202", "LUBRICATOR", "HT", _xl(HT[0]), HT[1], "ENG"),
+    ("WX-202", "LUBRICATOR", "COC", _xl(D(2025, 2, 16)), "-", "ENG"),            # wrong COC date
+    ("EMX200037", "TOOL TRAP", "MPI", _xl(MPI[0]), MPI[1], "ENG"),              # serial typo (C -> 0)
+    ("EMX200037", "TOOL TRAP", "HT", _xl(HT[0]), HT[1], "ENG"),
+    ("EMX200037", "TOOL TRAP", "COC", _xl(D(2025, 2, 16)), "-", "ENG"),
+    ("XO-4471-4", 'X-over, 8-3/4"', "MPI", _xl(MPI[0]), MPI[1], "ENG"),
+    ("XO-4471-4", 'X-over, 8-3/4"', "HT", _xl(D(2026, 11, 2)), D(2027, 10, 2), "ENG"),  # day/month swapped
+    ("XO-4471-4", 'X-over, 8-3/4"', "COC", _xl(D(2025, 2, 3)), "-", "ENG"),
+    ("XO-5512-1", 'X-over, 5-3/4"', "MPI", _xl(D(2025, 11, 20)), D(2026, 11, 19), "ENG"),  # expires during job
+    ("XO-5512-1", 'X-over, 5-3/4"', "HT", _xl(D(2026, 2, 11)), D(2027, 2, 10), "ENG"),
+    ("XO-5512-1", 'X-over, 5-3/4"', "COC", _xl(D(2023, 3, 16)), "-", "ENG"),     # document missing
+    ("PIS-0902", "PUMP IN SUB", "MPI", _xl(MPI[0]), MPI[1], "ENG"),             # HT not listed at all
+    ("PIS-0902", "PUMP IN SUB", "COC", "16/2/2025", "-", "ENG"),
+    ("QTS-118", "QUICK TEST SUB", "MPI", _xl(MPI[0]), MPI[1], "ENG"),
+    ("QTS-118", "QUICK TEST SUB", "HT", _xl(D(2025, 10, 15)), D(2026, 10, 14), "ENG"),  # expired before job
+    ("QTS-118", "QUICK TEST SUB", "COC", _xl(D(2025, 2, 16)), "-", "ENG"),
+    ("SW-2289", "Sheave Wheel", "MPI", _xl(D(2026, 7, 20)), D(2027, 1, 10), "ENG"),  # lifting item on ENG
+    ("SW-2289", "Sheave Wheel", "LOAD TEST", _xl(D(2026, 1, 18)), D(2029, 1, 18), "ENG"),
+    ("SL-1483", "WIRE ROPE SLING", "LOAD TEST", _xl(D(2026, 3, 16)), D(2027, 3, 16), "HSE"),
+    ("SH-6471", "SKID SHACKLE", "MPI", _xl(D(2026, 7, 10)), D(2027, 1, 10), "HSE"),
+    ("MGB-019", "PTU", "LOAD TEST", _xl(D(2026, 2, 4)), "until major repair", "HSE"),
 ]
 
-# Certificates in the package: (file name, fields, inside zip?)
-CERTS = [
-    ("TPI_SLU-4471.pdf", dict(type="Third Party Inspection", no="TPI-2026-0311", equip="Slickline Unit",
-                              sn="SLU-4471", issue="15-Mar-2026", until="14-Mar-2027",
-                              issuer="Falcon Inspection Co"), False),
-    ("PT_BOP-77812.pdf", dict(type="Pressure Test Certificate", no="PT-2026-0145", equip="Wireline BOP 5k",
-                              sn="BOP-77812", issue="20-Apr-2026", until=None,
-                              issuer="Gulf Inspection Services"), False),
-    ("TPI_BOP-77812.pdf", dict(type="Third Party Inspection", no="TPI-2026-0298", equip="Wireline BOP 5k",
-                               sn="BOP-77812", issue="02-Jun-2026", until="01-Jun-2027",
-                               issuer="Arabian Testing Bureau"), False),
-    ("PT_Lubricator.pdf", dict(type="Pressure Test Certificate", no="PT-2026-0377", equip="Lubricator 8ft",
-                               sn="LUB-20391", issue="10-Aug-2026", until=None,
-                               issuer="Gulf Inspection Services"), False),
-    ("WireTest_0108.pdf", dict(type="Wire Test Certificate", no="WT-2026-0088", equip='Slickline wire 0.108"',
-                               sn="WR-108-3321", issue="20-May-2026", until=None,
-                               issuer="Contractor workshop"), False),
-    ("Calibration_WI.pdf", dict(type="Calibration Certificate", no="CAL-2026-0510", equip="Weight Indicator",
-                                sn="WI-9012", issue="05-Jul-2026", until="04-Jul-2027",
-                                issuer="Desert Certification Ltd"), False),
-    ("LoadTest_Mast.pdf", dict(type="Load Test Certificate", no="LT-2026-0221", equip="Telescopic Mast",
-                               sn="MST-1180", issue="12-Sep-2026", until="11-Sep-2027",
-                               issuer="Arabian Testing Bureau"), True),
-]
+ATB, GIS, INHOUSE = "Arabian Testing Bureau", "Gulf Inspection Services", "Fictitious Wireline Services (in-house)"
+# file -> list of pages: (type, number, serials, description, date, valid until, issuer); None = non-certificate page
+DOCUMENTS = {
+    "MPI_report_JAN26.pdf": [("Magnetic Particle Inspection", "MPI-26-0117",
+                              "EMX20C011, WX-201, WX-202, EMX20C037, XO-4471-4, PIS-0902, QTS-118",
+                              "Pressure control equipment", "28-01-2026", "27-01-2027", ATB)],
+    "MPI_XO-5512-1.pdf": [("Magnetic Particle Inspection", "MPI-25-0988", "XO-5512-1", 'X-over 5-3/4"',
+                           "20-11-2025", "19-11-2026", ATB)],
+    "HT_chart_EMX20C011.pdf": [("Pressure Test", "TC-1490", "EMX20C011, WX-201, WX-202, EMX20C037, PIS-0902",
+                                "BOP body test", "29-01-2026", None, INHOUSE)],
+    "HT_witness_X-overs.pdf": [("Certificate of Pressure Test Witness", "GIS-HT-2026-003", "XO-4471-4, XO-5512-1",
+                                "X-overs", "11-02-2026", "10-02-2027", GIS)],
+    "HT_QTS-118.pdf": [("Certificate of Pressure Test Witness", "GIS-HT-2025-077", "QTS-118", "Quick test sub",
+                        "15-10-2025", "14-10-2026", GIS)],
+    "COC_bundle.pdf": [
+        ("Certificate of Conformance", "WO-3011", "EMX20C011", "WL valve", "13-02-2025", None, "Fictitious Metals Co"),
+        ("Certificate of Conformance", "WO-3012", "WX-201, WX-202", "Lubricators", "20-01-2025", None,
+         "Fictitious Metals Co"),
+        ("Certificate of Conformance", "WO-3013", "EMX20C037, PIS-0902, QTS-118", "Subs", "16-02-2025", None,
+         "Fictitious Metals Co"),
+        ("Certificate of Conformance", "WO-1009", "XO-4471-1, XO-4471-2, XO-4471-3, XO-4471-4", "X-overs",
+         "03-02-2025", None, "Fictitious Metals Co"),
+        ("Mill Test Certificate", "MTC-77812", "", "AISI 4140 bar", "19-12-2022", None, "Fictitious Steel SpA"),
+    ],
+    "COC_XO-9001.pdf": [("Certificate of Conformance", "WO-9001", "XO-9001", "X-over", "01-03-2025", None,
+                         "Fictitious Metals Co")],
+    "Company_Profile.pdf": [None],
+}
+ZIPPED = {"HT_QTS-118.pdf"}
 
 EXPECTED = {
     "findings": {
-        "SL-UNT-001": ["WARN", "not on the approved issuer list"],
-        "SL-BOP-001": ["FAIL", "before work start"],
-        "SL-BOP-002": ["OK", ""],
-        "SL-LUB-001": ["FAIL", "does not match"],
-        "SL-SFB-001": ["FAIL", "not found in the package"],
-        "SL-WIR-001": ["WARN", "during the work period"],
-        "SL-WIR-002": ["FAIL", "not listed in the LoR"],
-        "SL-WI-001": ["WARN", "not listed in the LoR"],
-        "SL-MST-001": ["OK", ""],
+        "EMX20C011|mpi": ["OK", ""],
+        "EMX20C011|hydrostatic_test": ["WARN", "not an approved third party"],
+        "EMX20C011|coc": ["OK", ""],
+        "WX-201|mpi": ["OK", ""],
+        "WX-201|hydrostatic_test": ["WARN", "not an approved third party"],
+        "WX-201|coc": ["OK", ""],
+        "WX-202|mpi": ["OK", ""],
+        "WX-202|hydrostatic_test": ["WARN", "not an approved third party"],
+        "WX-202|coc": ["FAIL", "differs from document date"],
+        "EMX200037|mpi": ["WARN", "probable typo"],
+        "EMX200037|hydrostatic_test": ["WARN", "probable typo"],
+        "EMX200037|coc": ["WARN", "probable typo"],
+        "XO-4471-4|mpi": ["OK", ""],
+        "XO-4471-4|hydrostatic_test": ["FAIL", "day and month swapped"],
+        "XO-4471-4|coc": ["OK", ""],
+        "XO-5512-1|mpi": ["WARN", "during the work period"],
+        "XO-5512-1|hydrostatic_test": ["OK", ""],
+        "XO-5512-1|coc": ["FAIL", "No document"],
+        "PIS-0902|mpi": ["OK", ""],
+        "PIS-0902|hydrostatic_test": ["FAIL", "not listed in the LoR (document found"],
+        "PIS-0902|coc": ["OK", ""],
+        "QTS-118|mpi": ["OK", ""],
+        "QTS-118|hydrostatic_test": ["FAIL", "before work start"],
+        "QTS-118|coc": ["OK", ""],
     },
-    "unrecognized_contains": ["Tool string assembly", "Company_Profile.pdf", "Method_Statement.docx"],
+    "also_in_reason": {"XO-4471-4|hydrostatic_test": ["in the future", "document supports only 10-Feb-2027"]},
+    "assignment_remarks": ["SW-2289"],
+    "unrecognized_contains": ["COC_XO-9001.pdf", "Company_Profile.pdf", "Method_Statement.docx"],
 }
 
 
-def _cert_pdf(path: Path, f: dict) -> None:
+def _pdf(path: Path, pages: list) -> None:
     c = canvas.Canvas(str(path), pagesize=A4)
     _, h = A4
-    c.setFont("Helvetica-Bold", 16)
-    c.drawString(60, h - 80, f["issuer"].upper())
-    c.setFont("Helvetica-Bold", 13)
-    c.drawString(60, h - 120, f["type"].upper())
-    lines = [
-        f"Certificate Type: {f['type']}",
-        f"Certificate No: {f['no']}",
-        f"Equipment: {f['equip']}",
-        f"Serial No: {f['sn']}",
-        f"Date of Issue: {f['issue']}",
-    ] + ([f"Valid Until: {f['until']}"] if f["until"] else []) + [
-        f"Issued by: {f['issuer']}",
-        "",
-        "This is to certify that the above equipment has been examined/tested",
-        "and found satisfactory at the time of test.",
-        "",
-        "FICTITIOUS DOCUMENT - GENERATED FOR SOFTWARE TESTING ONLY",
-    ]
-    c.setFont("Helvetica", 11)
-    for i, line in enumerate(lines):
-        c.drawString(60, h - 170 - i * 20, line)
-    c.drawString(60, 120, "Inspector: J. Doe            Signature: ____________")
+    for page in pages:
+        if page is None:
+            c.setFont("Helvetica", 12)
+            c.drawString(60, h - 80, "Fictitious Wireline Services - Company Profile")
+            c.drawString(60, h - 100, "Founded 2001. Wireline, slickline and logging services.")
+        else:
+            kind, no, serials, desc, issued, until, issuer = page
+            c.setFont("Helvetica-Bold", 15)
+            c.drawString(60, h - 80, issuer.upper())
+            c.setFont("Helvetica-Bold", 13)
+            c.drawString(60, h - 115, kind.upper())
+            lines = [f"Certificate Type: {kind}", f"Certificate No: {no}", f"Equipment: {desc}",
+                     f"Serial No: {serials}", f"Date of Issue: {issued}"]
+            lines += [f"Valid Until: {until}"] if until else []
+            lines += [f"Issued by: {issuer}", "", "FICTITIOUS DOCUMENT - GENERATED FOR SOFTWARE TESTING ONLY"]
+            c.setFont("Helvetica", 11)
+            for i, line in enumerate(lines):
+                c.drawString(60, h - 160 - i * 20, line)
+        c.showPage()
     c.save()
+
+
+def _lor(path: Path) -> None:
+    wb = Workbook()
+    ws = wb.active
+    ws.append(["Yellow fields to be filled by SP"])
+    ws.append(["List of Readiness - FICTITIOUS SAMPLE"])
+    ws.append(["SP", "Fictitious Wireline Services", "Date of issue", D(2026, 10, 26), "Valid till"])
+    ws.append(["Job / Campaign information", "Field / Well", "DEMO-FIELD-01"])
+    ws.append(["Type of job", "Logging Campaign"])
+    ws.append([])
+    ws.append(["Manpower:"])
+    ws.append(["#", "Name", "Years of experience", "Job role", "Document name", "Date of Expiry (MM/DD/YY)",
+               "Responsible unit"])
+    ws.append([1, "John Doe", 5, "Equipment Operator", "MED", D(2027, 4, 24), "HSE"])
+    ws.append([])
+    ws.append(["Equipment:"])
+    ws.append(["#", "Equipment S/N", "Equipment Description", "Type of Integrity Check",
+               "Date of Inspection (MM/DD/YY)", "Date of Expiry (MM/DD/YY)", "Responsible unit", "Auditor",
+               "Inspection Date", "Readiness for operations", "Comment"])
+    for i, (sn, desc, check, insp, exp, unit) in enumerate(EQUIPMENT, start=1):
+        ws.append([i, sn, desc, check, insp, exp, unit, "Auditor A", D(2026, 2, 19), "Ready"])
+    wb.save(path)
 
 
 def generate(root: Path) -> Path:
@@ -101,31 +175,13 @@ def generate(root: Path) -> Path:
     out = root / "package"
     out.mkdir(parents=True, exist_ok=True)
     (out / "request.yaml").write_text(yaml.safe_dump(REQUEST, sort_keys=False), encoding="utf-8")
-
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "LoR"
-    ws.append(["LIST OF READINESS - FICTITIOUS CONTRACTOR LLC"])
-    ws.append([])
-    ws.append(["Item", "Equipment Description", "Serial Number", "Certificates"])
-    for i, (desc, sn, refs) in enumerate(LOR_ROWS, start=1):
-        ws.append([i, desc, sn, refs])
-    wb.save(out / "LoR_RADP-DEMO-0001.xlsx")
-
-    zipped = []
-    for name, fields, in_zip in CERTS:
-        _cert_pdf(out / name, fields)
-        if in_zip:
-            zipped.append(out / name)
-    with zipfile.ZipFile(out / "Lifting_certs.zip", "w") as zf:
-        for p in zipped:
-            zf.write(p, p.name)
-            p.unlink()
-
-    c = canvas.Canvas(str(out / "Company_Profile.pdf"), pagesize=A4)
-    c.drawString(60, 760, "Fictitious Contractor LLC - Company Profile")
-    c.drawString(60, 740, "Founded 2001. Slickline, e-line and pumping services.")
-    c.save()
+    _lor(out / "LoR_RADP-DEMO-0002.xlsx")
+    for name, pages in DOCUMENTS.items():
+        _pdf(out / name, pages)
+    with zipfile.ZipFile(out / "Pressure_tests.zip", "w") as zf:
+        for name in ZIPPED:
+            zf.write(out / name, name)
+            (out / name).unlink()
     (out / "Method_Statement.docx").write_bytes(b"placeholder")
     (root / "expected.json").write_text(json.dumps(EXPECTED, ensure_ascii=False, indent=1), encoding="utf-8")
     return out

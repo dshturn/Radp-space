@@ -53,22 +53,30 @@ CERT_SCHEMA = {
 
 def build_prompt(kn: Knowledge) -> str:
     types = "\n".join(f"- {k}: {v.get('name', k)}" for k, v in kn.doc_types.items())
-    return f"""You review equipment certification documents submitted by an oilfield service contractor.
-The attached file may contain one or several certificates. Return one entry per certificate.
+    return f"""You review integrity documents for well intervention equipment (pressure control equipment
+such as wireline BOPs, lubricators, crossovers, tool traps) submitted by a service provider.
+A file may be a bundle: a certificate followed by attachments (mill certificates, NDE reports, test charts).
+Return one entry per distinct certificate, report or chart.
 
-For each certificate extract:
+For each entry extract:
 - doc_type: exactly one of the keys below, or "unknown" if none fits
 {types}
-- certificate_number: as printed, or null
-- serial_numbers: every equipment serial number the certificate covers, exactly as printed
-- equipment_description: the equipment named on the certificate
-- issue_date, expiry_date: ISO format YYYY-MM-DD; expiry_date only if explicitly printed (do not compute it)
-- issuer: the organisation that issued/performed the test or inspection
-- page: 1-based page where the certificate starts
-- notes: anything that makes the certificate doubtful (illegible, unsigned, altered, missing stamp), else null
+- certificate_number: certificate / report / reference number as printed, or null
+- serial_numbers: EVERY equipment serial number the document covers, exactly as printed. Serials may be in a
+  table (one row per item), in an "Identification" column, or listed in a comments field of a test chart as
+  other items tested in the same string - include all of them
+- equipment_description: the equipment named on the document
+- issue_date: date of the test / inspection (for a COC: the certificate date), ISO YYYY-MM-DD
+- expiry_date: only if a validity / expiry date is explicitly printed, ISO YYYY-MM-DD; do not compute it
+- issuer: the organisation that performed or witnessed the test or inspection (a third-party inspection body
+  if it witnessed the test; otherwise the company whose name and stamp appear)
+- page: 1-based page where the entry starts
+- notes: anything an assessor should know, else null: unsigned, witness or verification fields left blank,
+  illegible, altered, missing stamp, and any date whose day/month order is ambiguous (state how you read it)
 
-Copy values exactly as printed. Never guess: use null when a value is absent or unreadable.
-If the file is not a certificate at all, return it with doc_type "unknown" and describe it in notes."""
+Numeric dates on documents from the Middle East and Europe are usually day-first (DD-MM-YYYY); use the
+document's own context to decide, and mention it in notes when it is not certain.
+Copy values exactly as printed. Never guess: use null when a value is absent or unreadable."""
 
 
 def _normalize(certs: list[dict], kn: Knowledge, file: Path) -> list[dict]:

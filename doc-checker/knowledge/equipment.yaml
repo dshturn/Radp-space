@@ -1,24 +1,64 @@
-# Equipment categories and the aliases used to recognise them in the LoR.
+# Equipment categories, their discipline and the aliases used to recognise them in the LoR.
+# discipline: engineering (pressure control equipment) | safety (lifting equipment)
 # Extend with: python -m radp_check alias add equipment <category> "<alias>"
 categories:
-  slickline_unit:
-    name: Slickline unit (winch / power pack)
-    aliases: [slickline unit, sl unit, slickline winch, winch unit, power pack]
   wireline_bop:
     name: Wireline BOP / wireline valve
-    aliases: [wireline bop, wl bop, wireline valve, bop]
+    discipline: engineering
+    aliases: [wireline bop, wl bop, wireline valve, wl valve, bop]
   lubricator:
-    name: Lubricator
-    aliases: [lubricator, lubricator section, lub section, riser]
+    name: Lubricator / riser
+    discipline: engineering
+    aliases: [lubricator, lightweight lubricator, lub section, riser]
+  crossover:
+    name: Crossover (X-over)
+    discipline: engineering
+    aliases: [x-over, crossover, cross over, cross-over, xo]
+  tool_trap:
+    name: Tool trap
+    discipline: engineering
+    aliases: [tool trap]
+  tool_catcher:
+    name: Tool catcher
+    discipline: engineering
+    aliases: [tool catcher]
+  pump_in_sub:
+    name: Pump-in sub / flow tee
+    discipline: engineering
+    aliases: [pump in sub, pump-in sub, pump in tee, flow tee]
+  quick_test_sub:
+    name: Quick test sub
+    discipline: engineering
+    aliases: [quick test sub, qts]
+  grease_injection_head:
+    name: Grease injection head
+    discipline: engineering
+    aliases: [grease injection head, grease head, hgt, gih]
   stuffing_box:
     name: Stuffing box
-    aliases: [stuffing box, sfb, hydraulic stuffing box]
-  slickline_wire:
-    name: Slickline wire (drum)
-    aliases: [slickline wire, wire drum, measuring line]
-  weight_indicator:
-    name: Weight indicator / load cell
-    aliases: [weight indicator, load cell, tension meter, martin decker]
-  mast:
-    name: Mast / gin pole
-    aliases: [mast, gin pole, telescopic mast]
+    discipline: engineering
+    aliases: [stuffing box, sfb]
+  cable_cutter:
+    name: Cable cutter
+    discipline: engineering
+    aliases: [cable cutter, wireline cutter]
+  sling:
+    name: Sling
+    discipline: safety
+    aliases: [sling, wire rope sling]
+  shackle:
+    name: Shackle / master link
+    discipline: safety
+    aliases: [shackle, shackel, master link, bow shackle]
+  lifting_frame:
+    name: Lifting frame / skid / cage / box
+    discipline: safety
+    aliases: [skid, frame, module frame, bop cage, cage, supply box, basket, lifting cap, lifting beam, spreader bar]
+  clamp:
+    name: Lifting / riser clamp
+    discipline: safety
+    aliases: [lifting clamp, riser clamp]
+  sheave_wheel:
+    name: Sheave wheel
+    discipline: safety
+    aliases: [sheave wheel, sheave]

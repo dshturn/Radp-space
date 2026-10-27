@@ -15,7 +15,7 @@ from . import samples
 from .checker import Context, run_check
 from .extract import extract_all, get_extractor
 from .ingest import WORK_DIR_NAME, collect
-from .knowledge import RULE_STATUSES, Knowledge
+from .knowledge import DISCIPLINES, RULE_STATUSES, Knowledge
 from .lor import read_lor
 from .report import CHECK_COLUMNS, write_report
 from .util import parse_date
@@ -33,39 +33,43 @@ def cmd_check(args, kn: Knowledge) -> int:
     req = yaml.safe_load(pkg.request_file.read_text(encoding="utf-8")) if pkg.request_file else {}
     flags = dict(req.get("flags") or {})
     flags.update(dict(_flag(f) for f in args.flag or []))
+    discipline = args.discipline or req.get("discipline")
     ctx = Context(
         request_id=args.request_id or req.get("request_id") or Path(args.package).name,
         service_line=args.service_line or req.get("service_line") or "",
+        discipline=None if discipline in (None, "all") else discipline,
         work_start=parse_date(args.work_start or req.get("work_start")),
         work_end=parse_date(args.work_end or req.get("work_end") or args.work_start or req.get("work_start")),
         flags=flags,
     )
-    missing = [n for n, v in (("--service-line", ctx.service_line), ("--work-start", ctx.work_start)) if not v]
-    if missing:
-        print(f"Missing request context: {', '.join(missing)} (or put request.yaml in the package folder)")
-        return 2
     if not pkg.lor:
         print("No LoR (.xlsx) found in the package. Specify it with --lor <file>")
         return 2
 
-    print(f"Request {ctx.request_id} | {ctx.service_line} | work {ctx.work_start} to {ctx.work_end} | {flags or ''}")
-    items, lor_problems = read_lor(pkg.lor, kn)
-    print(f"LoR: {pkg.lor.name} - {len(items)} items")
+    info, items, lor_problems = read_lor(pkg.lor, kn)
+    print(f"Request {ctx.request_id} | discipline: {ctx.discipline or 'all'} | "
+          f"work: {ctx.work_start or '-'} to {ctx.work_end or '-'} {flags or ''}")
+    print(f"LoR: {pkg.lor.name} - {info.provider or '?'}, {info.job_type or '?'}, {len(items)} equipment lines")
     for p in lor_problems:
         print(f"  ! {p}")
+    if not ctx.work_start:
+        print("  ! No work dates given - validity is checked as of today")
 
     print(f"Documents: {len(pkg.documents)} files, reader: {args.provider}")
     extractor = get_extractor(args.provider)
     certs, failures = extract_all(pkg.documents, extractor, kn, Path(args.package) / WORK_DIR_NAME / "cache")
 
-    result = run_check(kn, ctx, items, certs, pkg.skipped + failures, args.approved_only)
+    result = run_check(kn, ctx, info, items, certs, pkg.skipped + failures, args.approved_only)
     out = Path(args.out) if args.out else (Path(args.package) / WORK_DIR_NAME /
                                            f"report_{ctx.request_id}_{datetime.now():%Y%m%d_%H%M}.xlsx")
     write_report(out, kn, ctx, result, args.provider)
 
     c = result.counts()
-    print(f"\nResult: OK {c.get('OK', 0)} | WARNING {c.get('WARN', 0)} | FAIL {c.get('FAIL', 0)} | "
-          f"unrecognised {len(result.unrecognized)}")
+    in_scope = sum(s.in_scope for s in result.scope)
+    remarks = sum("Assigned" in s.note for s in result.scope)
+    print(f"\nIn scope: {in_scope} of {len(result.scope)} LoR lines ({remarks} assignment remarks)")
+    print(f"Result: OK {c.get('OK', 0)} | WARNING {c.get('WARN', 0)} | FAIL {c.get('FAIL', 0)} | "
+          f"INFO {c.get('INFO', 0)} | unrecognised {len(result.unrecognized)}")
     print(f"Report: {out}")
     return 0
 
@@ -126,7 +130,8 @@ def cmd_rules_status(args, kn: Knowledge) -> int:
 # ---------------- learning: dictionaries ----------------
 
 def _table(kn: Knowledge, kind: str):
-    return (kn.equipment, kn.save_equipment) if kind == "equipment" else (kn.doc_types, kn.save_doc_types)
+    return {"equipment": (kn.equipment, kn.save_equipment), "document": (kn.doc_types, kn.save_doc_types),
+            "unit": (kn.units, kn.save_units)}[kind]
 
 
 def cmd_alias_add(args, kn: Knowledge) -> int:
@@ -150,9 +155,15 @@ def cmd_category_add(args, kn: Knowledge) -> int:
     if args.key in table:
         print(f"'{args.key}' already exists")
         return 1
-    table[args.key] = {"name": args.name, "aliases": args.alias or []}
+    entry = {"name": args.name, "aliases": args.alias or []}
+    if args.kind == "equipment":
+        if args.discipline not in DISCIPLINES:
+            print(f"--discipline is required for equipment: {', '.join(DISCIPLINES)}")
+            return 1
+        entry = {"name": args.name, "discipline": args.discipline, "aliases": args.alias or []}
+    table[args.key] = entry
     save()
-    kn.log("category_add", kind=args.kind, key=args.key, name=args.name, aliases=args.alias or [])
+    kn.log("category_add", kind=args.kind, key=args.key, **entry)
     print(f"Added {args.kind}/{args.key}")
     return 0
 
@@ -212,11 +223,12 @@ def cmd_export(args, kn: Knowledge) -> int:
                    json.dumps(r.get("when") or {}), r.get("max_age_months"), r.get("serial_must_match"),
                    r.get("third_party_required"), r.get("status"), s.get("document"), s.get("clause"),
                    s.get("revision"), r.get("note")])
-    for title, table in (("EquipmentCategories", kn.equipment), ("DocumentTypes", kn.doc_types)):
+    for title, table in (("EquipmentCategories", kn.equipment), ("DocumentTypes", kn.doc_types),
+                         ("ResponsibleUnits", kn.units)):
         ws = wb.create_sheet(title)
-        ws.append(["Key", "Name", "Aliases"])
+        ws.append(["Key", "Name", "Discipline", "Aliases"])
         for k, v in table.items():
-            ws.append([k, v.get("name"), "; ".join(v.get("aliases", []))])
+            ws.append([k, v.get("name"), v.get("discipline", ""), "; ".join(v.get("aliases", []))])
     ws = wb.create_sheet("ApprovedIssuers")
     ws.append(["Name"])
     for i in kn.issuers:
@@ -229,7 +241,8 @@ def cmd_export(args, kn: Knowledge) -> int:
 def cmd_validate(args, kn: Knowledge) -> int:
     problems = kn.validate()
     print("\n".join(problems) if problems else
-          f"OK: {len(kn.rules)} rules, {len(kn.equipment)} equipment categories, {len(kn.doc_types)} document types")
+          f"OK: {len(kn.rules)} rules, {len(kn.equipment)} equipment categories, {len(kn.doc_types)} document types, "
+          f"{len(kn.issuers)} approved issuers")
     return 1 if problems else 0
 
 
@@ -254,6 +267,7 @@ def build_parser() -> argparse.ArgumentParser:
     c.add_argument("--service-line")
     c.add_argument("--work-start")
     c.add_argument("--work-end")
+    c.add_argument("--discipline", choices=[*DISCIPLINES, "all"], help="Check only this discipline (default: all)")
     c.add_argument("--flag", action="append", help="Work condition, e.g. h2s_service=true")
     c.add_argument("--lor", help="LoR file, if not detected automatically")
     c.add_argument("--approved-only", action="store_true", help="Use approved rules only")
@@ -290,7 +304,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     a = sub.add_parser("alias", help="Aliases").add_subparsers(dest="sub", required=True)
     aa = a.add_parser("add")
-    aa.add_argument("kind", choices=["equipment", "document"])
+    aa.add_argument("kind", choices=["equipment", "document", "unit"])
     aa.add_argument("key")
     aa.add_argument("alias")
     aa.set_defaults(fn=cmd_alias_add)
@@ -302,6 +316,7 @@ def build_parser() -> argparse.ArgumentParser:
     ka.add_argument("key")
     ka.add_argument("name")
     ka.add_argument("--alias", action="append")
+    ka.add_argument("--discipline", choices=DISCIPLINES, help="Required for equipment categories")
     ka.set_defaults(fn=cmd_category_add)
 
     i = sub.add_parser("issuer", help="Approved issuers").add_subparsers(dest="sub", required=True)

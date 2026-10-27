@@ -1,4 +1,4 @@
-"""Knowledge base: rules, alias dictionaries, approved issuers.
+"""Knowledge base: rules, alias dictionaries, disciplines, approved issuers.
 
 This is the part of the system that "learns" and is transferred to the Aramco environment.
 Everything lives in YAML files under knowledge/; every change is appended to history.jsonl.
@@ -17,6 +17,7 @@ import yaml
 
 DEFAULT_DIR = Path(__file__).resolve().parent.parent / "knowledge"
 RULE_STATUSES = ("draft", "approved", "disabled")
+DISCIPLINES = ("engineering", "safety")
 
 
 def default_dir() -> Path:
@@ -24,7 +25,7 @@ def default_dir() -> Path:
 
 
 def _norm_text(text: str) -> str:
-    return re.sub(r"\s+", " ", (text or "").lower()).strip()
+    return re.sub(r"[\s_]+", " ", (text or "").lower()).strip()
 
 
 def _best_alias_match(text: str, table: dict) -> str | None:
@@ -35,7 +36,7 @@ def _best_alias_match(text: str, table: dict) -> str | None:
         aliases = list(entry.get("aliases", [])) + [key.replace("_", " ")]
         for alias in aliases:
             alias = _norm_text(alias)
-            if alias and len(alias) > best_len and re.search(rf"(?<!\w){re.escape(alias)}(?!\w)", text):
+            if alias and len(alias) > best_len and re.search(rf"(?<![a-z0-9]){re.escape(alias)}(?![a-z0-9])", text):
                 best, best_len = key, len(alias)
     return best
 
@@ -46,6 +47,7 @@ class Knowledge:
     rules: list[dict] = field(default_factory=list)
     equipment: dict = field(default_factory=dict)
     doc_types: dict = field(default_factory=dict)
+    units: dict = field(default_factory=dict)
     issuers: list[str] = field(default_factory=list)
 
     # ---------- load / save ----------
@@ -53,12 +55,17 @@ class Knowledge:
     @classmethod
     def load(cls, directory: Path | None = None) -> "Knowledge":
         d = Path(directory or default_dir())
-        read = lambda name: yaml.safe_load((d / name).read_text(encoding="utf-8")) or {}
+
+        def read(name):
+            path = d / name
+            return (yaml.safe_load(path.read_text(encoding="utf-8")) or {}) if path.exists() else {}
+
         return cls(
             dir=d,
             rules=read("rules.yaml").get("rules", []) or [],
             equipment=read("equipment.yaml").get("categories", {}) or {},
             doc_types=read("document_types.yaml").get("types", {}) or {},
+            units=read("units.yaml").get("units", {}) or {},
             issuers=read("issuers.yaml").get("approved", []) or [],
         )
 
@@ -74,6 +81,9 @@ class Knowledge:
 
     def save_doc_types(self) -> None:
         self._dump("document_types.yaml", {"types": self.doc_types})
+
+    def save_units(self) -> None:
+        self._dump("units.yaml", {"units": self.units})
 
     def save_issuers(self) -> None:
         self._dump("issuers.yaml", {"approved": self.issuers})
@@ -92,6 +102,19 @@ class Knowledge:
     def match_doc_type(self, text: str) -> str | None:
         return _best_alias_match(text, self.doc_types)
 
+    def match_unit(self, text: str) -> str | None:
+        """Discipline for a LoR 'Responsible unit' value."""
+        return _best_alias_match(text, self.units)
+
+    def category_discipline(self, category: str | None) -> str | None:
+        return self.equipment.get(category, {}).get("discipline") if category else None
+
+    def is_supporting(self, doc_type: str) -> bool:
+        return bool(self.doc_types.get(doc_type, {}).get("supporting"))
+
+    def doc_name(self, doc_type: str | None) -> str:
+        return self.doc_types.get(doc_type, {}).get("name", doc_type or "")
+
     def issuer_approved(self, issuer: str | None) -> bool:
         name = _norm_text(issuer or "")
         if not name:
@@ -105,7 +128,7 @@ class Knowledge:
                          approved_only: bool = False) -> list[dict]:
         out = []
         for r in self.rules:
-            if r.get("service_line") != service_line or r.get("equipment") != category:
+            if r.get("service_line") not in ("any", service_line) or r.get("equipment") != category:
                 continue
             status = r.get("status", "draft")
             if status == "disabled" or (approved_only and status != "approved"):
@@ -118,6 +141,9 @@ class Knowledge:
 
     def validate(self) -> list[str]:
         problems, seen = [], set()
+        for key, cat in self.equipment.items():
+            if cat.get("discipline") not in DISCIPLINES:
+                problems.append(f"equipment/{key}: discipline must be one of {', '.join(DISCIPLINES)}")
         for r in self.rules:
             rid = r.get("id", "?")
             if rid in seen:
