@@ -1,7 +1,7 @@
-"""База знаний: правила, словари синонимов, одобренные организации.
+"""Knowledge base: rules, alias dictionaries, approved issuers.
 
-Это та часть системы, которая «обучается» и переносится в среду Aramco.
-Всё хранится в YAML-файлах папки knowledge/, каждое изменение пишется в history.jsonl.
+This is the part of the system that "learns" and is transferred to the Aramco environment.
+Everything lives in YAML files under knowledge/; every change is appended to history.jsonl.
 """
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ def _norm_text(text: str) -> str:
 
 
 def _best_alias_match(text: str, table: dict) -> str | None:
-    """Ключ таблицы, у которого самый длинный синоним входит в текст целым словом."""
+    """Table key whose longest alias occurs in the text as a whole word."""
     text = _norm_text(text)
     best, best_len = None, 0
     for key, entry in table.items():
@@ -48,7 +48,7 @@ class Knowledge:
     doc_types: dict = field(default_factory=dict)
     issuers: list[str] = field(default_factory=list)
 
-    # ---------- загрузка / сохранение ----------
+    # ---------- load / save ----------
 
     @classmethod
     def load(cls, directory: Path | None = None) -> "Knowledge":
@@ -84,7 +84,7 @@ class Knowledge:
         with open(self.dir / "history.jsonl", "a", encoding="utf-8") as f:
             f.write(json.dumps(entry, ensure_ascii=False, default=str) + "\n")
 
-    # ---------- поиск ----------
+    # ---------- lookup ----------
 
     def match_equipment(self, text: str) -> str | None:
         return _best_alias_match(text, self.equipment)
@@ -114,21 +114,21 @@ class Knowledge:
                 out.append(r)
         return out
 
-    # ---------- проверка целостности ----------
+    # ---------- integrity check ----------
 
     def validate(self) -> list[str]:
         problems, seen = [], set()
         for r in self.rules:
             rid = r.get("id", "?")
             if rid in seen:
-                problems.append(f"{rid}: повторяющийся id")
+                problems.append(f"{rid}: duplicate id")
             seen.add(rid)
             if r.get("equipment") not in self.equipment:
-                problems.append(f"{rid}: неизвестная категория оборудования '{r.get('equipment')}'")
+                problems.append(f"{rid}: unknown equipment category '{r.get('equipment')}'")
             if r.get("document") not in self.doc_types:
-                problems.append(f"{rid}: неизвестный тип документа '{r.get('document')}'")
+                problems.append(f"{rid}: unknown document type '{r.get('document')}'")
             if r.get("status", "draft") not in RULE_STATUSES:
-                problems.append(f"{rid}: недопустимый статус '{r.get('status')}'")
+                problems.append(f"{rid}: invalid status '{r.get('status')}'")
             if r.get("status") == "approved" and (r.get("source") or {}).get("document") in (None, "", "PLACEHOLDER"):
-                problems.append(f"{rid}: утверждено, но не указан источник требования")
+                problems.append(f"{rid}: approved but no requirement source given")
         return problems

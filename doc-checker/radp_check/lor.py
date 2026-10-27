@@ -1,4 +1,4 @@
-"""Чтение List of Readiness (Excel): оборудование, серийные номера, заявленные документы."""
+"""List of Readiness (Excel) reader: equipment, serial numbers, declared documents."""
 from __future__ import annotations
 
 import re
@@ -33,7 +33,7 @@ def _find_header(ws) -> tuple[int, dict] | None:
     for r_idx, row in enumerate(ws.iter_rows(min_row=1, max_row=15, values_only=True), start=1):
         cells = [str(v or "").strip().lower() for v in row]
         cols = {}
-        for key, aliases in HEADER_ALIASES.items():  # синонимы упорядочены от точного к общему
+        for key, aliases in HEADER_ALIASES.items():  # aliases ordered from specific to generic
             for alias in aliases:
                 if alias in cells:
                     cols[key] = cells.index(alias)
@@ -50,7 +50,7 @@ def read_lor(path: Path, kn: Knowledge) -> tuple[list[LorItem], list[str]]:
         if found:
             break
     else:
-        return [], [f"В {path.name} не найдена строка заголовков (нужны колонки описания и серийного номера)"]
+        return [], [f"No header row found in {path.name} (description and serial number columns are required)"]
 
     header_row, cols = found
     items, problems = [], []
@@ -67,6 +67,6 @@ def read_lor(path: Path, kn: Knowledge) -> tuple[list[LorItem], list[str]]:
                 item.declared_types.add(t)
             item.declared_numbers.update(norm_id(n) for n in CERT_NO_RE.findall(ref.upper()) if any(ch.isdigit() for ch in n))
         if not serial:
-            problems.append(f"LoR строка {r_idx}: '{desc}' без серийного номера")
+            problems.append(f"LoR row {r_idx}: '{desc}' has no serial number")
         items.append(item)
     return items, problems

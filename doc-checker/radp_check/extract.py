@@ -1,10 +1,10 @@
-"""«Чтец»: извлечение фактов из документов пакета.
+"""The "reader": extracts facts from the documents in a package.
 
-Провайдеры взаимозаменяемы, результат у всех одинаковый (CERT_FIELDS):
-  mock    — без ИИ, по меткам в тексте; понимает только фейковые сертификаты из generate-sample
-  claude  — Claude API (облако). Только для фейковых/обезличенных документов!
-  openai  — любой OpenAI-совместимый endpoint (локальный Ollama/vLLM, внутренний шлюз).
-            Сюда подключается модель Aramco, если её API совместим; иначе пишется ещё один адаптер.
+Providers are interchangeable and all return the same fields (CERT_FIELDS):
+  mock    - no AI, reads labelled text; understands only the fake certificates from generate-sample
+  claude  - Claude API (cloud). Fake / anonymised documents only!
+  openai  - any OpenAI-compatible endpoint (local Ollama/vLLM, internal gateway).
+            The Aramco model plugs in here if its API is compatible; otherwise add one more adapter.
 """
 from __future__ import annotations
 
@@ -100,7 +100,7 @@ class MockExtractor:
 
     def extract(self, path: Path, kn: Knowledge) -> list[dict]:
         if path.suffix.lower() != ".pdf":
-            return [{"doc_type": "unknown", "notes": "mock-режим не читает изображения", "page": 1}]
+            return [{"doc_type": "unknown", "notes": "mock mode cannot read images", "page": 1}]
         certs = []
         for i, text in enumerate(pdf_pages_text(path), start=1):
             found = {k: (m.group(1).strip() if (m := re.search(rx, text)) else None) for k, rx in self.LABELS.items()}
@@ -109,7 +109,7 @@ class MockExtractor:
             found["serial_numbers"] = [s.strip() for s in (found["serial_numbers"] or "").split(",") if s.strip()]
             found["page"], found["notes"] = i, None
             certs.append(found)
-        return certs or [{"doc_type": "unknown", "notes": "Не похоже на сертификат", "page": 1,
+        return certs or [{"doc_type": "unknown", "notes": "Does not look like a certificate", "page": 1,
                           "serial_numbers": []}]
 
 
@@ -138,13 +138,13 @@ class ClaudeExtractor:
             messages=[{"role": "user", "content": [block, {"type": "text", "text": build_prompt(kn)}]}],
         )
         if response.stop_reason == "refusal":
-            return [{"doc_type": "unknown", "notes": "Модель отказалась обрабатывать файл", "page": 1}]
+            return [{"doc_type": "unknown", "notes": "The model declined to process this file", "page": 1}]
         text = next(b.text for b in response.content if b.type == "text")
         return json.loads(text)["certificates"]
 
 
 class OpenAICompatExtractor:
-    """Текстовый режим: PDF -> текст (pypdf) -> чат-модель. Сканы без текстового слоя не читает."""
+    """Text mode: PDF -> text (pypdf) -> chat model. Cannot read scans without a text layer."""
     name = "openai"
 
     def __init__(self):
@@ -154,10 +154,10 @@ class OpenAICompatExtractor:
 
     def extract(self, path: Path, kn: Knowledge) -> list[dict]:
         if path.suffix.lower() != ".pdf":
-            return [{"doc_type": "unknown", "notes": "Текстовый режим не читает изображения — нужна vision-модель", "page": 1}]
+            return [{"doc_type": "unknown", "notes": "Text mode cannot read images - a vision model is required", "page": 1}]
         pages = pdf_pages_text(path)
         if not any(p.strip() for p in pages):
-            return [{"doc_type": "unknown", "notes": "Скан без текстового слоя — нужна vision-модель или OCR", "page": 1}]
+            return [{"doc_type": "unknown", "notes": "Scan without a text layer - a vision model or OCR is required", "page": 1}]
         doc = "\n\n".join(f"--- page {i} ---\n{t}" for i, t in enumerate(pages, start=1))
         prompt = (build_prompt(kn) + "\n\nRespond with JSON only, matching this schema:\n"
                   + json.dumps(CERT_SCHEMA) + "\n\nDocument text:\n" + doc)
@@ -178,8 +178,8 @@ def get_extractor(name: str):
 
 def extract_all(files: list[Path], extractor, kn: Knowledge, cache_dir: Path,
                 progress=print) -> tuple[list[dict], list[tuple[Path, str]]]:
-    """Извлекает сертификаты из всех файлов. Результаты кэшируются по хэшу файла,
-    поэтому повторный прогон (например, после правки правил) не тратит вызовы модели."""
+    """Extract certificates from all files. Results are cached by file hash, so a re-run
+    (e.g. after editing rules) does not spend model calls again."""
     cache_dir.mkdir(parents=True, exist_ok=True)
     certs, failures = [], []
     for i, f in enumerate(files, start=1):
@@ -191,8 +191,8 @@ def extract_all(files: list[Path], extractor, kn: Knowledge, cache_dir: Path,
                 progress(f"  [{i}/{len(files)}] {f.name}")
                 raw = extractor.extract(f, kn)
                 cache.write_text(json.dumps(raw, ensure_ascii=False, indent=1), encoding="utf-8")
-        except Exception as e:  # один плохой файл не должен останавливать проверку пакета
-            failures.append((f, f"Ошибка извлечения: {type(e).__name__}: {e}"))
+        except Exception as e:  # one bad file must not stop the whole package check
+            failures.append((f, f"Extraction error: {type(e).__name__}: {e}"))
             continue
         certs.extend(_normalize(raw, kn, f))
     for n, c in enumerate(certs, start=1):

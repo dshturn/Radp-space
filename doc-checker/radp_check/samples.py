@@ -1,5 +1,5 @@
-"""Генератор фейкового пакета slickline с заранее заложенными дефектами.
-expected.json — эталон: что система обязана найти. Это и тест, и демо."""
+"""Fake slickline package generator with seeded defects.
+expected.json is the answer key: what the system must find. Serves as both test and demo."""
 from __future__ import annotations
 
 import json
@@ -14,7 +14,7 @@ from reportlab.pdfgen import canvas
 REQUEST = {"request_id": "RADP-DEMO-0001", "service_line": "slickline",
            "work_start": "2026-11-10", "work_end": "2026-11-30", "flags": {"h2s_service": True}}
 
-# (описание в LoR, серийник в LoR, ссылки на документы в LoR)
+# (LoR description, LoR serial number, LoR document references)
 LOR_ROWS = [
     ("Slickline Unit c/w power pack", "SLU-4471", "TPI TPI-2026-0311"),
     ('Wireline BOP 5k, 2-1/2"', "BOP-77812", "Pressure Test PT-2026-0145; TPI TPI-2026-0298"),
@@ -26,7 +26,7 @@ LOR_ROWS = [
     ("Tool string assembly", "TS-001", ""),
 ]
 
-# Сертификаты в пакете: (имя файла, поля, в zip?)
+# Certificates in the package: (file name, fields, inside zip?)
 CERTS = [
     ("TPI_SLU-4471.pdf", dict(type="Third Party Inspection", no="TPI-2026-0311", equip="Slickline Unit",
                               sn="SLU-4471", issue="15-Mar-2026", until="14-Mar-2027",
@@ -53,14 +53,14 @@ CERTS = [
 
 EXPECTED = {
     "findings": {
-        "SL-UNT-001": ["WARN", "нет в списке одобренных"],
-        "SL-BOP-001": ["FAIL", "до начала работ"],
+        "SL-UNT-001": ["WARN", "not on the approved issuer list"],
+        "SL-BOP-001": ["FAIL", "before work start"],
         "SL-BOP-002": ["OK", ""],
-        "SL-LUB-001": ["FAIL", "не совпадает"],
-        "SL-SFB-001": ["FAIL", "не найден в пакете"],
-        "SL-WIR-001": ["WARN", "во время работ"],
-        "SL-WIR-002": ["FAIL", "не заявлен в LoR"],
-        "SL-WI-001": ["WARN", "не указан в LoR"],
+        "SL-LUB-001": ["FAIL", "does not match"],
+        "SL-SFB-001": ["FAIL", "not found in the package"],
+        "SL-WIR-001": ["WARN", "during the work period"],
+        "SL-WIR-002": ["FAIL", "not listed in the LoR"],
+        "SL-WI-001": ["WARN", "not listed in the LoR"],
         "SL-MST-001": ["OK", ""],
     },
     "unrecognized_contains": ["Tool string assembly", "Company_Profile.pdf", "Method_Statement.docx"],
@@ -96,7 +96,7 @@ def _cert_pdf(path: Path, f: dict) -> None:
 
 
 def generate(root: Path) -> Path:
-    """Создаёт root/package (то, что «скачано из EFT») и root/expected.json (эталон)."""
+    """Creates root/package (as "downloaded from EFT") and root/expected.json (answer key)."""
     root = Path(root)
     out = root / "package"
     out.mkdir(parents=True, exist_ok=True)
@@ -105,7 +105,7 @@ def generate(root: Path) -> Path:
     wb = Workbook()
     ws = wb.active
     ws.title = "LoR"
-    ws.append(["LIST OF READINESS — FICTITIOUS CONTRACTOR LLC"])
+    ws.append(["LIST OF READINESS - FICTITIOUS CONTRACTOR LLC"])
     ws.append([])
     ws.append(["Item", "Equipment Description", "Serial Number", "Certificates"])
     for i, (desc, sn, refs) in enumerate(LOR_ROWS, start=1):

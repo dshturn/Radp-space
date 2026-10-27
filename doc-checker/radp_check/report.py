@@ -1,5 +1,5 @@
-"""Excel-отчёт. Колонки «Ассессор: согласен?» и «Комментарий» заполняет человек —
-потом команда `feedback` забирает их в базу знаний."""
+"""Excel report. The "Assessor agrees?" and "Assessor comment" columns are filled in by a person;
+the `feedback` command then pulls them into the knowledge base."""
 from __future__ import annotations
 
 from datetime import datetime
@@ -14,12 +14,12 @@ from .knowledge import Knowledge
 
 FILLS = {s: PatternFill("solid", fgColor=c) for s, c in
          {"OK": "C6EFCE", "INFO": "DDEBF7", "WARN": "FFEB9C", "FAIL": "FFC7CE"}.items()}
-STATUS_RU = {"OK": "OK", "INFO": "ИНФО", "WARN": "ВНИМАНИЕ", "FAIL": "НЕ СООТВ."}
-CHECK_COLUMNS = ["Строка LoR", "Оборудование (LoR)", "Серийный № (LoR)", "Категория", "Правило",
-                 "Статус правила", "Требуемый документ", "Заявлен в LoR", "Файл", "Стр.",
-                 "№ сертификата", "Дата выдачи", "Действует до", "Выдал", "Результат", "Причина",
-                 "Источник требования", "Ассессор: согласен?", "Комментарий ассессора"]
-FEEDBACK_COL = CHECK_COLUMNS.index("Ассессор: согласен?") + 1
+STATUS_LABEL = {"OK": "OK", "INFO": "INFO", "WARN": "WARNING", "FAIL": "FAIL"}
+CHECK_COLUMNS = ["LoR row", "Equipment (LoR)", "Serial No. (LoR)", "Category", "Rule",
+                 "Rule status", "Required document", "Listed in LoR", "File", "Page",
+                 "Certificate No.", "Issue date", "Valid until", "Issued by", "Result", "Reason",
+                 "Requirement source", "Assessor agrees?", "Assessor comment"]
+FEEDBACK_COL = CHECK_COLUMNS.index("Assessor agrees?") + 1
 
 
 def _header(ws, columns, widths=None):
@@ -37,30 +37,30 @@ def write_report(path: Path, kn: Knowledge, ctx: Context, result: Result, provid
     counts = result.counts()
 
     ws = wb.active
-    ws.title = "Сводка"
-    overall = ("ВЕРНУТЬ ПОДРЯДЧИКУ" if counts.get("FAIL") else
-               "ГОТОВ К РЕВЬЮ (есть замечания)" if counts.get("WARN") or result.unrecognized else "ГОТОВ К РЕВЬЮ")
+    ws.title = "Summary"
+    overall = ("RETURN TO CONTRACTOR" if counts.get("FAIL") else
+               "READY FOR REVIEW (with remarks)" if counts.get("WARN") or result.unrecognized else "READY FOR REVIEW")
     rows = [
-        ("Заявка", ctx.request_id), ("Сервисная линия", ctx.service_line),
-        ("Период работ", f"{ctx.work_start:%d.%m.%Y} – {ctx.work_end:%d.%m.%Y}"),
-        ("Условия", ", ".join(f"{k}={v}" for k, v in ctx.flags.items()) or "—"),
-        ("Проверено", datetime.now().strftime("%d.%m.%Y %H:%M")), ("Чтение документов", provider),
+        ("Request", ctx.request_id), ("Service line", ctx.service_line),
+        ("Work period", f"{ctx.work_start:%d-%b-%Y} to {ctx.work_end:%d-%b-%Y}"),
+        ("Conditions", ", ".join(f"{k}={v}" for k, v in ctx.flags.items()) or "-"),
+        ("Checked", datetime.now().strftime("%d-%b-%Y %H:%M")), ("Document reader", provider),
         ("", ""),
-        ("Требований проверено", len(result.findings)),
-        ("OK", counts.get("OK", 0)), ("Внимание", counts.get("WARN", 0)),
-        ("Не соответствует", counts.get("FAIL", 0)), ("Нераспознанное", len(result.unrecognized)),
-        ("", ""), ("Предварительный статус", overall),
-        ("", ""), ("ВАЖНО", "Это предварительная проверка. Решение принимает ассессор."),
+        ("Requirements checked", len(result.findings)),
+        ("OK", counts.get("OK", 0)), ("Warning", counts.get("WARN", 0)),
+        ("Fail", counts.get("FAIL", 0)), ("Unrecognised items", len(result.unrecognized)),
+        ("", ""), ("Preliminary status", overall),
+        ("", ""), ("IMPORTANT", "This is a pre-screening. The assessor makes the decision."),
     ]
     if any(f.rule and f.rule.get("status") != "approved" for f in result.findings):
-        rows.append(("", "Использованы НЕУТВЕРЖДЁННЫЕ правила (draft) — результат только для отладки."))
+        rows.append(("", "UNAPPROVED (draft) rules were used - result is for testing only."))
     for r in rows:
         ws.append(r)
     ws.column_dimensions["A"].width, ws.column_dimensions["B"].width = 26, 70
     for cell in ws["A"]:
         cell.font = Font(bold=True)
 
-    ws = wb.create_sheet("Проверка")
+    ws = wb.create_sheet("Check")
     _header(ws, CHECK_COLUMNS, {2: 30, 7: 28, 9: 30, 16: 50, 17: 30, 19: 30})
     order = sorted(result.findings, key=lambda f: (-{"FAIL": 3, "WARN": 2, "INFO": 1, "OK": 0}[f.status], f.item.row))
     for f in order:
@@ -71,30 +71,30 @@ def write_report(path: Path, kn: Knowledge, ctx: Context, result: Result, provid
             kn.equipment.get(f.item.category, {}).get("name", f.item.category),
             rule.get("id", ""), rule.get("status", ""),
             kn.doc_types.get(rule.get("document"), {}).get("name", rule.get("document", "")),
-            "да" if f.declared else "нет",
+            "yes" if f.declared else "no",
             Path(c["file"]).name if c.get("file") else "", c.get("page") or "",
             c.get("certificate_number") or "", c.get("issue_date") or "",
             f.valid_until.isoformat() if f.valid_until else (c.get("expiry_date") or ""),
-            c.get("issuer") or "", STATUS_RU[f.status], "; ".join(f.reasons) or "",
+            c.get("issuer") or "", STATUS_LABEL[f.status], "; ".join(f.reasons) or "",
             " ".join(x for x in (src.get("document"), src.get("clause"), src.get("revision")) if x),
             "", "",
         ])
         row = ws.max_row
-        ws.cell(row, CHECK_COLUMNS.index("Результат") + 1).fill = FILLS[f.status]
+        ws.cell(row, CHECK_COLUMNS.index("Result") + 1).fill = FILLS[f.status]
         for col in (2, 7, 16, 17):
             ws.cell(row, col).alignment = Alignment(wrap_text=True, vertical="top")
-    dv = DataValidation(type="list", formula1='"Да,Нет"', allow_blank=True)
+    dv = DataValidation(type="list", formula1='"Yes,No"', allow_blank=True)
     ws.add_data_validation(dv)
     col_letter = ws.cell(1, FEEDBACK_COL).column_letter
     dv.add(f"{col_letter}2:{col_letter}{max(ws.max_row, 2)}")
     ws.auto_filter.ref = ws.dimensions
 
-    ws = wb.create_sheet("Нераспознанное")
-    _header(ws, ["Что", "Объект", "Причина"], {1: 20, 2: 45, 3: 80})
+    ws = wb.create_sheet("Unrecognised")
+    _header(ws, ["Type", "Item", "Reason"], {1: 20, 2: 45, 3: 80})
     for u in result.unrecognized:
         ws.append([u["what"], u["name"], u["reason"]])
 
-    ws = wb.create_sheet("Извлечено")
+    ws = wb.create_sheet("Extracted")
     cols = ["cert_id", "file", "page", "doc_type", "certificate_number", "serial_numbers",
             "equipment_description", "issue_date", "expiry_date", "issuer", "notes"]
     _header(ws, cols, {2: 40, 7: 30, 10: 28, 11: 40})

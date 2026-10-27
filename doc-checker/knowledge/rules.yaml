@@ -1,6 +1,6 @@
-# Свод правил проверки. ВСЕ правила ниже — ПРИМЕРЫ для прототипа (status: draft,
-# source: PLACEHOLDER). Реальные требования вносятся из корпоративных мануалов
-# с указанием документа, пункта и ревизии, затем утверждаются (status: approved).
+# Check rule base. ALL rules below are PROTOTYPE EXAMPLES (status: draft,
+# source: PLACEHOLDER). Real requirements are entered from the corporate manuals
+# with document, clause and revision, then approved (status: approved).
 rules:
 - id: SL-BOP-001
   service_line: slickline
@@ -12,7 +12,7 @@ rules:
   third_party_required: true
   status: draft
   source: {document: PLACEHOLDER, clause: '', revision: ''}
-  note: Пример правила
+  note: Example rule
 - id: SL-BOP-002
   service_line: slickline
   equipment: wireline_bop
@@ -23,7 +23,7 @@ rules:
   third_party_required: true
   status: draft
   source: {document: PLACEHOLDER, clause: '', revision: ''}
-  note: Пример правила
+  note: Example rule
 - id: SL-LUB-001
   service_line: slickline
   equipment: lubricator
@@ -34,7 +34,7 @@ rules:
   third_party_required: true
   status: draft
   source: {document: PLACEHOLDER, clause: '', revision: ''}
-  note: Пример правила
+  note: Example rule
 - id: SL-SFB-001
   service_line: slickline
   equipment: stuffing_box
@@ -45,7 +45,7 @@ rules:
   third_party_required: true
   status: draft
   source: {document: PLACEHOLDER, clause: '', revision: ''}
-  note: Пример правила
+  note: Example rule
 - id: SL-UNT-001
   service_line: slickline
   equipment: slickline_unit
@@ -56,7 +56,7 @@ rules:
   third_party_required: true
   status: draft
   source: {document: PLACEHOLDER, clause: '', revision: ''}
-  note: Пример правила
+  note: Example rule
 - id: SL-WIR-001
   service_line: slickline
   equipment: slickline_wire
@@ -67,7 +67,7 @@ rules:
   third_party_required: false
   status: draft
   source: {document: PLACEHOLDER, clause: '', revision: ''}
-  note: Пример правила
+  note: Example rule
 - id: SL-WIR-002
   service_line: slickline
   equipment: slickline_wire
@@ -78,7 +78,7 @@ rules:
   third_party_required: false
   status: draft
   source: {document: PLACEHOLDER, clause: '', revision: ''}
-  note: Пример условного правила — только для H2S-работ
+  note: Example conditional rule - H2S service only
 - id: SL-WI-001
   service_line: slickline
   equipment: weight_indicator
@@ -89,7 +89,7 @@ rules:
   third_party_required: false
   status: draft
   source: {document: PLACEHOLDER, clause: '', revision: ''}
-  note: Пример правила
+  note: Example rule
 - id: SL-MST-001
   service_line: slickline
   equipment: mast
@@ -100,4 +100,4 @@ rules:
   third_party_required: true
   status: draft
   source: {document: PLACEHOLDER, clause: '', revision: ''}
-  note: Пример правила
+  note: Example rule

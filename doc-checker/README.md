@@ -1,35 +1,34 @@
-# RADP doc-checker — прототип предварительной проверки пакетов readiness
+# RADP doc-checker — readiness package pre-screening prototype
 
-Папка с пакетом (как скачан из EFT) → Excel-отчёт: чего не хватает, что просрочено, где не совпадают серийники.
+Package folder (as downloaded from EFT) → Excel report: what is missing, what has expired, where serial numbers do not match.
 
-> **Только фейковые документы.** Прототип работает вне периметра Aramco. Реальные пакеты подрядчиков,
-> мануалы и стандарты Aramco сюда не загружаются. Все правила в `knowledge/rules.yaml` — примеры (`draft`, `PLACEHOLDER`).
+> **Fake documents only.** This prototype runs outside the Aramco network. Real contractor packages and Aramco
+> manuals or standards must not be loaded here. All rules in `knowledge/rules.yaml` are examples (`draft`, `PLACEHOLDER`).
 
-## Как устроено
+## How it works
 
 ```
- knowledge/  ← СВОД ПРАВИЛ (то, что «обучается» и переносится в Aramco)
-   rules.yaml            оборудование → обязательный документ → критерии → источник (мануал/пункт/ревизия)
-   equipment.yaml        категории оборудования + синонимы для распознавания в LoR
-   document_types.yaml   типы документов + синонимы
-   issuers.yaml          одобренные сторонние организации
-   history.jsonl         журнал: кто, когда, что изменил в базе знаний
-   feedback.jsonl        несогласия ассессора с результатами проверки
+ knowledge/  ← RULE BASE (the part that "learns" and is transferred to Aramco)
+   rules.yaml            equipment → required document → criteria → source (manual / clause / revision)
+   equipment.yaml        equipment categories + aliases used to recognise them in the LoR
+   document_types.yaml   document types + aliases
+   issuers.yaml          approved third-party inspection bodies
+   history.jsonl         change log: who changed what in the knowledge base, and when
+   feedback.jsonl        assessor disagreements with check results
 
  radp_check/
-   ingest.py    папка пакета: распаковка zip, поиск LoR, список документов
-   lor.py       чтение LoR (Excel): оборудование, серийники, заявленные документы
-   extract.py   ЧТЕЦ — ИИ извлекает из каждого документа тип, №, серийники, даты, выдавшую организацию
-   checker.py   ПРОВЕРЯЮЩИЙ — детерминированное сравнение (без ИИ, результат воспроизводим)
-   report.py    Excel-отчёт
+   ingest.py    package folder: unzip archives, locate the LoR, list documents
+   lor.py       LoR reader (Excel): equipment, serial numbers, declared documents
+   extract.py   READER — AI extracts type, number, serials, dates and issuer from each document
+   checker.py   CHECKER — deterministic comparison (no AI, reproducible results)
+   report.py    Excel report
 ```
 
-ИИ используется только в `extract.py`. Решение «соответствует / не соответствует» принимает код по правилам,
-а окончательное решение — ассессор.
+AI is used only in `extract.py`. Compliance is decided by code against the rules; the final decision is the assessor's.
 
-## Установка (Windows)
+## Installation (Windows)
 
-Нужен Python 3.10+ (https://www.python.org, при установке отметить «Add to PATH»).
+Requires Python 3.10+ (https://www.python.org — tick "Add to PATH" during installation).
 
 ```powershell
 cd doc-checker
@@ -38,111 +37,110 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-## Быстрый старт
+## Quick start
 
 ```powershell
-# 1. Создать фейковый пакет с 9 заложенными дефектами
+# 1. Create a fake package with 9 seeded defects
 python -m radp_check generate-sample demo
 
-# 2. Проверить его (без ИИ, mock-режим понимает только сгенерированные сертификаты)
+# 2. Check it (no AI; mock mode only understands the generated certificates)
 python -m radp_check check demo\package
 
-# 3. Открыть отчёт: demo\package\_radp\report_*.xlsx
+# 3. Open the report: demo\package\_radp\report_*.xlsx
 ```
 
-## Проверка пакета
+## Checking a package
 
 ```powershell
-python -m radp_check check <папка> [--provider mock|claude|openai]
+python -m radp_check check <folder> [--provider mock|claude|openai]
     --service-line slickline --work-start 2026-11-10 --work-end 2026-11-30 --flag h2s_service=true
 ```
 
-Контекст заявки (номер, сервисная линия, даты работ, условия) берётся из флагов или из файла `request.yaml`
-в папке пакета. Сроки действия проверяются **на даты работ**, а не на сегодня.
+Request context (request number, service line, work dates, conditions) comes from the flags or from a `request.yaml`
+file in the package folder. Validity is checked **against the work dates**, not today's date.
 
-Отчёт (`<папка>\_radp\report_*.xlsx`):
+Report (`<folder>\_radp\report_*.xlsx`):
 
-| Лист | Что там |
+| Sheet | Contents |
 |---|---|
-| Сводка | итоги и предварительный статус |
-| Проверка | строка = оборудование × требование: заявлено в LoR? найдено? до какой даты действует? причина |
-| Нераспознанное | что система не поняла: неизвестное оборудование, нераспознанные файлы, неподдерживаемые форматы |
-| Извлечено | сырые данные, которые ИИ извлёк из каждого документа, — для контроля чтеца |
+| Summary | totals and preliminary status |
+| Check | one row per equipment × requirement: listed in LoR? found? valid until? reason |
+| Unrecognised | what the system could not interpret: unknown equipment, unrecognised files, unsupported formats |
+| Extracted | raw data the reader extracted from each document, for checking the reader itself |
 
-Результаты извлечения кэшируются по содержимому файла (`_radp\cache`): после правки правил повторная проверка
-не вызывает модель повторно.
+Extraction results are cached by file content (`_radp\cache`), so re-checking after a rule change does not call the model again.
 
-### Провайдеры чтения документов
+### Document readers
 
-| `--provider` | Что это | Настройка |
+| `--provider` | What it is | Settings |
 |---|---|---|
-| `mock` | Без ИИ, по меткам в тексте. Только для сгенерированных сертификатов | — |
-| `claude` | Claude API, читает PDF и сканы (vision). Облако — **только фейковые документы** | `ANTHROPIC_API_KEY`; модель: `RADP_CLAUDE_MODEL` |
-| `openai` | Любой OpenAI-совместимый endpoint: локальный Ollama / vLLM, внутренний шлюз. Текстовый режим (сканы без текстового слоя не читает) | `RADP_LLM_BASE_URL`, `RADP_LLM_MODEL`, `RADP_LLM_API_KEY` |
+| `mock` | No AI, reads labelled text. Generated certificates only | — |
+| `claude` | Claude API, reads PDFs and scans (vision). Cloud — **fake documents only** | `ANTHROPIC_API_KEY`; model: `RADP_CLAUDE_MODEL` |
+| `openai` | Any OpenAI-compatible endpoint: local Ollama / vLLM, internal gateway. Text mode (cannot read scans without a text layer) | `RADP_LLM_BASE_URL`, `RADP_LLM_MODEL`, `RADP_LLM_API_KEY` |
 
-Модель Aramco подключается через `openai`, если её API совместим, иначе — ещё одним классом в `extract.py`
-(~40 строк, остальной код не меняется).
+The Aramco model plugs in through `openai` if its API is compatible; otherwise add one more class in `extract.py`
+(~40 lines; nothing else changes).
 
-## Обучение = пополнение базы знаний
+## Learning = growing the knowledge base
 
-Каждая команда пишет запись в `knowledge/history.jsonl`.
+Every command below writes an entry to `knowledge/history.jsonl`.
 
 ```powershell
-# Свод правил
+# Rules
 python -m radp_check rules list
 python -m radp_check rules add --id SL-BOP-003 --service-line slickline --equipment wireline_bop `
     --document load_test_certificate --max-age 12 --third-party `
     --source-doc "Slickline Manual" --clause "7.3.2" --revision "Rev 4"
-python -m radp_check rules add ... --when h2s_service=true      # условное правило
-python -m radp_check rules status SL-BOP-003 approved            # без источника утвердить нельзя
-python -m radp_check rules status SL-BOP-001 disabled --reason "заменено SL-BOP-003"
+python -m radp_check rules add ... --when h2s_service=true      # conditional rule
+python -m radp_check rules status SL-BOP-003 approved            # cannot approve without a source
+python -m radp_check rules status SL-BOP-001 disabled --reason "superseded by SL-BOP-003"
 
-# Система не узнала оборудование или документ — научить синониму
+# The system did not recognise equipment or a document — teach it an alias
 python -m radp_check alias add equipment lubricator "lub. section"
 python -m radp_check alias add document pressure_test_certificate "hydro test report"
 
-# Новая категория оборудования / новый тип документа
+# New equipment category / new document type
 python -m radp_check category add equipment tool_string "Tool string" --alias "tool string"
 
-# Одобренная инспекционная организация
+# Approved inspection body
 python -m radp_check issuer add "Gulf Inspection Services"
 
-# Целостность базы
+# Knowledge base integrity
 python -m radp_check validate
 ```
 
-### Цикл обратной связи
+### Feedback loop
 
-1. Ассессор заполняет в отчёте колонки «Ассессор: согласен?» (Да/Нет) и «Комментарий».
-2. `python -m radp_check feedback <отчёт.xlsx>` — показывает точность и правила, с которыми чаще всего не согласны;
-   несогласия сохраняются в `knowledge/feedback.jsonl`.
-3. По ним правятся правила и синонимы. Так система «учится» — прозрачно и с журналом изменений.
+1. The assessor fills in the "Assessor agrees?" (Yes/No) and "Assessor comment" columns in the report.
+2. `python -m radp_check feedback <report.xlsx>` shows precision and the rules most often disputed;
+   disagreements are saved to `knowledge/feedback.jsonl`.
+3. Rules and aliases are corrected accordingly. This is how the system "learns": transparently, with a change log.
 
-## Перенос в среду Aramco
+## Transfer to the Aramco environment
 
-Переносится **папка `knowledge/`**, а не код:
+What transfers is **the `knowledge/` folder**, not the code:
 
 ```powershell
 python -m radp_check export knowledge_export.xlsx
 ```
 
-Листы `Rules`, `EquipmentCategories`, `DocumentTypes`, `ApprovedIssuers` готовы к импорту в SharePoint Lists.
-Код (~1200 строк Python) можно запустить внутри периметра как есть, поменяв провайдера на модель Aramco,
-или переписать на одобренной платформе — логика проверки описана в `checker.py` и тестах.
+Sheets `Rules`, `EquipmentCategories`, `DocumentTypes`, `ApprovedIssuers` are ready for import into SharePoint Lists.
+The code (~1,200 lines of Python) can run inside the network as is, with the reader switched to the Aramco model,
+or be rebuilt on an approved platform — the check logic is defined in `checker.py` and the tests.
 
-## Тесты
+## Tests
 
 ```powershell
 pip install pytest
 python -m pytest tests
 ```
 
-`test_sample_package_defects_found` сверяет отчёт с эталоном `expected.json`; `test_learning_loop` проверяет,
-что новые правила, синонимы и организации сразу меняют результат.
+`test_sample_package_defects_found` compares the report with the `expected.json` answer key; `test_learning_loop`
+verifies that new rules, aliases and issuers change the result immediately.
 
-## Ограничения прототипа
+## Prototype limitations
 
-- LoR — только Excel (`.xlsx`) с колонками описания, серийного номера и документов (заголовки распознаются по синонимам в `lor.py`).
-- `.docx`, `.msg`, `.tif` пока не читаются — попадают в «Нераспознанное».
-- Сопоставление документа с оборудованием — по серийному номеру. Сертификаты без серийника не привяжутся.
-- Нет проверки подписей и печатей; модель лишь отмечает явные сомнения в `notes`.
+- LoR must be Excel (`.xlsx`) with description, serial number and documents columns (headers are matched by aliases in `lor.py`).
+- `.docx`, `.msg`, `.tif` are not read yet — they appear under "Unrecognised".
+- Documents are linked to equipment by serial number. Certificates without a serial number will not be linked.
+- No signature or stamp verification; the reader only flags obvious doubts in `notes`.

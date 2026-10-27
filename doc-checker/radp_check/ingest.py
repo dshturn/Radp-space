@@ -1,4 +1,4 @@
-"""Разбор папки пакета: распаковка архивов, поиск LoR, список документов."""
+"""Package folder intake: unpack archives, locate the LoR, list documents."""
 from __future__ import annotations
 
 import zipfile
@@ -25,7 +25,7 @@ def _safe_extract(zip_path: Path, dest: Path) -> None:
         for member in zf.infolist():
             target = (dest / member.filename).resolve()
             if not str(target).startswith(str(dest.resolve())):
-                raise ValueError(f"Небезопасный путь в архиве: {member.filename}")
+                raise ValueError(f"Unsafe path in archive: {member.filename}")
         zf.extractall(dest)
 
 
@@ -34,7 +34,7 @@ def collect(root: Path, lor_override: Path | None = None) -> Package:
     work = root / WORK_DIR_NAME
     pkg = Package(root=root)
 
-    # Распаковка архивов (включая вложенные) в _radp/unzipped
+    # Unpack archives (including nested ones) into _radp/unzipped
     pending = [p for p in root.rglob("*.zip") if WORK_DIR_NAME not in p.relative_to(root).parts]
     done = set()
     while pending:
@@ -46,7 +46,7 @@ def collect(root: Path, lor_override: Path | None = None) -> Package:
         try:
             _safe_extract(z, dest)
         except (zipfile.BadZipFile, ValueError) as e:
-            pkg.skipped.append((z, f"Не удалось распаковать: {e}"))
+            pkg.skipped.append((z, f"Could not unpack: {e}"))
             continue
         pending.extend(p for p in dest.rglob("*.zip") if p not in done)
 
@@ -68,7 +68,7 @@ def collect(root: Path, lor_override: Path | None = None) -> Package:
         elif p.name.startswith("~$") or p.name.lower() in ("thumbs.db", ".ds_store"):
             continue
         else:
-            pkg.skipped.append((p, f"Формат {suffix or '(без расширения)'} не поддерживается"))
+            pkg.skipped.append((p, f"File type {suffix or '(no extension)'} not supported"))
 
     if lor_override:
         pkg.lor = Path(lor_override)
@@ -78,7 +78,7 @@ def collect(root: Path, lor_override: Path | None = None) -> Package:
         pkg.lor = pick[0] if pick else None
     for p in lor_candidates:
         if p != pkg.lor:
-            pkg.skipped.append((p, "Excel-файл, не распознан как LoR"))
+            pkg.skipped.append((p, "Excel file not recognised as the LoR"))
     return pkg
 
 

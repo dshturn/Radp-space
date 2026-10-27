@@ -1,5 +1,5 @@
-# Одобренные сторонние инспекционные организации (в прототипе — вымышленные).
-# Пополняется командой: python -m radp_check issuer add "<название>"
+# Approved third-party inspection bodies (fictitious in this prototype).
+# Extend with: python -m radp_check issuer add "<name>"
 approved:
   - Gulf Inspection Services
   - Arabian Testing Bureau

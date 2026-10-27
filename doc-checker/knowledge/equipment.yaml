@@ -1,5 +1,5 @@
-# Категории оборудования и синонимы, по которым они узнаются в LoR.
-# Пополняется командой: python -m radp_check alias add equipment <категория> "<синоним>"
+# Equipment categories and the aliases used to recognise them in the LoR.
+# Extend with: python -m radp_check alias add equipment <category> "<alias>"
 categories:
   slickline_unit:
     name: Slickline unit (winch / power pack)

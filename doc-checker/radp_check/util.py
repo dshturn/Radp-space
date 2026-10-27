@@ -33,7 +33,7 @@ def add_months(d: date, months: int) -> date:
 
 
 def norm_id(value: str | None) -> str:
-    """Нормализация серийных и сертификатных номеров: регистр, пробелы, дефисы, слэши."""
+    """Normalise serial/certificate numbers: case, spaces, dashes, slashes."""
     return re.sub(r"[\s\-/_.]", "", (value or "").upper())
 
 

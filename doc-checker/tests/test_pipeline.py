@@ -7,7 +7,7 @@ from openpyxl import load_workbook
 from radp_check.cli import main
 from radp_check.knowledge import DEFAULT_DIR, Knowledge
 
-STATUS = {"OK": "OK", "WARN": "ВНИМАНИЕ", "FAIL": "НЕ СООТВ."}
+STATUS = {"OK": "OK", "WARN": "WARNING", "FAIL": "FAIL"}
 
 
 def _setup(tmp_path):
@@ -20,10 +20,10 @@ def _setup(tmp_path):
 def _check(kn_dir, pkg, out):
     assert main(["--knowledge", str(kn_dir), "check", str(pkg), "--out", str(out)]) == 0
     wb = load_workbook(out)
-    rows = list(wb["Проверка"].iter_rows(values_only=True))
+    rows = list(wb["Check"].iter_rows(values_only=True))
     idx = {n: i for i, n in enumerate(rows[0])}
-    findings = {r[idx["Правило"]]: (r[idx["Результат"]], r[idx["Причина"]] or "") for r in rows[1:]}
-    unrecognized = [r[1] for r in list(wb["Нераспознанное"].iter_rows(values_only=True))[1:]]
+    findings = {r[idx["Rule"]]: (r[idx["Result"]], r[idx["Reason"]] or "") for r in rows[1:]}
+    unrecognized = [r[1] for r in list(wb["Unrecognised"].iter_rows(values_only=True))[1:]]
     return wb, findings, unrecognized
 
 
@@ -45,23 +45,23 @@ def test_learning_loop(tmp_path):
     kn_dir, pkg = _setup(tmp_path)
     run = lambda *a: main(["--knowledge", str(kn_dir), *a])
 
-    # Новая категория + правило -> бывшее «нераспознанное» оборудование начинает проверяться
+    # New category + rule -> previously unrecognised equipment is now checked
     assert run("category", "add", "equipment", "tool_string", "Tool string", "--alias", "tool string") == 0
     assert run("rules", "add", "--id", "SL-TS-001", "--service-line", "slickline", "--equipment", "tool_string",
                "--document", "third_party_inspection", "--max-age", "12", "--third-party") == 0
     _, findings, unrecognized = _check(kn_dir, pkg, tmp_path / "r2.xlsx")
-    assert findings["SL-TS-001"][0] == "НЕ СООТВ."
+    assert findings["SL-TS-001"][0] == "FAIL"
     assert not any("Tool string" in u for u in unrecognized)
 
-    # Одобрили организацию -> предупреждение ушло
+    # Issuer approved -> warning cleared
     assert run("issuer", "add", "Falcon Inspection Co") == 0
     _, findings, _ = _check(kn_dir, pkg, tmp_path / "r3.xlsx")
     assert findings["SL-UNT-001"][0] == "OK"
 
-    # Без источника требования правило утвердить нельзя
+    # A rule cannot be approved without a requirement source
     assert run("rules", "status", "SL-TS-001", "approved") == 1
 
-    # Каждое изменение записано в историю
+    # Every change is recorded in the history log
     actions = [json.loads(l)["action"] for l in (kn_dir / "history.jsonl").read_text(encoding="utf-8").splitlines()]
     assert actions == ["category_add", "rule_add", "issuer_add"]
     assert Knowledge.load(kn_dir).validate() == []
@@ -70,15 +70,15 @@ def test_learning_loop(tmp_path):
 def test_feedback_collected(tmp_path):
     kn_dir, pkg = _setup(tmp_path)
     wb, _, _ = _check(kn_dir, pkg, tmp_path / "r.xlsx")
-    ws = wb["Проверка"]
+    ws = wb["Check"]
     header = [c.value for c in ws[1]]
-    col = header.index("Ассессор: согласен?") + 1
-    comment = header.index("Комментарий ассессора") + 1
-    ws.cell(2, col, "Да")
-    ws.cell(3, col, "Нет")
-    ws.cell(3, comment, "Подрядчик прислал исправленный сертификат")
+    col = header.index("Assessor agrees?") + 1
+    comment = header.index("Assessor comment") + 1
+    ws.cell(2, col, "Yes")
+    ws.cell(3, col, "No")
+    ws.cell(3, comment, "Contractor has sent a corrected certificate")
     wb.save(tmp_path / "r.xlsx")
 
     assert main(["--knowledge", str(kn_dir), "feedback", str(tmp_path / "r.xlsx")]) == 0
     lines = (kn_dir / "feedback.jsonl").read_text(encoding="utf-8").splitlines()
-    assert len(lines) == 1 and "исправленный" in lines[0]
+    assert len(lines) == 1 and "corrected certificate" in lines[0]

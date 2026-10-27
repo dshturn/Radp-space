@@ -1,1 +1,1 @@
-"""RADP doc-checker: предварительная проверка пакетов документов readiness."""
+"""RADP doc-checker: pre-screening of readiness document packages."""

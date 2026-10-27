@@ -1,5 +1,5 @@
-# Типы документов и синонимы, по которым они узнаются в LoR и в самих сертификатах.
-# Пополняется командой: python -m radp_check alias add document <тип> "<синоним>"
+# Document types and the aliases used to recognise them in the LoR and in the certificates.
+# Extend with: python -m radp_check alias add document <type> "<alias>"
 types:
   pressure_test_certificate:
     name: Pressure test certificate

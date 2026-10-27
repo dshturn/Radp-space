@@ -1,5 +1,5 @@
-"""«Проверяющий»: сравнение требований (правила) с заявленным (LoR) и фактическим (пакет).
-Здесь нет ИИ — только детерминированная логика, поэтому результат воспроизводим."""
+"""The "checker": compares requirements (rules) with what is declared (LoR) and what is supplied (package).
+No AI here - deterministic logic only, so results are reproducible."""
 from __future__ import annotations
 
 from collections import defaultdict
@@ -60,21 +60,21 @@ def _evaluate(cert: dict, rule: dict, ctx: Context, kn: Knowledge) -> tuple[str,
     until = _valid_until(cert, rule)
     if until is None:
         if rule.get("max_age_months") or cert.get("expiry_date"):
-            status, reasons = "WARN", ["Не удалось определить срок действия (нет дат)"]
+            status, reasons = "WARN", ["Validity could not be determined (no dates)"]
     elif until < ctx.work_start:
-        status, reasons = "FAIL", [f"Истёк {until:%d.%m.%Y} — до начала работ"]
+        status, reasons = "FAIL", [f"Expired {until:%d-%b-%Y}, before work start"]
     elif until < ctx.work_end:
-        status, reasons = "WARN", [f"Истекает {until:%d.%m.%Y} — во время работ"]
+        status, reasons = "WARN", [f"Expires {until:%d-%b-%Y}, during the work period"]
     if rule.get("third_party_required"):
         if not cert.get("issuer"):
             status = max(status, "WARN", key=SEVERITY.get)
-            reasons.append("Не указана выдавшая организация")
+            reasons.append("Issuing organisation not stated")
         elif not kn.issuer_approved(cert["issuer"]):
             status = max(status, "WARN", key=SEVERITY.get)
-            reasons.append(f"'{cert['issuer']}' нет в списке одобренных организаций")
+            reasons.append(f"'{cert['issuer']}' is not on the approved issuer list")
     if cert.get("notes"):
         status = max(status, "WARN", key=SEVERITY.get)
-        reasons.append(f"Замечание при чтении: {cert['notes']}")
+        reasons.append(f"Reader remark: {cert['notes']}")
     return status, reasons, until
 
 
@@ -91,13 +91,13 @@ def run_check(kn: Knowledge, ctx: Context, items: list[LorItem], certs: list[dic
 
     for item in items:
         if not item.category:
-            unrecognized.append({"what": "Оборудование LoR", "name": f"строка {item.row}: {item.description}",
-                                 "reason": "Категория не распознана — добавьте синоним (alias add equipment)"})
+            unrecognized.append({"what": "LoR equipment", "name": f"row {item.row}: {item.description}",
+                                 "reason": "Equipment category not recognised - add an alias (alias add equipment)"})
             continue
         rules = kn.applicable_rules(ctx.service_line, item.category, ctx.flags, approved_only)
         if not rules:
-            findings.append(Finding(item, None, "INFO", [f"Нет правил для категории '{item.category}' "
-                                                          f"в линии '{ctx.service_line}'"]))
+            findings.append(Finding(item, None, "INFO", [f"No rules for category '{item.category}' "
+                                                          f"in service line '{ctx.service_line}'"]))
             continue
         for rule in rules:
             doc = rule["document"]
@@ -112,30 +112,30 @@ def run_check(kn: Knowledge, ctx: Context, items: list[LorItem], certs: list[dic
                 status, reasons, until = _evaluate(best, rule, ctx, kn)
                 if not declared:
                     status = max(status, "WARN", key=SEVERITY.get)
-                    reasons.append("Документ есть в пакете, но не указан в LoR")
+                    reasons.append("Document is in the package but not listed in the LoR")
                 findings.append(Finding(item, rule, status, reasons, declared, best, until))
             elif declared_certs:
                 used.update(c["cert_id"] for c in declared_certs)
                 c = declared_certs[0]
                 findings.append(Finding(item, rule, "FAIL", [
-                    f"Серийный номер в сертификате ({', '.join(c['serial_numbers']) or 'не указан'}) "
-                    f"не совпадает с LoR ({item.serial})"], True, c))
+                    f"Serial number on certificate ({', '.join(c['serial_numbers']) or 'not stated'}) "
+                    f"does not match the LoR ({item.serial})"], True, c))
             elif declared:
-                findings.append(Finding(item, rule, "FAIL", ["Заявлен в LoR, но не найден в пакете"], True))
+                findings.append(Finding(item, rule, "FAIL", ["Listed in the LoR but not found in the package"], True))
             else:
-                findings.append(Finding(item, rule, "FAIL", ["Отсутствует в пакете и не заявлен в LoR"], False))
+                findings.append(Finding(item, rule, "FAIL", ["Missing from the package and not listed in the LoR"], False))
 
     for c in certs:
         if c["cert_id"] in used:
             continue
-        name = f"{Path(c['file']).name} (стр. {c.get('page') or 1})"
+        name = f"{Path(c['file']).name} (p. {c.get('page') or 1})"
         if c["doc_type"] == "unknown":
-            reason = "Тип документа не распознан" + (f": {c['notes']}" if c.get("notes") else "")
+            reason = "Document type not recognised" + (f": {c['notes']}" if c.get("notes") else "")
         else:
             reason = (f"{kn.doc_types[c['doc_type']].get('name', c['doc_type'])}, s/n "
-                      f"{', '.join(c['serial_numbers']) or '—'}: не относится ни к одному требованию по LoR")
-        unrecognized.append({"what": "Документ пакета", "name": name, "reason": reason})
+                      f"{', '.join(c['serial_numbers']) or '-'}: not linked to any LoR requirement")
+        unrecognized.append({"what": "Package document", "name": name, "reason": reason})
     for path, reason in skipped:
-        unrecognized.append({"what": "Файл", "name": Path(path).name, "reason": reason})
+        unrecognized.append({"what": "File", "name": Path(path).name, "reason": reason})
 
     return Result(findings, unrecognized, certs)
