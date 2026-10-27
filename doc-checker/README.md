@@ -127,7 +127,7 @@ python -m radp_check export knowledge_export.xlsx
 ```
 
 Листы `Rules`, `EquipmentCategories`, `DocumentTypes`, `ApprovedIssuers` готовы к импорту в SharePoint Lists.
-Код (~800 строк Python) можно запустить внутри периметра как есть, поменяв провайдера на модель Aramco,
+Код (~1200 строк Python) можно запустить внутри периметра как есть, поменяв провайдера на модель Aramco,
 или переписать на одобренной платформе — логика проверки описана в `checker.py` и тестах.
 
 ## Тесты
