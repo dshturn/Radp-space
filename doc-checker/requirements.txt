@@ -1,0 +1,6 @@
+pypdf>=4.0
+openpyxl>=3.1
+PyYAML>=6.0
+reportlab>=4.0
+# Только для провайдера --provider claude (облако, только фейковые документы)
+anthropic>=2.0

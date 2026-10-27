@@ -1,0 +1,24 @@
+# Категории оборудования и синонимы, по которым они узнаются в LoR.
+# Пополняется командой: python -m radp_check alias add equipment <категория> "<синоним>"
+categories:
+  slickline_unit:
+    name: Slickline unit (winch / power pack)
+    aliases: [slickline unit, sl unit, slickline winch, winch unit, power pack]
+  wireline_bop:
+    name: Wireline BOP / wireline valve
+    aliases: [wireline bop, wl bop, wireline valve, bop]
+  lubricator:
+    name: Lubricator
+    aliases: [lubricator, lubricator section, lub section, riser]
+  stuffing_box:
+    name: Stuffing box
+    aliases: [stuffing box, sfb, hydraulic stuffing box]
+  slickline_wire:
+    name: Slickline wire (drum)
+    aliases: [slickline wire, wire drum, measuring line]
+  weight_indicator:
+    name: Weight indicator / load cell
+    aliases: [weight indicator, load cell, tension meter, martin decker]
+  mast:
+    name: Mast / gin pole
+    aliases: [mast, gin pole, telescopic mast]

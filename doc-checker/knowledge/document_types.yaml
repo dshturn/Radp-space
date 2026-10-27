@@ -1,0 +1,21 @@
+# Типы документов и синонимы, по которым они узнаются в LoR и в самих сертификатах.
+# Пополняется командой: python -m radp_check alias add document <тип> "<синоним>"
+types:
+  pressure_test_certificate:
+    name: Pressure test certificate
+    aliases: [pressure test, hydrotest, hydrostatic test, pt cert, pressure test certificate]
+  load_test_certificate:
+    name: Load test certificate
+    aliases: [load test, proof load, lt cert, load test certificate]
+  third_party_inspection:
+    name: Third-party inspection certificate
+    aliases: [third party inspection, third-party inspection, tpi, certificate of inspection, inspection certificate]
+  calibration_certificate:
+    name: Calibration certificate
+    aliases: [calibration, calibration certificate, cal cert]
+  wire_test_certificate:
+    name: Wire test certificate (torsion / breaking load)
+    aliases: [wire test, torsion test, breaking load test, wire test certificate]
+  certificate_of_conformity:
+    name: Certificate of conformity / material certificate
+    aliases: [certificate of conformity, coc, material certificate, mill certificate]

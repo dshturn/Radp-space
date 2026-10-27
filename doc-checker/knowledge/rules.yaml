@@ -1,0 +1,103 @@
+# Свод правил проверки. ВСЕ правила ниже — ПРИМЕРЫ для прототипа (status: draft,
+# source: PLACEHOLDER). Реальные требования вносятся из корпоративных мануалов
+# с указанием документа, пункта и ревизии, затем утверждаются (status: approved).
+rules:
+- id: SL-BOP-001
+  service_line: slickline
+  equipment: wireline_bop
+  document: pressure_test_certificate
+  when: {}
+  max_age_months: 6
+  serial_must_match: true
+  third_party_required: true
+  status: draft
+  source: {document: PLACEHOLDER, clause: '', revision: ''}
+  note: Пример правила
+- id: SL-BOP-002
+  service_line: slickline
+  equipment: wireline_bop
+  document: third_party_inspection
+  when: {}
+  max_age_months: 12
+  serial_must_match: true
+  third_party_required: true
+  status: draft
+  source: {document: PLACEHOLDER, clause: '', revision: ''}
+  note: Пример правила
+- id: SL-LUB-001
+  service_line: slickline
+  equipment: lubricator
+  document: pressure_test_certificate
+  when: {}
+  max_age_months: 6
+  serial_must_match: true
+  third_party_required: true
+  status: draft
+  source: {document: PLACEHOLDER, clause: '', revision: ''}
+  note: Пример правила
+- id: SL-SFB-001
+  service_line: slickline
+  equipment: stuffing_box
+  document: pressure_test_certificate
+  when: {}
+  max_age_months: 6
+  serial_must_match: true
+  third_party_required: true
+  status: draft
+  source: {document: PLACEHOLDER, clause: '', revision: ''}
+  note: Пример правила
+- id: SL-UNT-001
+  service_line: slickline
+  equipment: slickline_unit
+  document: third_party_inspection
+  when: {}
+  max_age_months: 12
+  serial_must_match: true
+  third_party_required: true
+  status: draft
+  source: {document: PLACEHOLDER, clause: '', revision: ''}
+  note: Пример правила
+- id: SL-WIR-001
+  service_line: slickline
+  equipment: slickline_wire
+  document: wire_test_certificate
+  when: {}
+  max_age_months: 6
+  serial_must_match: true
+  third_party_required: false
+  status: draft
+  source: {document: PLACEHOLDER, clause: '', revision: ''}
+  note: Пример правила
+- id: SL-WIR-002
+  service_line: slickline
+  equipment: slickline_wire
+  document: certificate_of_conformity
+  when: {h2s_service: true}
+  max_age_months: null
+  serial_must_match: true
+  third_party_required: false
+  status: draft
+  source: {document: PLACEHOLDER, clause: '', revision: ''}
+  note: Пример условного правила — только для H2S-работ
+- id: SL-WI-001
+  service_line: slickline
+  equipment: weight_indicator
+  document: calibration_certificate
+  when: {}
+  max_age_months: 12
+  serial_must_match: true
+  third_party_required: false
+  status: draft
+  source: {document: PLACEHOLDER, clause: '', revision: ''}
+  note: Пример правила
+- id: SL-MST-001
+  service_line: slickline
+  equipment: mast
+  document: load_test_certificate
+  when: {}
+  max_age_months: 12
+  serial_must_match: true
+  third_party_required: true
+  status: draft
+  source: {document: PLACEHOLDER, clause: '', revision: ''}
+  note: Пример правила
